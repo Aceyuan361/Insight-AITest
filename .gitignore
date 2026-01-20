@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+app.log
+
+# Test files (临时测试文件)
+test_*.py
+verify_*.py
+fix_*.py
+diagnose_*.py
+simple_test.py
+final_test.py
+quick_test*.py
+nul
+
+# Claude
+.claude/
+.agents/
+
+# Documentation reports (临时报告)
+*_SUMMARY.md
+*_REPORT.md
+Task-*-完成报告.md
+
+# OS
+.DS_Store
+Thumbs.db
