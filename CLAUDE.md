@@ -272,10 +272,42 @@ Android FPS 采集器 (`android/fps_collector.py`) 比较复杂:
 
 ## Known Limitations
 
-1. **iOS 支持有限** - tidevice 对指标访问受限
+1. **iOS 17+ 需要额外依赖** - py-ios-device 和 pymobiledevice3（可选，会自动降级到 tidevice）
 2. **GPU 监控未实现** - 两个平台都不支持
-3. **iOS 网络流量** - 返回 0
+3. **iOS 网络流量** - 支持有限（iOS 17+ 可通过 py-ios-device 获取）
 4. **Android FPS** - 需要 stop() 获取数据 (设计限制)
+
+## iOS Monitoring Enhancement (2025-01-20)
+
+### 混合架构
+自动根据 iOS 版本选择最佳采集方案：
+- **iOS 15-16**: tidevice（标准方案）
+- **iOS 17-26**: py-ios-device + pymobiledevice3（优化方案），失败时自动降级到 tidevice
+
+### 新增组件
+| 组件 | 文件 | 功能 |
+|------|------|------|
+| IOSDependencyChecker | `dependency_checker.py` | 检测 py-ios-device 和 pymobiledevice3 可用性 |
+| PyIOSConnection | `pyios_connect.py` | 管理 Instruments 服务连接 |
+| IOSDataNormalizer | `data_normalizer.py` | 统一数据格式（兼容 tidevice） |
+| IOSTunnelManager | `tunnel_manager.py` | pymobiledevice3 隧道管理 |
+| SysMontapCollector | `pyios_collectors/sysmontap.py` | CPU/Memory/Network 采集 |
+| GraphicsCollector | `pyios_collectors/graphics.py` | FPS/GPU 采集 |
+| EnergyCollector | `pyios_collectors/energy.py` | Battery 采集 |
+
+### 安装完整支持
+```bash
+pip install py-ios-device pymobiledevice3
+```
+
+### 安全增强
+- ✅ UDID 验证（防止命令注入）
+- ✅ 线程安全（网络速率计算）
+- ✅ 资源清理健壮性
+
+### 文档
+- 设计文档: `docs/plans/2025-01-20-ios-monitoring-upgrade-design.md`
+- 实施报告: `docs/ios-monitoring-upgrade-implementation-report.md`
 
 ---
 
