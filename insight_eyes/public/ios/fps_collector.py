@@ -139,9 +139,11 @@ class FPSCollector:
             reader_thread.start()
 
             # 等待获取数据或超时
+            # FPS 采集需要读取多行数据以获取最新值
             start_time = time.time()
             while time.time() - start_time < timeout:
-                if output_buffer:
+                # 等待至少有 3 行数据（确保跳过初始的 0 值）
+                if len(output_buffer) >= 3:
                     break
                 time.sleep(0.1)
 
