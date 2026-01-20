@@ -105,38 +105,29 @@ class MemoryCollector:
         """
         try:
             # 使用 tidevice perf 获取性能数据
-            output = self._run_tidevice(['perf', '--bundleid', bundle_id, '--io'], timeout=5)
+            output = self._run_tidevice(['perf', '-B', bundle_id, '-o', 'memory'], timeout=2)
 
             if output:
                 # 解析内存数据
-                # tidevice perf 输出格式示例:
-                # [Device] CPU: 15.2% Memory: 120.5MB
+                # tidevice perf 输出格式 (Python字典):
+                # memory {'pid': None, 'timestamp': ..., 'value': 8.40}
                 for line in output.split('\n'):
-                    if 'Memory' in line or 'MEM' in line:
-                        # 提取内存使用量，支持多种格式
-                        # 格式1: Memory: 120.5MB
-                        # 格式2: Memory: 120.5 MB
-                        # 格式3: Memory: 120500KB
-                        match = re.search(r'Memory[:\s]+([\d.]+)\s*(MB|KB)?', line, re.IGNORECASE)
-                        if match:
-                            memory_value = float(match.group(1))
-                            unit = match.group(2)
-
-                            # 转换为 MB
-                            if unit and unit.upper() == 'KB':
-                                memory_mb = memory_value / 1024
-                            else:
-                                memory_mb = memory_value
-
-                            # iOS 内存统计
-                            # totalPass: 总内存（主要值）
-                            # nativePass: Native 堆内存（iOS 上与总内存相同）
-                            # dalvikPass: Dalvik 堆内存（iOS 上不存在，返回 0）
+                    if line.strip().startswith('memory '):
+                        # 提取字典部分
+                        dict_part = line[line.find('{'):]
+                        try:
+                            # 安全解析字典
+                            import ast
+                            data = ast.literal_eval('{' + dict_part)
+                            memory_mb = float(data.get('value', 0))
                             return {
                                 'totalPass': round(memory_mb, 2),
                                 'nativePass': round(memory_mb, 2),
                                 'dalvikPass': 0.0
                             }
+                        except (ValueError, SyntaxError) as e:
+                            logger.debug(f"解析 Memory 数据失败: {e}")
+                            continue
 
             # 如果无法获取数据，返回默认值
             logger.debug("无法通过 tidevice perf 获取内存数据，可能应用未在前台运行")

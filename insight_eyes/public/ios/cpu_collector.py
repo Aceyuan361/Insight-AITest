@@ -102,23 +102,29 @@ class CPUCollector:
         try:
             # 使用 tidevice perf 获取性能数据
             # tidevice perf 命令会持续输出应用的性能指标
-            output = self._run_tidevice(['perf', '--bundleid', bundle_id, '--io'], timeout=5)
+            output = self._run_tidevice(['perf', '-B', bundle_id, '-o', 'cpu'], timeout=2)
 
             if output:
                 # 解析 CPU 数据
-                # tidevice perf 输出格式示例:
-                # [Device] CPU: 15.2% Memory: 120.5MB
+                # tidevice perf 输出格式 (Python字典):
+                # cpu {'timestamp': ..., 'value': 0.0, 'sys_value': 67.85, ...}
                 for line in output.split('\n'):
-                    if 'CPU' in line:
-                        # 提取 CPU 使用率
-                        match = re.search(r'CPU[:\s]+([\d.]+)%', line)
-                        if match:
-                            cpu_rate = float(match.group(1))
-                            # iOS 不区分应用和系统 CPU，返回相同的值
+                    if line.strip().startswith('cpu '):
+                        # 提取字典部分
+                        dict_part = line[line.find('{'):]
+                        try:
+                            # 安全解析字典
+                            import ast
+                            data = ast.literal_eval('{' + dict_part)
+                            app_cpu = float(data.get('value', 0))
+                            sys_cpu = float(data.get('sys_value', app_cpu))
                             return {
-                                'appCpuRate': round(cpu_rate, 2),
-                                'sysCpuRate': round(cpu_rate, 2)
+                                'appCpuRate': round(app_cpu, 2),
+                                'sysCpuRate': round(sys_cpu, 2)
                             }
+                        except (ValueError, SyntaxError) as e:
+                            logger.debug(f"解析 CPU 数据失败: {e}")
+                            continue
 
             # 如果无法获取数据，返回默认值
             logger.debug("无法通过 tidevice perf 获取 CPU 数据，可能应用未在前台运行")

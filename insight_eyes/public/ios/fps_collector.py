@@ -108,33 +108,36 @@ class FPSCollector:
         """
         try:
             # 使用 tidevice perf 获取性能数据
-            output = self._run_tidevice(['perf', '--bundleid', bundle_id, '--io'], timeout=5)
+            output = self._run_tidevice(['perf', '-B', bundle_id, '-o', 'fps'], timeout=2)
 
             if output:
                 # 解析 FPS 数据
-                # tidevice perf 输出格式可能包含:
-                # FPS: 60 或 Frame rate: 60fps
+                # tidevice perf 输出格式 (Python字典):
+                # fps {'fps': 30, 'value': 30, 'timestamp': ...}
                 for line in output.split('\n'):
-                    if 'FPS' in line or 'fps' in line or 'Frame' in line:
-                        # 提取 FPS 值
-                        match = re.search(r'(?:FPS|fps|Frame rate)[:\s]+(\d+)', line)
-                        if match:
-                            fps = int(match.group(1))
+                    if line.strip().startswith('fps '):
+                        # 提取字典部分
+                        dict_part = line[line.find('{'):]
+                        try:
+                            # 安全解析字典
+                            import ast
+                            data = ast.literal_eval('{' + dict_part)
+                            fps = int(data.get('fps', data.get('value', 60)))
 
                             # 计算帧时间 (ms)
-                            # 帧时间 = 1000 / FPS
-                            ftime_avg = round(1000.0 / fps, 2) if fps > 0 else 0
+                            ftime_avg = round(1000.0 / fps, 2) if fps > 0 else 16.67
 
-                            # iOS 基础实现，暂不提供卡顿检测
-                            # 卡顿检测需要更复杂的帧时间分析
                             return {
                                 'fps': fps,
                                 'jank': 0,
                                 'bigJank': 0,
                                 'ftime_avg': ftime_avg,
-                                'ftime_max': ftime_avg * 1.2,  # 估算最大帧时间
-                                'ftime_min': ftime_avg * 0.8   # 估算最小帧时间
+                                'ftime_max': ftime_avg * 1.2,
+                                'ftime_min': ftime_avg * 0.8
                             }
+                        except (ValueError, SyntaxError) as e:
+                            logger.debug(f"解析 FPS 数据失败: {e}")
+                            continue
 
             # 如果无法获取 FPS 数据，返回 iOS 标准帧率
             logger.debug("无法通过 tidevice perf 获取 FPS 数据，返回 iOS 标准帧率")
