@@ -9,6 +9,7 @@ License: MIT License
 
 Author: Aceyuan361
 """
+import time
 from typing import Optional, Dict, Any, List
 from logzero import logger
 
@@ -44,6 +45,13 @@ class SysMontapCollector(PyIOSCollectorBase):
         self._update_rate = 1000  # 数据更新频率（毫秒）
         self._proc_attrs = ['cpuUsage', 'memVirtualSize', 'memResidentSize', 'threadCount']
         self._sys_attrs = ['cpuTotal', 'networkIn', 'networkOut', 'memFree']
+
+        # 网络速率计算缓存（用于计算 KB/s）
+        self._last_network_data = {
+            'down_bytes': 0,
+            'up_bytes': 0,
+            'last_time': time.time()
+        }
 
     def configure(self) -> bool:
         """
@@ -183,8 +191,11 @@ class SysMontapCollector(PyIOSCollectorBase):
                 'sysCpuRate': round(sys_cpu, 2)
             }
 
-        except Exception as e:
-            logger.warning(f"[SysMontap] CPU 数据提取失败: {e}")
+        except (KeyError, AttributeError, TypeError) as e:
+            logger.warning(f"[SysMontap] CPU 数据格式错误: {type(e).__name__}: {e}")
+            return {'appCpuRate': 0.0, 'sysCpuRate': 0.0}
+        except (ValueError, ArithmeticError) as e:
+            logger.warning(f"[SysMontap] CPU 数值转换失败: {e}")
             return {'appCpuRate': 0.0, 'sysCpuRate': 0.0}
 
     def _extract_memory_data(self, message: Dict) -> Dict[str, float]:
@@ -221,13 +232,16 @@ class SysMontapCollector(PyIOSCollectorBase):
                 'dalvikPass': 0.0  # iOS 没有 Dalvik
             }
 
-        except Exception as e:
-            logger.warning(f"[SysMontap] Memory 数据提取失败: {e}")
+        except (KeyError, AttributeError, TypeError) as e:
+            logger.warning(f"[SysMontap] Memory 数据格式错误: {type(e).__name__}: {e}")
+            return {'totalPass': 0, 'nativePass': 0, 'dalvikPass': 0}
+        except (ValueError, ArithmeticError) as e:
+            logger.warning(f"[SysMontap] Memory 数值转换失败: {e}")
             return {'totalPass': 0, 'nativePass': 0, 'dalvikPass': 0}
 
     def _extract_network_data(self, message: Dict) -> Dict[str, float]:
         """
-        提取 Network 数据
+        提取 Network 数据（计算速率而非累计值）
 
         Args:
             message: SysMontap 消息
@@ -236,24 +250,59 @@ class SysMontapCollector(PyIOSCollectorBase):
             dict: {'upFlow': float, 'downFlow': float} (KB/s)
         """
         try:
-            # 从系统信息获取网络流量
+            current_time = time.time()
+
+            # 从系统信息获取网络流量（累计值，字节）
             if 'system' in message:
                 system = message['system']
-                # networkIn 是下行（字节），networkOut 是上行（字节）
                 down_bytes = system.get('networkIn', 0)
                 up_bytes = system.get('networkOut', 0)
 
-                # 转换为 KB/s（注意：这是累计值，需要计算速率）
-                # 这里先返回绝对值，速率计算在调用端处理
-                down_kb = round(down_bytes / 1024, 2)
-                up_kb = round(up_bytes / 1024, 2)
+                # 计算时间差（秒）
+                time_delta = current_time - self._last_network_data['last_time']
 
-                return {'upFlow': up_kb, 'downFlow': down_kb}
+                # 避免除零和首次采样
+                if time_delta < 0.1:  # 时间间隔太短，返回上次值
+                    return {
+                        'upFlow': self._last_network_data.get('up_rate', 0),
+                        'downFlow': self._last_network_data.get('down_rate', 0)
+                    }
+
+                # 计算速率（字节/秒 → KB/s）
+                if self._last_network_data['last_time'] > 0:
+                    down_delta = down_bytes - self._last_network_data['down_bytes']
+                    up_delta = up_bytes - self._last_network_data['up_bytes']
+
+                    # 处理计数器回绕（设备重启等情况）
+                    if down_delta < 0:
+                        down_delta = down_bytes
+                    if up_delta < 0:
+                        up_delta = up_bytes
+
+                    down_rate = round(down_delta / time_delta / 1024, 2)  # KB/s
+                    up_rate = round(up_delta / time_delta / 1024, 2)    # KB/s
+                else:
+                    down_rate = 0
+                    up_rate = 0
+
+                # 更新缓存
+                self._last_network_data = {
+                    'down_bytes': down_bytes,
+                    'up_bytes': up_bytes,
+                    'down_rate': down_rate,
+                    'up_rate': up_rate,
+                    'last_time': current_time
+                }
+
+                return {'upFlow': up_rate, 'downFlow': down_rate}
 
             return {'upFlow': 0, 'downFlow': 0}
 
-        except Exception as e:
-            logger.warning(f"[SysMontap] Network 数据提取失败: {e}")
+        except (KeyError, AttributeError, TypeError) as e:
+            logger.warning(f"[SysMontap] Network 数据格式错误: {type(e).__name__}: {e}")
+            return {'upFlow': 0, 'downFlow': 0}
+        except (ValueError, ArithmeticError) as e:
+            logger.warning(f"[SysMontap] Network 数值转换失败: {e}")
             return {'upFlow': 0, 'downFlow': 0}
 
     def collect_cpu(self) -> Optional[Dict[str, float]]:

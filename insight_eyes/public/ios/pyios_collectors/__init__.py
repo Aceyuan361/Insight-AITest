@@ -11,5 +11,11 @@ Author: Aceyuan361
 """
 
 from .base import PyIOSCollectorBase
+from .sysmontap import SysMontapCollector
+from .graphics import GraphicsCollector
 
-__all__ = ['PyIOSCollectorBase']
+__all__ = [
+    'PyIOSCollectorBase',
+    'SysMontapCollector',
+    'GraphicsCollector'
+]

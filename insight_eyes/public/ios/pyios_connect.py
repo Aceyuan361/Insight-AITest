@@ -61,6 +61,11 @@ class PyIOSConnection:
         # 线程锁
         self._lock = threading.RLock()
 
+        # 采集器缓存（优化：避免重复创建和配置）
+        self._sysmontap_collector: Optional['SysMontapCollector'] = None
+        self._graphics_collector: Optional['GraphicsCollector'] = None
+        self._current_bundle_id: Optional[str] = None
+
         logger.debug(f"[PyIOS连接] 初始化: udid={udid}, remote={remote_address}")
 
     def connect(self) -> bool:
@@ -97,12 +102,16 @@ class PyIOSConnection:
                 logger.info(f"[PyIOS连接] ✓ 连接建立成功 (耗时: {self._connect_time:.2f}s)")
                 return True
 
-            except ImportError as e:
-                logger.error(f"[PyIOS连接] ✗ 导入失败: {e}")
-                logger.error("[PyIOS连接] 请安装: pip install py-ios-device")
+            except (ImportError, ModuleNotFoundError) as e:
+                logger.error(f"[PyIOS连接] ✗ 依赖库缺失: {e}")
+                logger.error("[PyIOS连接] 请安装: pip install py-ios-device pymobiledevice3")
+                return False
+            except (ConnectionError, OSError) as e:
+                logger.error(f"[PyIOS连接] ✗ 网络连接失败: {e}")
+                self._cleanup()
                 return False
             except Exception as e:
-                logger.error(f"[PyIOS连接] ✗ 连接失败: {e}")
+                logger.error(f"[PyIOS连接] ✗ 连接失败（未知错误）: {type(e).__name__}: {e}")
                 self._cleanup()
                 return False
 
@@ -188,6 +197,58 @@ class PyIOSConnection:
         logger.info("[PyIOS连接] 连接已断开，尝试重新连接...")
         return self.connect()
 
+    def _get_or_create_collectors(self, bundle_id: str) -> Tuple['SysMontapCollector', 'GraphicsCollector']:
+        """
+        获取或创建采集器（懒加载 + 单例模式）
+
+        优化策略：
+        1. 如果 Bundle ID 变更，停止旧采集器并创建新的
+        2. 如果采集器已存在，直接复用（避免重复配置和启动）
+        3. 仅在首次创建时配置和启动服务
+
+        Args:
+            bundle_id: 应用 Bundle ID
+
+        Returns:
+            (SysMontapCollector, GraphicsCollector) 元组
+        """
+        # 检查是否需要重新创建采集器
+        if self._current_bundle_id != bundle_id:
+            logger.debug(f"[PyIOS连接] Bundle ID 变更: {self._current_bundle_id} -> {bundle_id}")
+
+            # 停止旧采集器
+            if self._sysmontap_collector:
+                try:
+                    self._sysmontap_collector.stop()
+                except Exception as e:
+                    logger.warning(f"[PyIOS连接] 停止 SysMontap 采集器失败: {e}")
+                self._sysmontap_collector = None
+
+            if self._graphics_collector:
+                try:
+                    self._graphics_collector.stop()
+                except Exception as e:
+                    logger.warning(f"[PyIOS连接] 停止 Graphics 采集器失败: {e}")
+                self._graphics_collector = None
+
+            # 创建新采集器
+            from .pyios_collectors.sysmontap import SysMontapCollector
+            from .pyios_collectors.graphics import GraphicsCollector
+
+            self._sysmontap_collector = SysMontapCollector(self._rpc, bundle_id)
+            self._graphics_collector = GraphicsCollector(self._rpc, bundle_id)
+
+            # 配置并启动（仅一次）
+            if self._sysmontap_collector.configure():
+                self._sysmontap_collector.start()
+            if self._graphics_collector.configure():
+                self._graphics_collector.start()
+
+            self._current_bundle_id = bundle_id
+            logger.debug(f"[PyIOS连接] ✓ 采集器已创建并启动: {bundle_id}")
+
+        return self._sysmontap_collector, self._graphics_collector
+
     def _receive_data(self) -> Optional[Any]:
         """
         接收 Instruments 数据
@@ -223,18 +284,11 @@ class PyIOSConnection:
                 if not self._ensure_connected():
                     return None
 
-                # 使用 SysMontap 采集器
-                from .pyios_collectors.sysmontap import SysMontapCollector
-                collector = SysMontapCollector(self._rpc, bundle_id)
-
-                # 配置并启动服务
-                if not collector.configure():
-                    return None
-                if not collector.start():
-                    return None
+                # 使用缓存采集器（避免重复配置和启动）
+                sysmontap, _ = self._get_or_create_collectors(bundle_id)
 
                 # 采集数据
-                cpu_data = collector.collect_cpu()
+                cpu_data = sysmontap.collect_cpu()
 
                 # 使用数据规范化器
                 from .data_normalizer import IOSDataNormalizer
@@ -261,12 +315,11 @@ class PyIOSConnection:
                 if not self._ensure_connected():
                     return None
 
-                # 使用 SysMontap 采集器
-                from .pyios_collectors.sysmontap import SysMontapCollector
-                collector = SysMontapCollector(self._rpc, bundle_id)
+                # 使用缓存采集器（避免重复配置和启动）
+                sysmontap, _ = self._get_or_create_collectors(bundle_id)
 
                 # 采集数据
-                mem_data = collector.collect_memory()
+                mem_data = sysmontap.collect_memory()
 
                 # 使用数据规范化器
                 from .data_normalizer import IOSDataNormalizer
@@ -293,12 +346,11 @@ class PyIOSConnection:
                 if not self._ensure_connected():
                     return None
 
-                # 使用 Graphics 采集器
-                from .pyios_collectors.graphics import GraphicsCollector
-                collector = GraphicsCollector(self._rpc, bundle_id)
+                # 使用缓存采集器（避免重复配置和启动）
+                _, graphics = self._get_or_create_collectors(bundle_id)
 
                 # 采集数据
-                fps_data = collector.collect_fps()
+                fps_data = graphics.collect_fps()
 
                 # 使用数据规范化器
                 from .data_normalizer import IOSDataNormalizer
@@ -316,6 +368,27 @@ class PyIOSConnection:
         """
         with self._lock:
             logger.info("[PyIOS连接] 正在断开连接...")
+
+            # 停止所有采集器
+            if self._sysmontap_collector:
+                try:
+                    self._sysmontap_collector.stop()
+                    logger.debug("[PyIOS连接] ✓ SysMontap 采集器已停止")
+                except Exception as e:
+                    logger.warning(f"[PyIOS连接] 停止 SysMontap 采集器失败: {e}")
+                self._sysmontap_collector = None
+
+            if self._graphics_collector:
+                try:
+                    self._graphics_collector.stop()
+                    logger.debug("[PyIOS连接] ✓ Graphics 采集器已停止")
+                except Exception as e:
+                    logger.warning(f"[PyIOS连接] 停止 Graphics 采集器失败: {e}")
+                self._graphics_collector = None
+
+            self._current_bundle_id = None
+
+            # 清理连接资源
             self._cleanup()
             logger.info("[PyIOS连接] ✓ 连接已断开")
 

@@ -139,17 +139,28 @@ class GraphicsCollector(PyIOSCollectorBase):
         """
         提取 FPS 数据
 
+        卡顿检测说明：
+        - jank（卡顿）：单帧时间 > 16.67ms（低于 60fps）
+        - bigJank（严重卡顿）：单帧时间 > 100ms
+
+        注意：与 Android FPS 采集器可能存在差异
+        - Android: 基于 SurfaceFlinger 的帧时间戳，精确到纳秒级
+        - iOS: 基于 Instruments Graphics 服务的帧时间数组（如果可用）
+        - 卡顿次数为 frame_times 数组中的绝对次数，非百分比
+
         Args:
-            message: Graphics 消息
+            message: Graphics 消息，可能包含以下字段：
+                - fps/frameRate/FPS: 帧率值
+                - frameTimes: 帧时间数组（单位：毫秒）
 
         Returns:
             dict: {
-                'fps': int,
-                'jank': int,
-                'bigJank': int,
-                'ftime_avg': float,
-                'ftime_max': float,
-                'ftime_min': float
+                'fps': int,          # 帧率
+                'jank': int,         # 卡顿次数（>16.67ms）
+                'bigJank': int,      # 严重卡顿次数（>100ms）
+                'ftime_avg': float,  # 平均帧时间（ms）
+                'ftime_max': float,  # 最大帧时间（ms）
+                'ftime_min': float   # 最小帧时间（ms）
             }
         """
         try:
@@ -175,12 +186,13 @@ class GraphicsCollector(PyIOSCollectorBase):
                 ftime_max = round(max(frame_times), 2)
                 ftime_avg = round(sum(frame_times) / len(frame_times), 2)
 
-                # 计算卡顿（简单实现）
-                # 标准：>16.67ms = jank, >100ms = bigJank
+                # 计算卡顿次数（基于帧时间数组中的样本）
+                # 注意：这是绝对次数，不是百分比
+                # 如果 frame_times 包含最近 1 秒的 60 个帧样本，则 jank=2 表示 2/60=3.3% 的帧卡顿
                 jank = sum(1 for ft in frame_times if ft > 16.67)
                 big_jank = sum(1 for ft in frame_times if ft > 100)
             else:
-                # 估算
+                # 如果没有帧时间数组，根据 FPS 估算
                 ftime_min = round(ftime_avg * 0.8, 2)
                 ftime_max = round(ftime_avg * 1.2, 2)
                 jank = 0
@@ -195,9 +207,19 @@ class GraphicsCollector(PyIOSCollectorBase):
                 'ftime_min': ftime_min
             }
 
-        except Exception as e:
-            logger.warning(f"[Graphics] FPS 数据提取失败: {e}")
+        except (KeyError, AttributeError, TypeError) as e:
+            logger.warning(f"[Graphics] FPS 数据格式错误: {type(e).__name__}: {e}")
             # 返回 iOS 标准默认值
+            return {
+                'fps': 60,
+                'jank': 0,
+                'bigJank': 0,
+                'ftime_avg': 16.67,
+                'ftime_max': 20.0,
+                'ftime_min': 16.0
+            }
+        except (ValueError, ArithmeticError) as e:
+            logger.warning(f"[Graphics] FPS 数值转换失败: {e}")
             return {
                 'fps': 60,
                 'jank': 0,
@@ -241,8 +263,16 @@ class GraphicsCollector(PyIOSCollectorBase):
                 'gpu_model': 'Apple GPU'
             }
 
-        except Exception as e:
-            logger.warning(f"[Graphics] GPU 数据提取失败: {e}")
+        except (KeyError, AttributeError, TypeError) as e:
+            logger.warning(f"[Graphics] GPU 数据格式错误: {type(e).__name__}: {e}")
+            return {
+                'gpu': 0,
+                'gpu_freq': 0,
+                'gpu_vendor': 'apple',
+                'gpu_model': 'Apple GPU'
+            }
+        except (ValueError, ArithmeticError) as e:
+            logger.warning(f"[Graphics] GPU 数值转换失败: {e}")
             return {
                 'gpu': 0,
                 'gpu_freq': 0,
