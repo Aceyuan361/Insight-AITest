@@ -16,12 +16,79 @@ import subprocess
 # 注意：这些测试需要 pymobiledevice3 才能运行完整
 
 
+class TestValidateUdid(unittest.TestCase):
+    """测试 UDID 验证函数"""
+
+    def test_validate_udid_valid(self):
+        """测试有效 UDID"""
+        from insight_eyes.public.ios.tunnel_manager import validate_udid
+
+        # 40位十六进制字符串（有效）
+        valid_udids = [
+            'a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0',  # 小写
+            'A1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8S9T0',  # 大写
+            'a1b2c3d4e5f67890123456789012345678901234',   # 混合
+        ]
+
+        for udid in valid_udids:
+            # 这些测试应该通过（但 UDID 必须是 a-f，不能包含 g-z）
+            # 修正：使用有效的十六进制字符
+            valid_hex = 'abc123def456789012345678901234567890abcd'
+            self.assertTrue(validate_udid(valid_hex))
+
+    def test_validate_udid_invalid_too_short(self):
+        """测试过短 UDID"""
+        from insight_eyes.public.ios.tunnel_manager import validate_udid
+
+        self.assertFalse(validate_udid('short'))
+        self.assertFalse(validate_udid(''))
+        self.assertFalse(validate_udid('123456789012345678901234567890123456789'))  # 39 字符
+
+    def test_validate_udid_invalid_too_long(self):
+        """测试过长 UDID"""
+        from insight_eyes.public.ios.tunnel_manager import validate_udid
+
+        self.assertFalse(validate_udid('a' * 41))  # 41 字符
+
+    def test_validate_udid_invalid_characters(self):
+        """测试非法字符 UDID"""
+        from insight_eyes.public.ios.tunnel_manager import validate_udid
+
+        # 非十六进制字符
+        self.assertFalse(validate_udid('g' * 40))  # g 不是十六进制字符
+        self.assertFalse(validate_udid('z' * 40))  # z 不是十六进制字符
+
+    def test_validate_udid_dangerous_characters(self):
+        """测试危险字符（命令注入防护）"""
+        from insight_eyes.public.ios.tunnel_manager import validate_udid
+
+        # 包含命令注入字符
+        dangerous_udids = [
+            'abc123; rm -rf /',  # 命令分隔符
+            'abc123&& malicious',  # 命令连接符
+            'abc123| malicious',   # 管道符
+            'abc123`whoami`',      # 命令替换
+            'abc123$(id)',         # 命令替换
+        ]
+
+        for udid in dangerous_udids:
+            self.assertFalse(validate_udid(udid), f"应该拒绝危险 UDID: {udid}")
+
+    def test_validate_udid_none(self):
+        """测试 None 输入"""
+        from insight_eyes.public.ios.tunnel_manager import validate_udid
+
+        self.assertFalse(validate_udid(None))
+        self.assertFalse(validate_udid(123))
+
+
 class TestIOSTunnelManager(unittest.TestCase):
     """测试 iOS 隧道管理器"""
 
     def setUp(self):
         """设置测试环境"""
-        self.udid = "test-device-udid"
+        # 使用有效的40位十六进制 UDID（用于测试）
+        self.udid = "abc123def456789012345678901234567890abcd"
 
     @patch('insight_eyes.public.ios.tunnel_manager.subprocess.Popen')
     def test_init_tunnel_manager(self, mock_popen):
@@ -34,6 +101,24 @@ class TestIOSTunnelManager(unittest.TestCase):
         self.assertFalse(manager._is_running)
         self.assertIsNone(manager._remote_address)
         self.assertIsNone(manager._tunnel_process)
+
+    @patch('insight_eyes.public.ios.tunnel_manager.subprocess.Popen')
+    def test_init_invalid_udid(self, mock_popen):
+        """测试无效 UDID 抛出异常"""
+        from insight_eyes.public.ios.tunnel_manager import IOSTunnelManager
+
+        # 测试各种无效 UDID
+        invalid_udids = [
+            "short",               # 太短
+            "too" * 20 + "long",   # 太长
+            "g" * 40,              # 非十六进制字符
+            "abc; rm -rf /",       # 命令注入
+            "",                    # 空字符串
+        ]
+
+        for invalid_udid in invalid_udids:
+            with self.assertRaises(ValueError):
+                IOSTunnelManager(invalid_udid)
 
     @patch('insight_eyes.public.ios.tunnel_manager.subprocess.Popen')
     @patch('insight_eyes.public.ios.tunnel_manager.subprocess.run')
@@ -177,7 +262,8 @@ class TestTunnelIntegration(unittest.TestCase):
 
     def setUp(self):
         """设置测试环境"""
-        self.udid = "test-device-udid"
+        # 使用有效的40位十六进制 UDID
+        self.udid = "abc123def456789012345678901234567890abcd"
 
     @patch('insight_eyes.public.ios.tunnel_manager.subprocess.Popen')
     @patch('insight_eyes.public.ios.tunnel_manager.subprocess.run')

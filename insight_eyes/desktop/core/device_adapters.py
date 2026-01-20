@@ -967,17 +967,28 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
 
     def _get_ios_version(self) -> Optional[str]:
         """
-        获取 iOS 设备版本号
+        获取 iOS 设备版本号（带缓存优化）
+
+        性能优化：避免重复调用 subprocess 命令
 
         Returns:
             str: iOS 版本号（如 "17.0"），失败返回 None
         """
+        # 优先返回缓存值（避免重复调用外部命令）
+        if self._ios_version:
+            logger.debug(f"[iOS适配器] 使用缓存的 iOS 版本: {self._ios_version}")
+            return self._ios_version
+
         try:
             # 从设备信息缓存获取
             if self._device_info_cache and 'version' in self._device_info_cache:
-                return self._device_info_cache['version']
+                version = self._device_info_cache['version']
+                self._ios_version = version  # 更新缓存
+                logger.debug(f"[iOS适配器] 从设备信息缓存获取 iOS 版本: {version}")
+                return version
 
-            # 通过 tidevice info 获取
+            # 通过 tidevice info 获取（仅当缓存为空时）
+            logger.debug("[iOS适配器] 缓存未命中，调用 tidevice info 获取版本")
             result = subprocess.run(
                 ['tidevice', '--udid', self.device_id, 'info'],
                 capture_output=True,
@@ -992,7 +1003,8 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
                         match = re.search(r'(\d+\.\d+(?:\.\d+)?)', line)
                         if match:
                             version = match.group(1)
-                            logger.debug(f"[iOS适配器] 检测到 iOS 版本: {version}")
+                            self._ios_version = version  # 更新缓存
+                            logger.debug(f"[iOS适配器] 检测到 iOS 版本: {version} (已缓存)")
                             return version
 
             logger.debug("[iOS适配器] 无法从 tidevice info 获取版本")

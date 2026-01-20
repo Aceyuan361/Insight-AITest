@@ -10,6 +10,7 @@ License: MIT License
 Author: Aceyuan361
 """
 import time
+import threading
 from typing import Optional, Dict, Any, List
 from logzero import logger
 
@@ -50,8 +51,12 @@ class SysMontapCollector(PyIOSCollectorBase):
         self._last_network_data = {
             'down_bytes': 0,
             'up_bytes': 0,
+            'down_rate': 0,
+            'up_rate': 0,
             'last_time': time.time()
         }
+        # 网络数据线程锁（保护 _last_network_data 访问）
+        self._network_lock = threading.RLock()
 
     def configure(self) -> bool:
         """
@@ -258,43 +263,45 @@ class SysMontapCollector(PyIOSCollectorBase):
                 down_bytes = system.get('networkIn', 0)
                 up_bytes = system.get('networkOut', 0)
 
-                # 计算时间差（秒）
-                time_delta = current_time - self._last_network_data['last_time']
+                # 使用锁保护网络数据访问（线程安全）
+                with self._network_lock:
+                    # 计算时间差（秒）
+                    time_delta = current_time - self._last_network_data['last_time']
 
-                # 避免除零和首次采样
-                if time_delta < 0.1:  # 时间间隔太短，返回上次值
-                    return {
-                        'upFlow': self._last_network_data.get('up_rate', 0),
-                        'downFlow': self._last_network_data.get('down_rate', 0)
+                    # 避免除零和首次采样
+                    if time_delta < 0.1:  # 时间间隔太短，返回上次值
+                        return {
+                            'upFlow': self._last_network_data.get('up_rate', 0),
+                            'downFlow': self._last_network_data.get('down_rate', 0)
+                        }
+
+                    # 计算速率（字节/秒 → KB/s）
+                    if self._last_network_data['last_time'] > 0:
+                        down_delta = down_bytes - self._last_network_data['down_bytes']
+                        up_delta = up_bytes - self._last_network_data['up_bytes']
+
+                        # 处理计数器回绕（设备重启等情况）
+                        if down_delta < 0:
+                            down_delta = down_bytes
+                        if up_delta < 0:
+                            up_delta = up_bytes
+
+                        down_rate = round(down_delta / time_delta / 1024, 2)  # KB/s
+                        up_rate = round(up_delta / time_delta / 1024, 2)    # KB/s
+                    else:
+                        down_rate = 0
+                        up_rate = 0
+
+                    # 更新缓存（在锁内完成）
+                    self._last_network_data = {
+                        'down_bytes': down_bytes,
+                        'up_bytes': up_bytes,
+                        'down_rate': down_rate,
+                        'up_rate': up_rate,
+                        'last_time': current_time
                     }
 
-                # 计算速率（字节/秒 → KB/s）
-                if self._last_network_data['last_time'] > 0:
-                    down_delta = down_bytes - self._last_network_data['down_bytes']
-                    up_delta = up_bytes - self._last_network_data['up_bytes']
-
-                    # 处理计数器回绕（设备重启等情况）
-                    if down_delta < 0:
-                        down_delta = down_bytes
-                    if up_delta < 0:
-                        up_delta = up_bytes
-
-                    down_rate = round(down_delta / time_delta / 1024, 2)  # KB/s
-                    up_rate = round(up_delta / time_delta / 1024, 2)    # KB/s
-                else:
-                    down_rate = 0
-                    up_rate = 0
-
-                # 更新缓存
-                self._last_network_data = {
-                    'down_bytes': down_bytes,
-                    'up_bytes': up_bytes,
-                    'down_rate': down_rate,
-                    'up_rate': up_rate,
-                    'last_time': current_time
-                }
-
-                return {'upFlow': up_rate, 'downFlow': down_rate}
+                    return {'upFlow': up_rate, 'downFlow': down_rate}
 
             return {'upFlow': 0, 'downFlow': 0}
 

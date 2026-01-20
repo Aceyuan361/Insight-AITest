@@ -487,30 +487,56 @@ class PyIOSConnection:
             logger.info("[PyIOS连接] ✓ 连接已断开")
 
     def _cleanup(self):
-        """清理连接资源"""
-        try:
-            # 停止 Instruments 服务
-            if self._rpc:
-                try:
-                    self._rpc.stop()
-                except Exception as e:
-                    logger.warning(f"[PyIOS连接] 停止 RPC 失败: {e}")
-                finally:
-                    self._rpc = None
+        """
+        清理连接资源（增强版）
 
-            # 关闭远程锁定连接
-            if self._rsd:
-                try:
-                    self._rsd.close()
-                except Exception as e:
-                    logger.warning(f"[PyIOS连接] 关闭 RSD 失败: {e}")
-                finally:
-                    self._rsd = None
+        确保所有资源都被正确清理，即使部分清理失败：
+        1. 停止 Instruments 服务（_rpc）
+        2. 关闭远程锁定连接（_rsd）
+        3. 重置连接状态
 
-            self._is_connected = False
+        每个资源使用独立的 try-except 块，确保单个失败不影响其他清理
+        """
+        # 清理 RPC (Instruments 服务)
+        rpc_cleanup_error = None
+        if self._rpc is not None:
+            try:
+                logger.debug("[PyIOS连接] 正在停止 RPC 服务...")
+                self._rpc.stop()
+            except Exception as e:
+                rpc_cleanup_error = e
+                logger.warning(f"[PyIOS连接] 停止 RPC 失败: {type(e).__name__}: {e}")
+            finally:
+                # 确保 RPC 引用被清空（即使 stop() 失败）
+                self._rpc = None
+                logger.debug("[PyIOS连接] RPC 引用已清空")
 
-        except Exception as e:
-            logger.error(f"[PyIOS连接] 清理资源失败: {e}")
+        # 清理 RSD (远程锁定连接)
+        rsd_cleanup_error = None
+        if self._rsd is not None:
+            try:
+                logger.debug("[PyIOS连接] 正在关闭 RSD 连接...")
+                self._rsd.close()
+            except Exception as e:
+                rsd_cleanup_error = e
+                logger.warning(f"[PyIOS连接] 关闭 RSD 失败: {type(e).__name__}: {e}")
+            finally:
+                # 确保 RSD 引用被清空（即使 close() 失败）
+                self._rsd = None
+                logger.debug("[PyIOS连接] RSD 引用已清空")
+
+        # 重置连接状态
+        self._is_connected = False
+
+        # 记录清理摘要
+        if rpc_cleanup_error or rsd_cleanup_error:
+            logger.warning(
+                f"[PyIOS连接] 资源清理完成（存在错误）: "
+                f"RPC错误={rpc_cleanup_error is not None}, "
+                f"RSD错误={rsd_cleanup_error is not None}"
+            )
+        else:
+            logger.debug("[PyIOS连接] ✓ 资源清理完成")
 
     def __enter__(self):
         """支持上下文管理器"""

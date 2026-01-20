@@ -12,8 +12,40 @@ Author: Aceyuan361
 import subprocess
 import time
 import threading
+import re
 from typing import Optional, Tuple, Dict, Any
 from logzero import logger
+
+
+# UDID 验证正则表达式（iOS 设备 UDID 格式：40位十六进制字符）
+UDID_PATTERN = re.compile(r'^[a-fA-F0-9]{40}$')
+
+
+def validate_udid(udid: str) -> bool:
+    """
+    验证 iOS 设备 UDID 格式，防止命令注入
+
+    iOS UDID 格式：40位十六进制字符串
+
+    Args:
+        udid: 设备 UDID
+
+    Returns:
+        bool: 是否有效
+    """
+    if not udid or not isinstance(udid, str):
+        return False
+
+    # 检查长度和格式
+    if not UDID_PATTERN.match(udid):
+        return False
+
+    # 检查是否包含危险字符（双重保护）
+    dangerous_chars = [';', '&', '|', '$', '`', '(', ')', '<', '>', '\n', '\r']
+    if any(char in udid for char in dangerous_chars):
+        return False
+
+    return True
 
 
 class IOSTunnelManager:
@@ -42,7 +74,17 @@ class IOSTunnelManager:
 
         Args:
             udid: iOS 设备唯一标识符
+
+        Raises:
+            ValueError: UDID 格式无效
         """
+        # 验证 UDID 格式（防止命令注入）
+        if not validate_udid(udid):
+            raise ValueError(
+                f"无效的 iOS UDID 格式: '{udid}'。"
+                f"UDID 必须是40位十六进制字符。"
+            )
+
         self.udid = udid
 
         # 隧道进程
@@ -357,5 +399,16 @@ class IOSTunnelManager:
         self.stop_tunnel()
 
     def __del__(self):
-        """析构函数，确保资源清理"""
-        self.stop_tunnel()
+        """
+        析构函数，确保资源清理
+
+        注意：如果 __init__ 抛出异常（如无效 UDID），
+        某些实例变量可能尚未初始化，需要使用 hasattr 检查
+        """
+        try:
+            # 检查 _lock 是否存在（__init__ 可能因验证失败而未完成）
+            if hasattr(self, '_lock'):
+                self.stop_tunnel()
+        except Exception:
+            # 析构函数中忽略所有异常，避免干扰正常的错误处理
+            pass

@@ -22,7 +22,7 @@ from insight_eyes.public.ios.ios_apm import IOSAPM
 from insight_eyes.public.ios.dependency_checker import IOSDependencyChecker
 from insight_eyes.public.ios.pyios_connect import PyIOSConnection
 from insight_eyes.public.ios.data_normalizer import IOSDataNormalizer
-from insight_eyes.public.ios.tunnel_manager import IOSTunnelManager
+from insight_eyes.public.ios.tunnel_manager import IOSTunnelManager, validate_udid
 
 __all__ = [
     'IOSAPM',
@@ -36,4 +36,5 @@ __all__ = [
     'PyIOSConnection',
     'IOSDataNormalizer',
     'IOSTunnelManager',
+    'validate_udid',
 ]
