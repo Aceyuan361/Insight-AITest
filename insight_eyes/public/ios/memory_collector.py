@@ -59,8 +59,14 @@ class MemoryCollector:
         Returns:
             str: 命令输出，失败返回 None
         """
+        cmd = ['tidevice', '--udid', self.udid] + args
+
+        # 对于 perf 命令，使用 Popen 持续读取输出
+        if 'perf' in args:
+            return self._run_tidevice_perf(cmd, timeout)
+
+        # 其他命令使用 run
         try:
-            cmd = ['tidevice', '--udid', self.udid] + args
             result = subprocess.run(
                 cmd,
                 capture_output=True,
@@ -75,13 +81,86 @@ class MemoryCollector:
             return result.stdout
 
         except subprocess.TimeoutExpired:
-            logger.error(f"tidevice 命令超时: {' '.join(args)}")
+            logger.warning(f"tidevice 命令超时: {' '.join(args)}")
             return None
         except FileNotFoundError:
             logger.error("未找到 tidevice 命令，请安装: pip install tidevice")
             return None
         except Exception as e:
             logger.error(f"tidevice 执行异常: {e}")
+            return None
+
+    def _run_tidevice_perf(self, cmd: list, timeout: int) -> Optional[str]:
+        """
+        执行 tidevice perf 命令（持续输出型）
+
+        使用 Popen 持续读取输出，在获取数据或超时后终止进程
+
+        Args:
+            cmd: 完整的命令列表
+            timeout: 超时时间（秒）
+
+        Returns:
+            str: 捕获的输出
+        """
+        import threading
+        import time
+
+        output_buffer = []
+        process = None
+
+        def read_output():
+            nonlocal output_buffer
+            for line in process.stdout:
+                line = line.decode('utf-8', errors='ignore').strip()
+                if line:
+                    output_buffer.append(line)
+                    # 获取到数据后通知主线程
+                    if len(output_buffer) >= 1:
+                        break
+
+        try:
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=False
+            )
+
+            # 启动线程读取输出
+            reader_thread = threading.Thread(target=read_output, daemon=True)
+            reader_thread.start()
+
+            # 等待获取数据或超时
+            start_time = time.time()
+            while time.time() - start_time < timeout:
+                if output_buffer:
+                    break
+                time.sleep(0.1)
+
+            # 终止进程
+            process.terminate()
+            try:
+                process.wait(timeout=1)
+            except:
+                process.kill()
+
+            if output_buffer:
+                output = '\n'.join(output_buffer)
+                logger.debug(f"tidevice perf 成功获取 {len(output_buffer)} 行数据")
+                return output
+            else:
+                logger.warning(f"tidevice perf 超时未获取到数据")
+                return None
+
+        except Exception as e:
+            if process:
+                try:
+                    process.terminate()
+                    process.wait(timeout=1)
+                except:
+                    process.kill()
+            logger.error(f"tidevice perf 执行异常: {e}")
             return None
 
     def collect(self, bundle_id: str) -> Optional[Dict[str, float]]:
@@ -105,7 +184,7 @@ class MemoryCollector:
         """
         try:
             # 使用 tidevice perf 获取性能数据
-            output = self._run_tidevice(['perf', '-B', bundle_id, '-o', 'memory'], timeout=2)
+            output = self._run_tidevice(['perf', '-B', bundle_id, '-o', 'memory'], timeout=5)
 
             if output:
                 # 解析内存数据
@@ -118,7 +197,7 @@ class MemoryCollector:
                         try:
                             # 安全解析字典
                             import ast
-                            data = ast.literal_eval('{' + dict_part)
+                            data = ast.literal_eval(dict_part)
                             memory_mb = float(data.get('value', 0))
                             return {
                                 'totalPass': round(memory_mb, 2),
