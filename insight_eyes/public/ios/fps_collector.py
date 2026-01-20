@@ -119,8 +119,9 @@ class FPSCollector:
                     line = line.decode('utf-8', errors='ignore').strip()
                     if line:
                         output_buffer.append(line)
-                        # 获取到数据后通知主线程
-                        if len(output_buffer) >= 1:
+                        # 读取多行数据以获取最新的 FPS 值（tidevice perf 持续输出）
+                        # 第一行可能是初始值 0，后续行才是真实 FPS
+                        if len(output_buffer) >= 5:  # 读取 5 行，取最后一行
                             break
             except Exception:
                 pass  # 线程退出时忽略错误
@@ -203,7 +204,11 @@ class FPSCollector:
                 # 解析 FPS 数据
                 # tidevice perf 输出格式 (Python字典):
                 # fps {'fps': 30, 'value': 30, 'timestamp': ...}
-                for line in output.split('\n'):
+                # 注意：output 可能包含多行，我们取最后一行（最新的值）
+                lines = output.split('\n')
+                fps_data_list = []  # 收集所有有效的 FPS 数据
+
+                for line in lines:
                     if line.strip().startswith('fps '):
                         # 提取字典部分
                         dict_part = line[line.find('{'):]
@@ -212,21 +217,26 @@ class FPSCollector:
                             import ast
                             data = ast.literal_eval(dict_part)
                             fps = int(data.get('fps', data.get('value', 60)))
-
-                            # 计算帧时间 (ms)
-                            ftime_avg = round(1000.0 / fps, 2) if fps > 0 else 16.67
-
-                            return {
-                                'fps': fps,
-                                'jank': 0,
-                                'bigJank': 0,
-                                'ftime_avg': ftime_avg,
-                                'ftime_max': ftime_avg * 1.2,
-                                'ftime_min': ftime_avg * 0.8
-                            }
+                            fps_data_list.append(fps)
                         except (ValueError, SyntaxError) as e:
                             logger.debug(f"解析 FPS 数据失败: {e}")
                             continue
+
+                # 使用最后一个（最新的）FPS 值
+                if fps_data_list:
+                    fps = fps_data_list[-1]  # 取最后一行
+                    # 计算帧时间 (ms)
+                    ftime_avg = round(1000.0 / fps, 2) if fps > 0 else 16.67
+
+                    logger.debug(f"FPS 采集: 读取了 {len(fps_data_list)} 行数据，使用最新值 fps={fps}")
+                    return {
+                        'fps': fps,
+                        'jank': 0,
+                        'bigJank': 0,
+                        'ftime_avg': ftime_avg,
+                        'ftime_max': ftime_avg * 1.2,
+                        'ftime_min': ftime_avg * 0.8
+                    }
 
             # 如果无法获取 FPS 数据，返回 iOS 标准帧率
             logger.debug("无法通过 tidevice perf 获取 FPS 数据，返回 iOS 标准帧率")

@@ -537,13 +537,12 @@ class ConfigPanel(QWidget):
                 enable_cpu=cpu_cb.isChecked() if cpu_cb else True,
                 enable_memory=memory_cb.isChecked() if memory_cb else True,
                 enable_fps=fps_cb.isChecked() if fps_cb else True,
-                enable_network=network_cb.isChecked() if network_cb else True,
-                enable_battery=battery_cb.isChecked() if battery_cb else True,
+                enable_network_up=network_cb.isChecked() if network_cb else True,
+                enable_network_down=network_cb.isChecked() if network_cb else True,
                 enable_gpu=gpu_cb.isChecked() if gpu_cb else False,
                 fps_threshold=self.fps_threshold.value(),
                 memory_threshold_mb=self.memory_threshold.value(),
-                cpu_threshold_percent=self.cpu_threshold.value(),
-                battery_threshold_temp=self.temp_threshold.value()
+                cpu_threshold_percent=self.cpu_threshold.value()
             )
 
             return config
