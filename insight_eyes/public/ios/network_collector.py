@@ -68,7 +68,7 @@ class NetworkCollector:
         try:
             # iOS 网络流量采集需要使用 tidevice perf 或其他方式
             # 目前暂不支持，返回默认值
-            logger.debug("iOS 网络流量采集暂不支持，返回默认值")
+            logger.warning("iOS 网络流量采集暂不支持，返回默认值 0 (tidevice 限制)")
 
             return {
                 'upFlow': 0,

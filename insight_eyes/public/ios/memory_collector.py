@@ -108,22 +108,28 @@ class MemoryCollector:
 
         output_buffer = []
         process = None
+        stop_reading = threading.Event()
 
         def read_output():
             nonlocal output_buffer
-            for line in process.stdout:
-                line = line.decode('utf-8', errors='ignore').strip()
-                if line:
-                    output_buffer.append(line)
-                    # 获取到数据后通知主线程
-                    if len(output_buffer) >= 1:
+            try:
+                for line in process.stdout:
+                    if stop_reading.is_set():
                         break
+                    line = line.decode('utf-8', errors='ignore').strip()
+                    if line:
+                        output_buffer.append(line)
+                        # 获取到数据后通知主线程
+                        if len(output_buffer) >= 1:
+                            break
+            except Exception:
+                pass  # 线程退出时忽略错误
 
         try:
             process = subprocess.Popen(
                 cmd,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,  # 忽略 stderr
                 text=False
             )
 
@@ -138,12 +144,22 @@ class MemoryCollector:
                     break
                 time.sleep(0.1)
 
-            # 终止进程
-            process.terminate()
+            # 清理进程
+            stop_reading.set()  # 通知线程停止读取
+
+            # 先关闭管道，让进程能够正常退出
             try:
-                process.wait(timeout=1)
+                if process.stdout:
+                    process.stdout.close()
             except:
+                pass
+
+            # 强制终止进程（Windows 上需要 kill）
+            try:
                 process.kill()
+                process.wait(timeout=2)
+            except:
+                pass
 
             if output_buffer:
                 output = '\n'.join(output_buffer)
@@ -154,12 +170,6 @@ class MemoryCollector:
                 return None
 
         except Exception as e:
-            if process:
-                try:
-                    process.terminate()
-                    process.wait(timeout=1)
-                except:
-                    process.kill()
             logger.error(f"tidevice perf 执行异常: {e}")
             return None
 

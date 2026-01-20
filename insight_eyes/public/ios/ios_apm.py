@@ -49,6 +49,9 @@ class IOSAPM:
         # iOS 不使用 PID
         self.pid = None
 
+        # 网络采集警告标志（避免重复警告）
+        self._network_warning_shown = False
+
         # 初始化各采集器
         self.cpu_collector = CPUCollector(udid)
         self.memory_collector = MemoryCollector(udid)
@@ -110,7 +113,16 @@ class IOSAPM:
 
         Returns:
             dict: {'upFlow': float, 'downFlow': float} 单位 KB/s 或 None
+
+        注意:
+            iOS 网络流量采集受系统限制，tidevice 暂不支持
         """
+        # 首次调用时显示警告
+        if not self._network_warning_shown:
+            logger.warning(f"iOS 网络流量采集暂不支持 (tidevice 限制)")
+            logger.warning(f"如需网络监控，建议使用 Android 设备或使用 Instruments 工具")
+            self._network_warning_shown = True
+
         return self.network_collector.collect(self.bundleId)
 
     def collectBattery(self):
