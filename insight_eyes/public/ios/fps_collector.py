@@ -119,9 +119,23 @@ class FPSCollector:
                     line = line.decode('utf-8', errors='ignore').strip()
                     if line:
                         output_buffer.append(line)
-                        # 读取多行数据以获取最新的 FPS 值（tidevice perf 持续输出）
-                        # 第一行可能是初始值 0，后续行才是真实 FPS
-                        if len(output_buffer) >= 5:  # 读取 5 行，取最后一行
+                        # 智能等待策略：检查 FPS 值
+                        # 如果第一行不是 0，立即返回（性能优化）
+                        # 如果是 0，等待第二行
+                        if len(output_buffer) >= 1:
+                            try:
+                                import ast
+                                dict_part = line[line.find('{'):]
+                                data = ast.literal_eval(dict_part)
+                                fps = int(data.get('fps', data.get('value', 0)))
+                                if fps > 0:
+                                    # 第一行就有有效值，立即返回
+                                    break
+                            except:
+                                pass
+
+                        # 最多等待 2 行数据
+                        if len(output_buffer) >= 2:
                             break
             except Exception:
                 pass  # 线程退出时忽略错误
@@ -138,14 +152,16 @@ class FPSCollector:
             reader_thread = threading.Thread(target=read_output, daemon=True)
             reader_thread.start()
 
-            # 等待获取数据或超时
-            # FPS 采集需要读取多行数据以获取最新值
+            # 等待获取数据或超时（最多 2 秒）
+            # FPS 采集使用智能策略：有数据且 FPS > 0 就返回
             start_time = time.time()
-            while time.time() - start_time < timeout:
-                # 等待至少有 3 行数据（确保跳过初始的 0 值）
-                if len(output_buffer) >= 3:
-                    break
-                time.sleep(0.1)
+            while time.time() - start_time < min(timeout, 2.0):  # 最多等 2 秒
+                # 有数据就检查，不需要等待 3 行
+                if output_buffer:
+                    # 如果已经有 2 行数据，或者等待超过 0.5 秒，就返回
+                    if len(output_buffer) >= 2 or (time.time() - start_time > 0.5):
+                        break
+                time.sleep(0.05)  # 更短的检查间隔
 
             # 清理进程
             stop_reading.set()  # 通知线程停止读取
