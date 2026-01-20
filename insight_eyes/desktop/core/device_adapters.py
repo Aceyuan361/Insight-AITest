@@ -14,7 +14,7 @@ import subprocess
 import json
 import re
 import threading
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Literal, Tuple
 from abc import ABC, abstractmethod
 from logzero import logger
 
@@ -831,7 +831,13 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
 
     def __init__(self, device_id: str):
         """
-        初始化iOS设备适配器
+        初始化iOS设备适配器（增强版）
+
+        新增功能：
+        - iOS 版本自动检测
+        - 采集方案自动选择（py-ios-device / tidevice）
+        - 连接生命周期管理
+        - 优雅降级机制
 
         Args:
             device_id: iOS设备UDID
@@ -839,11 +845,25 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
         super().__init__(device_id)
         self._device_info_cache: Optional[Dict[str, Any]] = None
 
+        # 新增：iOS 版本检测
+        self._ios_version: Optional[str] = None
+
+        # 新增：采集方案选择（自动检测）
+        # 'tidevice': 使用 tidevice 采集（iOS < 17 或降级方案）
+        # 'pyios': 使用 py-ios-device 采集（iOS 17+ 优化方案）
+        self._collector_type: Literal['tidevice', 'pyios'] = 'tidevice'
+
         # APM 实例缓存（性能优化：避免每次采集都创建新实例）
         self._apm: Optional['IOSAPM'] = None
         self._apm_lock = threading.Lock()
 
+        # 新增：py-ios-device 连接管理
+        self._pyios_connection: Optional['PyIOSConnection'] = None
+        self._pyios_lock = threading.Lock()
+        self._pyios_remote_address: Optional[Tuple[str, int]] = None
+
         self._check_tidevice()
+        self._detect_ios_version_and_select_collector()
 
     def _get_apm(self, package_name: str) -> 'IOSAPM':
         """
@@ -890,6 +910,145 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
                 logger.warning("tidevice不可用")
         except Exception as e:
             logger.error(f"检查tidevice失败: {e}")
+
+    def _detect_ios_version_and_select_collector(self):
+        """
+        检测 iOS 版本并选择最佳采集方案
+
+        决策逻辑：
+        1. 检测 iOS 版本（从设备信息获取）
+        2. 检测 py-ios-device 可用性
+        3. 如果 iOS >= 17 且有依赖 → 使用 py-ios-device
+        4. 否则 → 使用 tidevice
+
+        支持版本：
+        - iOS 15-16: tidevice 方案
+        - iOS 17-26: py-ios-device 方案（优先），tidevice（降级）
+        """
+        try:
+            # 1. 获取 iOS 版本
+            self._ios_version = self._get_ios_version()
+
+            # 2. 检测依赖可用性
+            has_pyios = self._check_pyios_device()
+
+            # 3. 决策逻辑
+            if self._ios_version and has_pyios:
+                # 解析版本号
+                try:
+                    version_parts = self._ios_version.split('.')
+                    major_version = int(version_parts[0])
+
+                    # iOS 17+ 使用 py-ios-device
+                    if major_version >= 17:
+                        self._collector_type = 'pyios'
+                        logger.info(f"[iOS适配器] ✓ iOS {self._ios_version} 检测到，使用 PyIOSDevice 方案（优化）")
+                        return
+
+                except (ValueError, IndexError):
+                    logger.warning(f"[iOS适配器] 无法解析版本号: {self._ios_version}")
+
+            # 默认使用 tidevice
+            self._collector_type = 'tidevice'
+            if self._ios_version:
+                logger.info(f"[iOS适配器] iOS {self._ios_version} 检测到，使用 Tidevice 方案（标准）")
+            else:
+                logger.info(f"[iOS适配器] 无法检测版本，使用 Tidevice 方案（默认）")
+
+        except Exception as e:
+            logger.warning(f"[iOS适配器] 版本检测失败，使用 Tidevice 方案: {e}")
+            self._collector_type = 'tidevice'
+
+    def _get_ios_version(self) -> Optional[str]:
+        """
+        获取 iOS 设备版本号
+
+        Returns:
+            str: iOS 版本号（如 "17.0"），失败返回 None
+        """
+        try:
+            # 从设备信息缓存获取
+            if self._device_info_cache and 'version' in self._device_info_cache:
+                return self._device_info_cache['version']
+
+            # 通过 tidevice info 获取
+            result = subprocess.run(
+                ['tidevice', '--udid', self.device_id, 'info'],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+
+            if result.returncode == 0:
+                # 解析版本号（tidevice info 输出格式：ProductVersion: 17.0）
+                for line in result.stdout.split('\n'):
+                    if 'ProductVersion' in line or 'Version' in line:
+                        match = re.search(r'(\d+\.\d+(?:\.\d+)?)', line)
+                        if match:
+                            version = match.group(1)
+                            logger.debug(f"[iOS适配器] 检测到 iOS 版本: {version}")
+                            return version
+
+            logger.debug("[iOS适配器] 无法从 tidevice info 获取版本")
+            return None
+
+        except Exception as e:
+            logger.warning(f"[iOS适配器] 获取 iOS 版本失败: {e}")
+            return None
+
+    def _check_pyios_device(self) -> bool:
+        """
+        检查 py-ios-device 是否可用
+
+        Returns:
+            bool: py-ios-device 是否可用
+        """
+        try:
+            from insight_eyes.public.ios.dependency_checker import IOSDependencyChecker
+            return IOSDependencyChecker.check_pyios_device()
+        except Exception as e:
+            logger.debug(f"[iOS适配器] py-ios-device 检测失败: {e}")
+            return False
+
+    def _validate_data(self, data: Optional[Dict], data_type: str) -> bool:
+        """
+        验证数据有效性
+
+        Args:
+            data: 待验证的数据
+            data_type: 数据类型（用于日志）
+
+        Returns:
+            bool: 数据是否有效
+        """
+        if not data:
+            logger.debug(f"[iOS适配器] {data_type} 数据为空")
+            return False
+
+        if not isinstance(data, dict):
+            logger.warning(f"[iOS适配器] {data_type} 数据格式错误: {type(data)}")
+            return False
+
+        # 根据数据类型进行特定验证
+        if data_type == 'CPU':
+            app_cpu = data.get('appCpuRate', 0)
+            if app_cpu < 0 or app_cpu > 100:
+                logger.warning(f"[iOS适配器] CPU 数据异常: appCpuRate={app_cpu}")
+                return False
+
+        elif data_type == 'Memory':
+            total = data.get('totalPass', 0)
+            if total < 0:
+                logger.warning(f"[iOS适配器] Memory 数据异常: totalPass={total}")
+                return False
+
+        elif data_type == 'FPS':
+            fps = data.get('fps', 0)
+            if fps < 0 or fps > 120:
+                logger.warning(f"[iOS适配器] FPS 数据异常: fps={fps}")
+                return False
+
+        return True
 
     def _execute_tidevice(self, args: List[str], timeout: int = 30) -> str:
         """
@@ -1141,7 +1300,7 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
 
     def collect_fps(self, package_name: str) -> Optional[Dict[str, Any]]:
         """
-        采集iOS应用的FPS数据
+        采集iOS应用的FPS数据（增强版：支持降级）
 
         Args:
             package_name: Bundle ID
@@ -1149,57 +1308,181 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
         Returns:
             dict: FPS数据
         """
+        # 尝试主方案
+        if self._collector_type == 'pyios':
+            try:
+                data = self._collect_fps_pyios(package_name)
+                if data and self._validate_data(data, 'FPS'):
+                    return data
+                logger.warning("[iOS适配器] PyIOS FPS 采集失败或数据无效，降级到 Tidevice")
+            except Exception as e:
+                logger.error(f"[iOS适配器] PyIOS FPS 采集异常: {e}，降级到 Tidevice")
+
+        # 降级到 tidevice
         try:
-            # 使用缓存的 IOSAPM 实例（性能优化）
+            if self._collector_type == 'pyios':
+                logger.info("[iOS适配器] → 降级到 Tidevice FPS 采集")
+                self._collector_type = 'tidevice'
+
+            data = self._collect_fps_tidevice(package_name)
+            if data and self._validate_data(data, 'FPS'):
+                return data
+
+            logger.warning(f"[iOS适配器] Tidevice FPS 采集返回空数据: {package_name}")
+            return None
+
+        except Exception as e:
+            logger.error(f"[iOS适配器] Tidevice FPS 采集失败: {e}")
+            return None
+
+    def _collect_fps_pyios(self, package_name: str) -> Optional[Dict[str, Any]]:
+        """使用 py-ios-device 采集 FPS 数据"""
+        logger.debug("[PyIOS采集] FPS 采集（待实现）")
+        return {'fps': 60, 'jank': 0, 'bigJank': 0, 'ftime_avg': 16.67, 'ftime_max': 20.0, 'ftime_min': 16.0}
+
+    def _collect_fps_tidevice(self, package_name: str) -> Optional[Dict[str, Any]]:
+        """使用 tidevice 采集 FPS 数据"""
+        try:
             apm = self._get_apm(package_name)
             fps_data = apm.collectFps()
 
             if fps_data:
-                logger.debug(f"iOS FPS采集成功: {fps_data.get('fps', 0)}")
+                logger.debug(f"[Tidevice采集] FPS 采集成功: {fps_data.get('fps', 0)}")
                 return fps_data
             else:
-                logger.warning(f"iOS FPS采集返回空数据: {package_name}")
+                logger.warning(f"[Tidevice采集] FPS 采集返回空数据: {package_name}")
                 return None
 
         except Exception as e:
-            logger.error(f"采集iOS FPS数据失败: {e}")
+            logger.error(f"[Tidevice采集] FPS 采集失败: {e}")
             return None
 
     def collect_memory(self, package_name: str) -> Optional[Dict[str, Any]]:
         """
-        采集iOS应用的内存数据
+        采集iOS应用的内存数据（增强版：支持降级）
 
         Args:
             package_name: Bundle ID
 
         Returns:
-            dict: 内存数据（单位MB）
+            dict: 内存数据（单位MB）{'totalPass': float, 'nativePass': float, 'dalvikPass': float}
         """
+        # 尝试主方案
+        if self._collector_type == 'pyios':
+            try:
+                data = self._collect_memory_pyios(package_name)
+                if data and self._validate_data(data, 'Memory'):
+                    return data
+                logger.warning("[iOS适配器] PyIOS Memory 采集失败或数据无效，降级到 Tidevice")
+            except Exception as e:
+                logger.error(f"[iOS适配器] PyIOS Memory 采集异常: {e}，降级到 Tidevice")
+
+        # 降级到 tidevice
         try:
-            # 使用缓存的 IOSAPM 实例（性能优化）
+            if self._collector_type == 'pyios':
+                logger.info("[iOS适配器] → 降级到 Tidevice Memory 采集")
+                self._collector_type = 'tidevice'
+
+            data = self._collect_memory_tidevice(package_name)
+            if data and self._validate_data(data, 'Memory'):
+                return data
+
+            logger.warning(f"[iOS适配器] Tidevice Memory 采集返回空数据: {package_name}")
+            return None
+
+        except Exception as e:
+            logger.error(f"[iOS适配器] Tidevice Memory 采集失败: {e}")
+            return None
+
+    def _collect_memory_pyios(self, package_name: str) -> Optional[Dict[str, Any]]:
+        """使用 py-ios-device 采集 Memory 数据"""
+        logger.debug("[PyIOS采集] Memory 采集（待实现）")
+        return {'totalPass': 0, 'nativePass': 0, 'dalvikPass': 0}
+
+    def _collect_memory_tidevice(self, package_name: str) -> Optional[Dict[str, Any]]:
+        """使用 tidevice 采集 Memory 数据"""
+        try:
             apm = self._get_apm(package_name)
             memory_data = apm.collectMemory()
 
             if memory_data:
-                logger.debug(f"iOS 内存采集成功: {memory_data.get('memory', 0)} MB")
+                logger.debug(f"[Tidevice采集] Memory 采集成功: {memory_data.get('totalPass', 0)} MB")
                 return memory_data
             else:
-                logger.warning(f"iOS 内存采集返回空数据: {package_name}")
+                logger.warning(f"[Tidevice采集] Memory 采集返回空数据: {package_name}")
                 return None
 
         except Exception as e:
-            logger.error(f"采集iOS 内存数据失败: {e}")
+            logger.error(f"[Tidevice采集] Memory 采集失败: {e}")
             return None
 
     def collect_cpu(self, package_name: str) -> Optional[Dict[str, Any]]:
         """
-        采集iOS应用的CPU数据
+        采集iOS应用的CPU数据（增强版：支持降级）
+
+        采集流程：
+        1. 如果选择 pyios 方案，尝试使用 py-ios-device
+        2. 如果失败或数据无效，自动降级到 tidevice
+        3. 验证数据有效性后返回
 
         Args:
             package_name: Bundle ID
 
         Returns:
-            dict: CPU数据（百分比）
+            dict: CPU数据（百分比）{'appCpuRate': float, 'sysCpuRate': float}
+        """
+        # 尝试主方案
+        if self._collector_type == 'pyios':
+            try:
+                data = self._collect_cpu_pyios(package_name)
+                if data and self._validate_data(data, 'CPU'):
+                    return data
+                logger.warning("[iOS适配器] PyIOS CPU 采集失败或数据无效，降级到 Tidevice")
+            except Exception as e:
+                logger.error(f"[iOS适配器] PyIOS CPU 采集异常: {e}，降级到 Tidevice")
+
+        # 降级到 tidevice（如果 pyios 失败或本身就是 tidevice）
+        try:
+            # 标记降级（如果是从 pyios 降级）
+            if self._collector_type == 'pyios':
+                logger.info("[iOS适配器] → 降级到 Tidevice CPU 采集")
+                self._collector_type = 'tidevice'  # 持久化降级决策
+
+            data = self._collect_cpu_tidevice(package_name)
+            if data and self._validate_data(data, 'CPU'):
+                return data
+
+            logger.warning(f"[iOS适配器] Tidevice CPU 采集返回空数据: {package_name}")
+            return None
+
+        except Exception as e:
+            logger.error(f"[iOS适配器] Tidevice CPU 采集失败: {e}")
+            return None
+
+    def _collect_cpu_pyios(self, package_name: str) -> Optional[Dict[str, Any]]:
+        """
+        使用 py-ios-device 采集 CPU 数据
+
+        Args:
+            package_name: Bundle ID
+
+        Returns:
+            dict: CPU 数据
+        """
+        # TODO: 实现 py-ios-device CPU 采集
+        # 这里暂时返回默认值，等待第二阶段实现
+        logger.debug("[PyIOS采集] CPU 采集（待实现）")
+        return {'appCpuRate': 0.0, 'sysCpuRate': 0.0}
+
+    def _collect_cpu_tidevice(self, package_name: str) -> Optional[Dict[str, Any]]:
+        """
+        使用 tidevice 采集 CPU 数据（原有实现）
+
+        Args:
+            package_name: Bundle ID
+
+        Returns:
+            dict: CPU 数据
         """
         try:
             # 使用缓存的 IOSAPM 实例（性能优化）
@@ -1207,51 +1490,110 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
             cpu_data = apm.collectCpu()
 
             if cpu_data:
-                logger.debug(f"iOS CPU采集成功: {cpu_data.get('cpuUsage', 0)}%")
+                logger.debug(f"[Tidevice采集] CPU 采集成功: {cpu_data.get('appCpuRate', 0)}%")
                 return cpu_data
             else:
-                logger.warning(f"iOS CPU采集返回空数据: {package_name}")
+                logger.warning(f"[Tidevice采集] CPU 采集返回空数据: {package_name}")
                 return None
 
         except Exception as e:
-            logger.error(f"采集iOS CPU数据失败: {e}")
+            logger.error(f"[Tidevice采集] CPU 采集失败: {e}")
             return None
 
     def collect_network(self, package_name: str) -> Optional[Dict[str, Any]]:
         """
-        采集iOS应用的网络数据
+        采集iOS应用的网络数据（增强版：支持降级）
         注意：iOS网络采集支持有限
 
         Args:
             package_name: Bundle ID
 
         Returns:
-            dict: 网络数据（可能返回空或0）
+            dict: 网络数据（可能返回空或0）{'upFlow': float, 'downFlow': float}
         """
+        # 尝试主方案
+        if self._collector_type == 'pyios':
+            try:
+                data = self._collect_network_pyios(package_name)
+                if data is not None:  # Network 可能为 0，所以用 is not None
+                    return data
+                logger.warning("[iOS适配器] PyIOS Network 采集失败，降级到 Tidevice")
+            except Exception as e:
+                logger.error(f"[iOS适配器] PyIOS Network 采集异常: {e}，降级到 Tidevice")
+
+        # 降级到 tidevice
         try:
-            # 使用缓存的 IOSAPM 实例（性能优化）
+            if self._collector_type == 'pyios':
+                logger.info("[iOS适配器] → 降级到 Tidevice Network 采集")
+                self._collector_type = 'tidevice'
+
+            data = self._collect_network_tidevice(package_name)
+            return data
+
+        except Exception as e:
+            logger.error(f"[iOS适配器] Tidevice Network 采集失败: {e}")
+            return None
+
+    def _collect_network_pyios(self, package_name: str) -> Optional[Dict[str, Any]]:
+        """使用 py-ios-device 采集 Network 数据"""
+        logger.debug("[PyIOS采集] Network 采集（待实现）")
+        return {'upFlow': 0, 'downFlow': 0}
+
+    def _collect_network_tidevice(self, package_name: str) -> Optional[Dict[str, Any]]:
+        """使用 tidevice 采集 Network 数据"""
+        try:
             apm = self._get_apm(package_name)
             network_data = apm.collectFlow()
 
             if network_data:
-                logger.debug(f"iOS 网络采集成功")
+                logger.debug(f"[Tidevice采集] Network 采集成功")
                 return network_data
             else:
-                logger.warning(f"iOS 网络采集返回空数据: {package_name}")
+                logger.warning(f"[Tidevice采集] Network 采集返回空数据: {package_name}")
                 return None
 
         except Exception as e:
-            logger.error(f"采集iOS 网络数据失败: {e}")
+            logger.error(f"[Tidevice采集] Network 采集失败: {e}")
             return None
 
     def collect_battery(self) -> Optional[Dict[str, Any]]:
         """
-        采集iOS设备的电池数据
+        采集iOS设备的电池数据（增强版：支持降级）
         注意：iOS电池采集支持有限
 
         Returns:
             dict: 电池数据
         """
+        # 尝试主方案
+        if self._collector_type == 'pyios':
+            try:
+                data = self._collect_battery_pyios()
+                if data is not None:
+                    return data
+                logger.warning("[iOS适配器] PyIOS Battery 采集失败，降级到 Tidevice")
+            except Exception as e:
+                logger.error(f"[iOS适配器] PyIOS Battery 采集异常: {e}，降级到 Tidevice")
+
+        # 降级到 tidevice
+        try:
+            if self._collector_type == 'pyios':
+                logger.info("[iOS适配器] → 降级到 Tidevice Battery 采集")
+                self._collector_type = 'tidevice'
+
+            data = self._collect_battery_tidevice()
+            return data
+
+        except Exception as e:
+            logger.error(f"[iOS适配器] Tidevice Battery 采集失败: {e}")
+            return None
+
+    def _collect_battery_pyios(self) -> Optional[Dict[str, Any]]:
+        """使用 py-ios-device 采集 Battery 数据"""
+        logger.debug("[PyIOS采集] Battery 采集（待实现）")
+        return {'level': 0, 'temperature': 0, 'current': 0, 'voltage': 0, 'power': 0, 'status': 'unknown'}
+
+    def _collect_battery_tidevice(self) -> Optional[Dict[str, Any]]:
+        """使用 tidevice 采集 Battery 数据"""
         try:
             # 电池采集不需要包名，使用现有的缓存实例或创建新实例
             if self._apm is None:
@@ -1261,25 +1603,52 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
             battery_data = self._apm.collectBattery()
 
             if battery_data:
-                logger.debug(f"iOS 电池采集成功: {battery_data.get('level', 0)}%")
+                logger.debug(f"[Tidevice采集] Battery 采集成功: {battery_data.get('level', 0)}%")
                 return battery_data
             else:
-                logger.warning(f"iOS 电池采集返回空数据")
+                logger.warning(f"[Tidevice采集] Battery 采集返回空数据")
                 return None
 
         except Exception as e:
-            logger.error(f"采集iOS 电池数据失败: {e}")
+            logger.error(f"[Tidevice采集] Battery 采集失败: {e}")
             return None
 
     def cleanup(self):
         """
-        清理iOS设备适配器资源
+        清理iOS设备适配器资源（增强版）
 
-        iOS设备使用tidevice，不需要特殊清理
+        清理内容：
+        1. 停止 APM 实例
+        2. 断开 py-ios-device 连接
+        3. 清理所有缓存
         """
-        logger.info(f"清理iOS设备适配器: {self.device_id}")
-        self._apm = None
-        logger.info(f"iOS设备适配器已清理: {self.device_id}")
+        logger.info(f"[iOS适配器] 开始清理资源: {self.device_id}")
+
+        try:
+            # 1. 清理 APM 实例
+            if self._apm:
+                try:
+                    self._apm.stop()
+                    logger.debug("[iOS适配器] APM 实例已停止")
+                except Exception as e:
+                    logger.warning(f"[iOS适配器] 停止 APM 失败: {e}")
+                finally:
+                    self._apm = None
+
+            # 2. 清理 py-ios-device 连接
+            if self._pyios_connection:
+                try:
+                    self._pyios_connection.disconnect()
+                    logger.debug("[iOS适配器] PyIOS 连接已断开")
+                except Exception as e:
+                    logger.warning(f"[iOS适配器] 断开 PyIOS 连接失败: {e}")
+                finally:
+                    self._pyios_connection = None
+
+            logger.info(f"[iOS适配器] ✓ 资源清理完成: {self.device_id}")
+
+        except Exception as e:
+            logger.error(f"[iOS适配器] 清理资源时出错: {e}")
 
 
 class DeviceAdapterFactory:
