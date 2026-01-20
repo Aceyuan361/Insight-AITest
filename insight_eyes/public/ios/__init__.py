@@ -18,6 +18,12 @@ from insight_eyes.public.ios.network_collector import NetworkCollector
 from insight_eyes.public.ios.battery_collector import BatteryCollector
 from insight_eyes.public.ios.ios_apm import IOSAPM
 
+# 新增：py-ios-device 支持
+from insight_eyes.public.ios.dependency_checker import IOSDependencyChecker
+from insight_eyes.public.ios.pyios_connect import PyIOSConnection
+from insight_eyes.public.ios.data_normalizer import IOSDataNormalizer
+from insight_eyes.public.ios.tunnel_manager import IOSTunnelManager
+
 __all__ = [
     'IOSAPM',
     'CPUCollector',
@@ -25,4 +31,9 @@ __all__ = [
     'FPSCollector',
     'NetworkCollector',
     'BatteryCollector',
+    # py-ios-device 支持
+    'IOSDependencyChecker',
+    'PyIOSConnection',
+    'IOSDataNormalizer',
+    'IOSTunnelManager',
 ]

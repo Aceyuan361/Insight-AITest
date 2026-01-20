@@ -862,6 +862,9 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
         self._pyios_lock = threading.Lock()
         self._pyios_remote_address: Optional[Tuple[str, int]] = None
 
+        # 新增：隧道管理器（用于 iOS 17+）
+        self._tunnel_manager: Optional['IOSTunnelManager'] = None
+
         # 新增：缓存当前监控的包名（用于 Battery/GPU 等系统级采集）
         self._current_package_name: Optional[str] = None
 
@@ -1500,12 +1503,29 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
             dict: CPU 数据
         """
         try:
+            # 确保隧道启动（iOS 17+ 需要）
+            if not self._ensure_tunnel():
+                logger.warning("[iOS适配器] 隧道启动失败，无法采集数据")
+                return {'appCpuRate': 0.0, 'sysCpuRate': 0.0}
+
             # 确保连接存在
             if not self._pyios_connection or not self._pyios_connection.is_alive():
                 logger.debug("[iOS适配器] PyIOS 连接不存在，需要建立连接")
-                # TODO: 这里需要建立远程隧道连接
-                # 暂时返回默认值
-                return {'appCpuRate': 0.0, 'sysCpuRate': 0.0}
+
+                # 创建新的连接（使用隧道地址）
+                if not self._pyios_remote_address:
+                    logger.warning("[iOS适配器] 无法获取隧道地址")
+                    return {'appCpuRate': 0.0, 'sysCpuRate': 0.0}
+
+                from insight_eyes.public.ios.pyios_connect import PyIOSConnection
+                self._pyios_connection = PyIOSConnection(
+                    self.device_id,
+                    self._pyios_remote_address
+                )
+
+                if not self._pyios_connection.connect():
+                    logger.warning("[iOS适配器] PyIOS 连接建立失败")
+                    return {'appCpuRate': 0.0, 'sysCpuRate': 0.0}
 
             # 使用连接采集数据
             cpu_data = self._pyios_connection.collect_cpu(package_name)
@@ -1717,14 +1737,79 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
             logger.error(f"[iOS适配器] PyIOS GPU 采集异常: {e}")
             return None
 
+    def _ensure_tunnel(self) -> bool:
+        """
+        确保隧道启动（iOS 17+ 需要）
+
+        Returns:
+            bool: 隧道是否可用
+        """
+        # 只有 iOS 17+ 且使用 py-ios-device 时才需要隧道
+        if not self._ios_version:
+            return True  # 无法检测版本，假设不需要
+
+        try:
+            major_version = int(self._ios_version.split('.')[0])
+            if major_version < 17:
+                return True  # iOS 17 以下不需要隧道
+        except:
+            return True
+
+        # 检查是否已有运行中的隧道
+        if self._tunnel_manager and self._tunnel_manager.is_running():
+            return True
+
+        # 启动新隧道
+        logger.info(f"[iOS隧道] 正在启动隧道: {self.device_id}")
+        return self._start_tunnel()
+
+    def _start_tunnel(self) -> bool:
+        """
+        启动远程隧道
+
+        Returns:
+            bool: 是否启动成功
+        """
+        try:
+            from insight_eyes.public.ios.tunnel_manager import IOSTunnelManager
+
+            self._tunnel_manager = IOSTunnelManager(self.device_id)
+
+            if self._tunnel_manager.start_tunnel():
+                remote_address = self._tunnel_manager.get_remote_address()
+                if remote_address:
+                    self._pyios_remote_address = remote_address
+                    logger.info(f"[iOS隧道] ✓ 隧道启动成功: {remote_address}")
+                    return True
+
+            logger.error("[iOS隧道] ✗ 隧道启动失败")
+            return False
+
+        except Exception as e:
+            logger.error(f"[iOS隧道] 启动隧道异常: {e}")
+            return False
+
+    def _stop_tunnel(self):
+        """停止远程隧道"""
+        if self._tunnel_manager:
+            try:
+                self._tunnel_manager.stop_tunnel()
+                logger.debug("[iOS隧道] 隧道已停止")
+            except Exception as e:
+                logger.warning(f"[iOS隧道] 停止隧道失败: {e}")
+            finally:
+                self._tunnel_manager = None
+                self._pyios_remote_address = None
+
     def cleanup(self):
         """
         清理iOS设备适配器资源（增强版）
 
         清理内容：
         1. 停止 APM 实例
-        2. 断开 py-ios-device 连接
-        3. 清理所有缓存
+        2. 停止远程隧道
+        3. 断开 py-ios-device 连接
+        4. 清理所有缓存
         """
         logger.info(f"[iOS适配器] 开始清理资源: {self.device_id}")
 
@@ -1739,7 +1824,10 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
                 finally:
                     self._apm = None
 
-            # 2. 清理 py-ios-device 连接
+            # 2. 停止远程隧道
+            self._stop_tunnel()
+
+            # 3. 清理 py-ios-device 连接
             if self._pyios_connection:
                 try:
                     self._pyios_connection.disconnect()
