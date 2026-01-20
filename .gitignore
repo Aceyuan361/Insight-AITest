@@ -53,3 +53,7 @@ Task-*-完成报告.md
 # OS
 .DS_Store
 Thumbs.db
+
+# Temporary files
+analytics/
+test_results.txt
