@@ -671,7 +671,7 @@ class IOSAppEnumerator(BaseAppEnumerator):
         """
         try:
             # 使用tidevice获取应用列表
-            output = self._execute_tidevice(['app', 'list'], timeout=30)
+            output = self._execute_tidevice(['applist'], timeout=30)
             if not output:
                 return []
 
@@ -720,7 +720,7 @@ class IOSAppEnumerator(BaseAppEnumerator):
         """
         try:
             # 使用tidevice获取正在运行的应用
-            output = self._execute_tidevice(['app', 'list', '--running'], timeout=10)
+            output = self._execute_tidevice(['applist'], timeout=10)
             if not output:
                 return []
 
