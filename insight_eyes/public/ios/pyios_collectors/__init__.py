@@ -13,9 +13,11 @@ Author: Aceyuan361
 from .base import PyIOSCollectorBase
 from .sysmontap import SysMontapCollector
 from .graphics import GraphicsCollector
+from .energy import EnergyCollector
 
 __all__ = [
     'PyIOSCollectorBase',
     'SysMontapCollector',
-    'GraphicsCollector'
+    'GraphicsCollector',
+    'EnergyCollector'
 ]

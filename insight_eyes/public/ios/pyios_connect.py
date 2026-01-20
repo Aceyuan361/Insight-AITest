@@ -64,6 +64,7 @@ class PyIOSConnection:
         # 采集器缓存（优化：避免重复创建和配置）
         self._sysmontap_collector: Optional['SysMontapCollector'] = None
         self._graphics_collector: Optional['GraphicsCollector'] = None
+        self._energy_collector: Optional['EnergyCollector'] = None
         self._current_bundle_id: Optional[str] = None
 
         logger.debug(f"[PyIOS连接] 初始化: udid={udid}, remote={remote_address}")
@@ -197,7 +198,7 @@ class PyIOSConnection:
         logger.info("[PyIOS连接] 连接已断开，尝试重新连接...")
         return self.connect()
 
-    def _get_or_create_collectors(self, bundle_id: str) -> Tuple['SysMontapCollector', 'GraphicsCollector']:
+    def _get_or_create_collectors(self, bundle_id: str) -> Tuple['SysMontapCollector', 'GraphicsCollector', 'EnergyCollector']:
         """
         获取或创建采集器（懒加载 + 单例模式）
 
@@ -210,7 +211,7 @@ class PyIOSConnection:
             bundle_id: 应用 Bundle ID
 
         Returns:
-            (SysMontapCollector, GraphicsCollector) 元组
+            (SysMontapCollector, GraphicsCollector, EnergyCollector) 元组
         """
         # 检查是否需要重新创建采集器
         if self._current_bundle_id != bundle_id:
@@ -231,23 +232,34 @@ class PyIOSConnection:
                     logger.warning(f"[PyIOS连接] 停止 Graphics 采集器失败: {e}")
                 self._graphics_collector = None
 
+            if self._energy_collector:
+                try:
+                    self._energy_collector.stop()
+                except Exception as e:
+                    logger.warning(f"[PyIOS连接] 停止 Energy 采集器失败: {e}")
+                self._energy_collector = None
+
             # 创建新采集器
             from .pyios_collectors.sysmontap import SysMontapCollector
             from .pyios_collectors.graphics import GraphicsCollector
+            from .pyios_collectors.energy import EnergyCollector
 
             self._sysmontap_collector = SysMontapCollector(self._rpc, bundle_id)
             self._graphics_collector = GraphicsCollector(self._rpc, bundle_id)
+            self._energy_collector = EnergyCollector(self._rpc, bundle_id)
 
             # 配置并启动（仅一次）
             if self._sysmontap_collector.configure():
                 self._sysmontap_collector.start()
             if self._graphics_collector.configure():
                 self._graphics_collector.start()
+            if self._energy_collector.configure():
+                self._energy_collector.start()
 
             self._current_bundle_id = bundle_id
             logger.debug(f"[PyIOS连接] ✓ 采集器已创建并启动: {bundle_id}")
 
-        return self._sysmontap_collector, self._graphics_collector
+        return self._sysmontap_collector, self._graphics_collector, self._energy_collector
 
     def _receive_data(self) -> Optional[Any]:
         """
@@ -285,7 +297,7 @@ class PyIOSConnection:
                     return None
 
                 # 使用缓存采集器（避免重复配置和启动）
-                sysmontap, _ = self._get_or_create_collectors(bundle_id)
+                sysmontap, _, _ = self._get_or_create_collectors(bundle_id)
 
                 # 采集数据
                 cpu_data = sysmontap.collect_cpu()
@@ -316,7 +328,7 @@ class PyIOSConnection:
                     return None
 
                 # 使用缓存采集器（避免重复配置和启动）
-                sysmontap, _ = self._get_or_create_collectors(bundle_id)
+                sysmontap, _, _ = self._get_or_create_collectors(bundle_id)
 
                 # 采集数据
                 mem_data = sysmontap.collect_memory()
@@ -347,7 +359,7 @@ class PyIOSConnection:
                     return None
 
                 # 使用缓存采集器（避免重复配置和启动）
-                _, graphics = self._get_or_create_collectors(bundle_id)
+                _, graphics, _ = self._get_or_create_collectors(bundle_id)
 
                 # 采集数据
                 fps_data = graphics.collect_fps()
@@ -360,6 +372,80 @@ class PyIOSConnection:
 
             except Exception as e:
                 logger.error(f"[PyIOS连接] FPS 采集失败: {e}")
+                return None
+
+    def collect_battery(self, bundle_id: str) -> Optional[Dict[str, Any]]:
+        """
+        采集 Battery 数据（单次调用接口）
+
+        Args:
+            bundle_id: 应用 Bundle ID
+
+        Returns:
+            dict: {
+                'level': int,
+                'temperature': float,
+                'current': int,
+                'voltage': float,
+                'power': float,
+                'status': str
+            }
+        """
+        with self._lock:
+            try:
+                if not self._ensure_connected():
+                    return None
+
+                # 使用缓存采集器（避免重复配置和启动）
+                _, _, energy = self._get_or_create_collectors(bundle_id)
+
+                # 采集数据
+                battery_data = energy.collect_battery()
+
+                # 使用数据规范化器
+                from .data_normalizer import IOSDataNormalizer
+                normalized = IOSDataNormalizer.normalize_battery(battery_data)
+
+                return normalized
+
+            except Exception as e:
+                logger.error(f"[PyIOS连接] Battery 采集失败: {e}")
+                return None
+
+    def collect_gpu(self, bundle_id: str) -> Optional[Dict[str, Any]]:
+        """
+        采集 GPU 数据（单次调用接口）
+
+        Args:
+            bundle_id: 应用 Bundle ID
+
+        Returns:
+            dict: {
+                'gpu': int,
+                'gpu_freq': int,
+                'gpu_vendor': str,
+                'gpu_model': str
+            }
+        """
+        with self._lock:
+            try:
+                if not self._ensure_connected():
+                    return None
+
+                # 使用缓存采集器（避免重复配置和启动）
+                _, graphics, _ = self._get_or_create_collectors(bundle_id)
+
+                # 采集数据
+                gpu_data = graphics.collect_gpu()
+
+                # 使用数据规范化器
+                from .data_normalizer import IOSDataNormalizer
+                normalized = IOSDataNormalizer.normalize_gpu(gpu_data)
+
+                return normalized
+
+            except Exception as e:
+                logger.error(f"[PyIOS连接] GPU 采集失败: {e}")
                 return None
 
     def disconnect(self):
@@ -385,6 +471,14 @@ class PyIOSConnection:
                 except Exception as e:
                     logger.warning(f"[PyIOS连接] 停止 Graphics 采集器失败: {e}")
                 self._graphics_collector = None
+
+            if self._energy_collector:
+                try:
+                    self._energy_collector.stop()
+                    logger.debug("[PyIOS连接] ✓ Energy 采集器已停止")
+                except Exception as e:
+                    logger.warning(f"[PyIOS连接] 停止 Energy 采集器失败: {e}")
+                self._energy_collector = None
 
             self._current_bundle_id = None
 

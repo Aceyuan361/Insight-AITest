@@ -862,6 +862,9 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
         self._pyios_lock = threading.Lock()
         self._pyios_remote_address: Optional[Tuple[str, int]] = None
 
+        # 新增：缓存当前监控的包名（用于 Battery/GPU 等系统级采集）
+        self._current_package_name: Optional[str] = None
+
         self._check_tidevice()
         self._detect_ios_version_and_select_collector()
 
@@ -1308,6 +1311,9 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
         Returns:
             dict: FPS数据
         """
+        # 缓存当前监控的包名（用于 Battery/GPU 等系统级采集）
+        self._current_package_name = package_name
+
         # 尝试主方案
         if self._collector_type == 'pyios':
             try:
@@ -1376,6 +1382,9 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
         Returns:
             dict: 内存数据（单位MB）{'totalPass': float, 'nativePass': float, 'dalvikPass': float}
         """
+        # 缓存当前监控的包名（用于 Battery/GPU 等系统级采集）
+        self._current_package_name = package_name
+
         # 尝试主方案
         if self._collector_type == 'pyios':
             try:
@@ -1449,6 +1458,9 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
         Returns:
             dict: CPU数据（百分比）{'appCpuRate': float, 'sysCpuRate': float}
         """
+        # 缓存当前监控的包名（用于 Battery/GPU 等系统级采集）
+        self._current_package_name = package_name
+
         # 尝试主方案
         if self._collector_type == 'pyios':
             try:
@@ -1540,6 +1552,9 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
         Returns:
             dict: 网络数据（可能返回空或0）{'upFlow': float, 'downFlow': float}
         """
+        # 缓存当前监控的包名（用于 Battery/GPU 等系统级采集）
+        self._current_package_name = package_name
+
         # 尝试主方案
         if self._collector_type == 'pyios':
             try:
@@ -1628,15 +1643,15 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
     def _collect_battery_pyios(self) -> Optional[Dict[str, Any]]:
         """使用 py-ios-device 采集 Battery 数据"""
         try:
-            # Battery 采集不需要 bundle_id
             if not self._pyios_connection or not self._pyios_connection.is_alive():
                 logger.debug("[iOS适配器] PyIOS 连接不存在")
                 return {'level': 0, 'temperature': 0, 'current': 0, 'voltage': 0, 'power': 0, 'status': 'unknown'}
 
-            # TODO: 实现 Battery 采集
-            # 暂时返回默认值
-            logger.debug("[PyIOS采集] Battery 采集（待实现）")
-            return {'level': 0, 'temperature': 0, 'current': 0, 'voltage': 0, 'power': 0, 'status': 'unknown'}
+            # 使用缓存的包名（如果有的话）
+            bundle_id = self._current_package_name or "com.apple.Preferences"
+
+            battery_data = self._pyios_connection.collect_battery(bundle_id)
+            return battery_data if battery_data else {'level': 0, 'temperature': 0, 'current': 0, 'voltage': 0, 'power': 0, 'status': 'unknown'}
 
         except Exception as e:
             logger.error(f"[iOS适配器] PyIOS Battery 采集异常: {e}")
@@ -1661,6 +1676,45 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
 
         except Exception as e:
             logger.error(f"[Tidevice采集] Battery 采集失败: {e}")
+            return None
+
+    def collect_gpu(self) -> Optional[Dict[str, Any]]:
+        """
+        采集iOS设备的GPU数据
+
+        注意：iOS GPU 采集支持有限，通常返回默认值
+
+        Returns:
+            dict: GPU数据 {'gpu': int, 'gpu_freq': int, 'gpu_vendor': str, 'gpu_model': str}
+        """
+        # 尝试使用 py-ios-device
+        if self._collector_type == 'pyios':
+            try:
+                data = self._collect_gpu_pyios()
+                if data is not None:
+                    return data
+                logger.warning("[iOS适配器] PyIOS GPU 采集失败，使用默认值")
+            except Exception as e:
+                logger.error(f"[iOS适配器] PyIOS GPU 采集异常: {e}")
+
+        # 返回默认值（iOS GPU 采集支持有限）
+        return {'gpu': 0, 'gpu_freq': 0, 'gpu_vendor': 'apple', 'gpu_model': 'Apple GPU'}
+
+    def _collect_gpu_pyios(self) -> Optional[Dict[str, Any]]:
+        """使用 py-ios-device 采集 GPU 数据"""
+        try:
+            if not self._pyios_connection or not self._pyios_connection.is_alive():
+                logger.debug("[iOS适配器] PyIOS 连接不存在")
+                return {'gpu': 0, 'gpu_freq': 0, 'gpu_vendor': 'apple', 'gpu_model': 'Apple GPU'}
+
+            # 使用缓存的包名（如果有的话）
+            bundle_id = self._current_package_name or "com.apple.Preferences"
+
+            gpu_data = self._pyios_connection.collect_gpu(bundle_id)
+            return gpu_data if gpu_data else {'gpu': 0, 'gpu_freq': 0, 'gpu_vendor': 'apple', 'gpu_model': 'Apple GPU'}
+
+        except Exception as e:
+            logger.error(f"[iOS适配器] PyIOS GPU 采集异常: {e}")
             return None
 
     def cleanup(self):
