@@ -220,13 +220,27 @@ class PyIOSConnection:
         """
         with self._lock:
             try:
-                message = self._receive_data()
-                if not message:
+                if not self._ensure_connected():
                     return None
 
-                # TODO: 解析 CPU 数据
-                # 这里需要实现具体的解析逻辑
-                return {'appCpuRate': 0.0, 'sysCpuRate': 0.0}
+                # 使用 SysMontap 采集器
+                from .pyios_collectors.sysmontap import SysMontapCollector
+                collector = SysMontapCollector(self._rpc, bundle_id)
+
+                # 配置并启动服务
+                if not collector.configure():
+                    return None
+                if not collector.start():
+                    return None
+
+                # 采集数据
+                cpu_data = collector.collect_cpu()
+
+                # 使用数据规范化器
+                from .data_normalizer import IOSDataNormalizer
+                normalized = IOSDataNormalizer.normalize_cpu(cpu_data)
+
+                return normalized
 
             except Exception as e:
                 logger.error(f"[PyIOS连接] CPU 采集失败: {e}")
@@ -244,12 +258,21 @@ class PyIOSConnection:
         """
         with self._lock:
             try:
-                message = self._receive_data()
-                if not message:
+                if not self._ensure_connected():
                     return None
 
-                # TODO: 解析 Memory 数据
-                return {'totalPass': 0, 'nativePass': 0, 'dalvikPass': 0}
+                # 使用 SysMontap 采集器
+                from .pyios_collectors.sysmontap import SysMontapCollector
+                collector = SysMontapCollector(self._rpc, bundle_id)
+
+                # 采集数据
+                mem_data = collector.collect_memory()
+
+                # 使用数据规范化器
+                from .data_normalizer import IOSDataNormalizer
+                normalized = IOSDataNormalizer.normalize_memory(mem_data)
+
+                return normalized
 
             except Exception as e:
                 logger.error(f"[PyIOS连接] Memory 采集失败: {e}")
@@ -267,12 +290,21 @@ class PyIOSConnection:
         """
         with self._lock:
             try:
-                message = self._receive_data()
-                if not message:
+                if not self._ensure_connected():
                     return None
 
-                # TODO: 解析 FPS 数据
-                return {'fps': 60, 'jank': 0, 'bigJank': 0, 'ftime_avg': 16.67}
+                # 使用 Graphics 采集器
+                from .pyios_collectors.graphics import GraphicsCollector
+                collector = GraphicsCollector(self._rpc, bundle_id)
+
+                # 采集数据
+                fps_data = collector.collect_fps()
+
+                # 使用数据规范化器
+                from .data_normalizer import IOSDataNormalizer
+                normalized = IOSDataNormalizer.normalize_fps(fps_data)
+
+                return normalized
 
             except Exception as e:
                 logger.error(f"[PyIOS连接] FPS 采集失败: {e}")

@@ -1337,8 +1337,17 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
 
     def _collect_fps_pyios(self, package_name: str) -> Optional[Dict[str, Any]]:
         """使用 py-ios-device 采集 FPS 数据"""
-        logger.debug("[PyIOS采集] FPS 采集（待实现）")
-        return {'fps': 60, 'jank': 0, 'bigJank': 0, 'ftime_avg': 16.67, 'ftime_max': 20.0, 'ftime_min': 16.0}
+        try:
+            if not self._pyios_connection or not self._pyios_connection.is_alive():
+                logger.debug("[iOS适配器] PyIOS 连接不存在")
+                return {'fps': 60, 'jank': 0, 'bigJank': 0, 'ftime_avg': 16.67, 'ftime_max': 20.0, 'ftime_min': 16.0}
+
+            fps_data = self._pyios_connection.collect_fps(package_name)
+            return fps_data
+
+        except Exception as e:
+            logger.error(f"[iOS适配器] PyIOS FPS 采集异常: {e}")
+            return None
 
     def _collect_fps_tidevice(self, package_name: str) -> Optional[Dict[str, Any]]:
         """使用 tidevice 采集 FPS 数据"""
@@ -1396,8 +1405,17 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
 
     def _collect_memory_pyios(self, package_name: str) -> Optional[Dict[str, Any]]:
         """使用 py-ios-device 采集 Memory 数据"""
-        logger.debug("[PyIOS采集] Memory 采集（待实现）")
-        return {'totalPass': 0, 'nativePass': 0, 'dalvikPass': 0}
+        try:
+            if not self._pyios_connection or not self._pyios_connection.is_alive():
+                logger.debug("[iOS适配器] PyIOS 连接不存在")
+                return {'totalPass': 0, 'nativePass': 0, 'dalvikPass': 0}
+
+            mem_data = self._pyios_connection.collect_memory(package_name)
+            return mem_data
+
+        except Exception as e:
+            logger.error(f"[iOS适配器] PyIOS Memory 采集异常: {e}")
+            return None
 
     def _collect_memory_tidevice(self, package_name: str) -> Optional[Dict[str, Any]]:
         """使用 tidevice 采集 Memory 数据"""
@@ -1469,10 +1487,21 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
         Returns:
             dict: CPU 数据
         """
-        # TODO: 实现 py-ios-device CPU 采集
-        # 这里暂时返回默认值，等待第二阶段实现
-        logger.debug("[PyIOS采集] CPU 采集（待实现）")
-        return {'appCpuRate': 0.0, 'sysCpuRate': 0.0}
+        try:
+            # 确保连接存在
+            if not self._pyios_connection or not self._pyios_connection.is_alive():
+                logger.debug("[iOS适配器] PyIOS 连接不存在，需要建立连接")
+                # TODO: 这里需要建立远程隧道连接
+                # 暂时返回默认值
+                return {'appCpuRate': 0.0, 'sysCpuRate': 0.0}
+
+            # 使用连接采集数据
+            cpu_data = self._pyios_connection.collect_cpu(package_name)
+            return cpu_data
+
+        except Exception as e:
+            logger.error(f"[iOS适配器] PyIOS CPU 采集异常: {e}")
+            return None
 
     def _collect_cpu_tidevice(self, package_name: str) -> Optional[Dict[str, Any]]:
         """
@@ -1536,8 +1565,17 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
 
     def _collect_network_pyios(self, package_name: str) -> Optional[Dict[str, Any]]:
         """使用 py-ios-device 采集 Network 数据"""
-        logger.debug("[PyIOS采集] Network 采集（待实现）")
-        return {'upFlow': 0, 'downFlow': 0}
+        try:
+            if not self._pyios_connection or not self._pyios_connection.is_alive():
+                logger.debug("[iOS适配器] PyIOS 连接不存在")
+                return {'upFlow': 0, 'downFlow': 0}
+
+            net_data = self._pyios_connection.collect_network(package_name)
+            return net_data
+
+        except Exception as e:
+            logger.error(f"[iOS适配器] PyIOS Network 采集异常: {e}")
+            return None
 
     def _collect_network_tidevice(self, package_name: str) -> Optional[Dict[str, Any]]:
         """使用 tidevice 采集 Network 数据"""
@@ -1589,8 +1627,20 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
 
     def _collect_battery_pyios(self) -> Optional[Dict[str, Any]]:
         """使用 py-ios-device 采集 Battery 数据"""
-        logger.debug("[PyIOS采集] Battery 采集（待实现）")
-        return {'level': 0, 'temperature': 0, 'current': 0, 'voltage': 0, 'power': 0, 'status': 'unknown'}
+        try:
+            # Battery 采集不需要 bundle_id
+            if not self._pyios_connection or not self._pyios_connection.is_alive():
+                logger.debug("[iOS适配器] PyIOS 连接不存在")
+                return {'level': 0, 'temperature': 0, 'current': 0, 'voltage': 0, 'power': 0, 'status': 'unknown'}
+
+            # TODO: 实现 Battery 采集
+            # 暂时返回默认值
+            logger.debug("[PyIOS采集] Battery 采集（待实现）")
+            return {'level': 0, 'temperature': 0, 'current': 0, 'voltage': 0, 'power': 0, 'status': 'unknown'}
+
+        except Exception as e:
+            logger.error(f"[iOS适配器] PyIOS Battery 采集异常: {e}")
+            return None
 
     def _collect_battery_tidevice(self) -> Optional[Dict[str, Any]]:
         """使用 tidevice 采集 Battery 数据"""
