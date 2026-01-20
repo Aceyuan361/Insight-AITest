@@ -110,8 +110,8 @@ class IOSDataNormalizer:
                         'dalvikPass': round(dalvik, 2)
                     }
 
-                # py-ios-device 原始格式
-                elif 'Memory' in raw_data or 'memVirtualSize' in raw_data:
+                # py-ios-device 原始格式 (支持多种字段名)
+                elif 'Memory' in raw_data or 'memVirtualSize' in raw_data or 'memResidentSize' in raw_data:
                     # 提取内存值（可能是 MB 或 KB）
                     if 'Memory' in raw_data:
                         mem_value = float(raw_data['Memory'])
@@ -128,6 +128,15 @@ class IOSDataNormalizer:
                     elif 'memVirtualSize' in raw_data:
                         mem_value = float(raw_data['memVirtualSize'])
                         # 通常 memVirtualSize 单位是字节
+                        mem_mb = mem_value / (1024 * 1024)
+                        return {
+                            'totalPass': round(mem_mb, 2),
+                            'nativePass': round(mem_mb, 2),
+                            'dalvikPass': 0.0
+                        }
+                    elif 'memResidentSize' in raw_data:
+                        # memResidentSize 是物理内存（字节），与 memVirtualSize 类似处理
+                        mem_value = float(raw_data['memResidentSize'])
                         mem_mb = mem_value / (1024 * 1024)
                         return {
                             'totalPass': round(mem_mb, 2),
