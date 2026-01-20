@@ -525,11 +525,6 @@ desktop/
 - 添加线程安全的 CPU 数据缓存机制
 - 优化多核设备的 CPU 使用率计算
 
-**Bug 修复:**
-- 修复监控停止时信号断开异常
-- 修复信号连接未验证导致的 TypeError
-- 改进 _disconnect_collection_signals 异常处理
-
 **技术改进:**
 - CPUCollector 新增 _get_app_cpu_time_from_proc() 方法
 - CPUCollector 新增 _get_cpu_data_atomic() 线程安全方法
@@ -555,8 +550,3 @@ desktop/
 - session_manager.py: delete_session 添加 emit_signal 参数控制信号发射
 - report_panel.py: 新增 sessions_deleted 信号处理方法，优化批量删除体验
 
-**测试结果:**
-- 批量删除 12 个会话，只弹出 1 次结果窗口（之前会弹出 12 次）
-- 批量删除 10 个会话，只弹出 1 次结果窗口（之前会弹出 10 次）
-- 勾选电池/GPU 复选框不再崩溃，监控面板正确显示新增卡片
-- 单个删除功能保持向后兼容，仍然正常工作

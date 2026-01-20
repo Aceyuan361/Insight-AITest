@@ -886,13 +886,13 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
             IOSAPM: APM 实例
         """
         # 快速检查（无锁）：如果已有匹配的 APM 实例，直接返回
-        if self._apm is not None and self._apm.bundle_id == package_name:
+        if self._apm is not None and self._apm.bundleId == package_name:
             return self._apm
 
         # 慢速路径：创建新实例（带锁保护）
         with self._apm_lock:
             # 双重检查：在锁内再次检查，防止竞态条件
-            if self._apm is not None and self._apm.bundle_id == package_name:
+            if self._apm is not None and self._apm.bundleId == package_name:
                 return self._apm
 
             # 创建新实例
