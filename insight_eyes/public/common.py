@@ -87,26 +87,26 @@ class Devices:
     def _get_ios_devices(self):
         """获取 iOS 设备列表（使用 py-ios-device）"""
         try:
-            from ios_device.py_ios_device import get_device
+            from ios_device.servers.Instrument import LockdownClient
 
             result = []
 
-            # 尝试获取设备（不传参数，自动获取第一个设备）
+            # 使用 LockdownClient 获取设备信息
             try:
-                device = get_device()
-                if device:
-                    udid = device.udid
-                    # 获取设备名称
-                    try:
-                        name = device.get_value('DeviceName')
-                    except Exception:
-                        name = 'iOS Device'
+                client = LockdownClient()
+                udid = client.udid
 
-                    result.append({
-                        'udid': udid,
-                        'name': name,
-                        'type': 'iOS'
-                    })
+                # 从 device_info 获取设备名称
+                name = client.device_info.get('DeviceName', 'iOS Device')
+
+                result.append({
+                    'udid': udid,
+                    'name': name,
+                    'type': 'iOS'
+                })
+
+                # 关闭连接
+                client.close()
             except Exception as e:
                 logger.debug(f"未检测到 iOS 设备: {e}")
 
@@ -156,15 +156,21 @@ class Devices:
             list: 应用包名列表
         """
         try:
-            from ios_device.py_ios_device import get_applications
+            from ios_device.py_ios_device import PyiOSDevice
+
+            # 创建设备对象
+            device = PyiOSDevice(udid)
 
             # 获取应用列表
-            apps = get_applications(udid)
+            apps = device.get_applications()
             packages = []
 
             for app in apps:
                 if 'CFBundleIdentifier' in app:
                     packages.append(app['CFBundleIdentifier'])
+
+            # 关闭连接
+            device.stop()
 
             return packages
 
