@@ -1883,9 +1883,13 @@ class DeviceAdapterFactory:
             platform_value = str(platform)
 
         if platform_value == "Android":
-            return AndroidDeviceAdapter(device_id)
+            adapter = AndroidDeviceAdapter(device_id)
         elif platform_value == "iOS":
-            return IOSDeviceAdapter(device_id)
+            adapter = IOSDeviceAdapter(device_id)
         else:
             logger.error(f"不支持的平台: {platform} (值: {platform_value})")
             return None
+
+        # 设置 platform 属性，供 main_window.py 检测平台类型
+        adapter.platform = platform
+        return adapter

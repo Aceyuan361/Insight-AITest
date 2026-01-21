@@ -20,26 +20,30 @@ class PyIOSConnection:
     py-ios-device 连接管理器
 
     职责：
-    1. 管理远程隧道连接（通过 pymobiledevice3）
+    1. 管理设备连接（直接连接或隧道连接）
     2. 维护 InstrumentServer 会话
     3. 提供单次调用的采集接口（兼容 tidevice 模式）
     4. 自动重连和健康检查
 
     支持版本：
-    - iOS 17-26（完整支持）
+    - iOS 15-26（完整支持）
+    - iOS 15-16: 直接连接（有线 USB）
+    - iOS 17-26: 隧道连接（无线/USB）
 
     使用场景：
-    - iOS 17+ 设备的性能监控
+    - iOS 15+ 设备的性能监控
     - 需要 Instruments 协议的精确数据采集
     """
 
-    def __init__(self, udid: str, remote_address: Tuple[str, int]):
+    def __init__(self, udid: str, remote_address: Optional[Tuple[str, int]] = None):
         """
         初始化连接管理器
 
         Args:
             udid: iOS 设备唯一标识符
-            remote_address: 远程隧道地址 (host, port)
+            remote_address: 远程隧道地址 (host, port) 或 None
+                            - iOS 15-16: 有线连接，直接连接设备（None）
+                            - iOS 17-26: 无线/USB连接，需要隧道 ((host, port))
         """
         self.udid = udid
         self.remote_address = remote_address
@@ -67,7 +71,8 @@ class PyIOSConnection:
         self._energy_collector: Optional['EnergyCollector'] = None
         self._current_bundle_id: Optional[str] = None
 
-        logger.debug(f"[PyIOS连接] 初始化: udid={udid}, remote={remote_address}")
+        connection_type = "隧道" if remote_address else "直接"
+        logger.debug(f"[PyIOS连接] 初始化: udid={udid}, 连接类型={connection_type}, remote={remote_address}")
 
     def connect(self) -> bool:
         """
@@ -82,10 +87,20 @@ class PyIOSConnection:
                 from ios_device.remote.remote_lockdown import RemoteLockdownClient
                 from ios_device.servers.Instrument import InstrumentServer
 
-                logger.info(f"[PyIOS连接] 正在连接到 {self.remote_address}...")
+                if self.remote_address:
+                    logger.info(f"[PyIOS连接] 正在连接到隧道: {self.remote_address}...")
+                else:
+                    logger.info("[PyIOS连接] 正在直接连接设备...")
 
                 # 1. 连接到远程锁定服务
-                self._rsd = RemoteLockdownClient(self.remote_address)
+                if self.remote_address:
+                    # iOS 17+: 通过 pymobiledevice3 隧道连接
+                    self._rsd = RemoteLockdownClient(self.remote_address)
+                    logger.debug(f"[PyIOS连接] 使用隧道连接: {self.remote_address}")
+                else:
+                    # iOS 15-16: 直接连接（有线连接）
+                    self._rsd = RemoteLockdownClient()
+                    logger.debug("[PyIOS连接] 使用直接连接（本地设备）")
                 logger.debug("[PyIOS连接] ✓ RemoteLockdownClient 连接成功")
 
                 # 2. 初始化 Instruments 服务
