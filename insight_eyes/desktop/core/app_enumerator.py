@@ -661,7 +661,7 @@ class IOSAppEnumerator(BaseAppEnumerator):
 
     def enumerate_apps(self, include_system_apps: bool = False) -> List[AppInfo]:
         """
-        枚举iOS设备上的所有应用
+        枚举iOS设备上的所有应用（使用 py-ios-device）
 
         Args:
             include_system_apps: 是否包含系统应用
@@ -670,25 +670,24 @@ class IOSAppEnumerator(BaseAppEnumerator):
             List[AppInfo]: 应用信息列表
         """
         try:
-            # 使用tidevice获取应用列表
-            output = self._execute_tidevice(['applist'], timeout=30)
-            if not output:
+            # 使用 py-ios-device 获取应用列表
+            from ios_device.py_ios_device import PyiOSDevice
+
+            device = PyiOSDevice(self.device_id)
+            apps_data = device.get_applications()
+            device.stop()
+
+            if not apps_data:
                 return []
 
             # 解析应用列表
             apps = []
-            for line in output.split('\n'):
-                line = line.strip()
-                if not line or line.startswith('Total:'):
+            for app in apps_data:
+                bundle_id = app.get('CFBundleIdentifier', '')
+                app_name = app.get('CFBundleDisplayName', app.get('CFBundleName', bundle_id))
+
+                if not bundle_id:
                     continue
-
-                # 解析格式: com.apple.mobilesafari (Mobile Safari)
-                bundle_id = line.split()[0]
-                app_name = bundle_id  # 默认使用Bundle ID作为名称
-
-                # 尝试提取应用名称
-                if '(' in line and ')' in line:
-                    app_name = line.split('(')[1].split(')')[0].strip()
 
                 # 过滤系统应用
                 if not include_system_apps and bundle_id.startswith('com.apple.'):
@@ -713,25 +712,29 @@ class IOSAppEnumerator(BaseAppEnumerator):
 
     def get_running_apps(self) -> List[AppInfo]:
         """
-        获取正在运行的iOS应用
+        获取正在运行的iOS应用（使用 py-ios-device）
 
         Returns:
             List[AppInfo]: 运行中的应用列表
         """
         try:
-            # 使用tidevice获取正在运行的应用
-            output = self._execute_tidevice(['applist'], timeout=10)
-            if not output:
+            # 使用 py-ios-device 获取进程列表
+            from ios_device.py_ios_device import PyiOSDevice
+
+            device = PyiOSDevice(self.device_id)
+            processes = device.get_processes()
+            device.stop()
+
+            if not processes:
                 return []
 
             # 解析运行中的应用
             running_apps = []
-            for line in output.split('\n'):
-                line = line.strip()
-                if not line or line.startswith('Total:'):
+            for proc in processes:
+                bundle_id = proc.get('bundleId', '')
+                if not bundle_id:
                     continue
 
-                bundle_id = line.split()[0]
                 app_info = self.get_app_info(bundle_id)
                 if app_info:
                     app_info.is_running = True
