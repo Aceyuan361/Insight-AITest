@@ -4,9 +4,9 @@ iOS APM (Application Performance Monitor) 性能监控主类
 提供 iOS 应用的性能数据采集功能
 
 架构说明：
-- 使用 py-ios-device 架构（PyIOSConnection + SysMontapCollector + GraphicsCollector + EnergyCollector）
-- 弃用 tidevice 采集器（标记为 @deprecated）
-- 使用 IOSDataNormalizer 统一数据格式
+- 使用 IOSPyDeviceCollector 实现持久连接架构
+- 数据持续推送到回调缓存，查询时返回缓存中的最新数据
+- 与 AndroidAPM 接口保持一致
 
 Copyright (c) 2025 Aceyuan361
 GitHub: https://github.com/Aceyuan361/Insight-Eye
@@ -28,13 +28,12 @@ class IOSAPM:
     - FPS 帧率
     - 网络流量
     - 电池状态
-    - GPU 使用率（通过 py-ios-device）
+    - GPU 使用率
 
     架构：
-    - 使用 py-ios-device 架构（PyIOSConnection + 专用采集器）
-    - 弃用 tidevice 采集器
-
-    与 AndroidAPM 接口保持一致
+    - 使用 IOSPyDeviceCollector 实现持久连接
+    - 数据持续推送，collect 方法返回缓存中的最新数据
+    - 与 AndroidAPM 接口保持一致
     """
 
     def __init__(self, bundleId, udid, frequency=1.0):
@@ -53,143 +52,58 @@ class IOSAPM:
         # iOS 不使用 PID
         self.pid = None
 
-        # py-ios-device 连接和采集器（延迟初始化）
-        self._connection = None
-        self._sysmontap_collector = None  # CPU/Memory/Network 采集器
-        self._graphics_collector = None   # FPS/GPU 采集器
-        self._energy_collector = None     # Battery 采集器
+        # IOSPyDeviceCollector 采集器（延迟初始化）
+        self._collector = None
 
-        # 网络采集警告标志（避免重复警告）
-        self._network_warning_shown = False
+        logger.info(f"初始化 iOS APM (PyiOSDevice架构): BundleID={bundleId}, UDID={udid}, 采集频率={frequency}秒")
 
-        logger.info(f"初始化 iOS APM (py-ios-device 架构): BundleID={bundleId}, UDID={udid}, 采集频率={frequency}秒")
-
-    def _ensure_connection(self) -> bool:
+    def _ensure_collector(self):
         """
-        确保连接已建立
-
-        对于 iOS 15-16 使用直接连接（remote_address=None）
-        对于 iOS 17-26 使用隧道连接（需要 IOSTunnelManager）
+        确保 IOSPyDeviceCollector 采集器已初始化
 
         Returns:
-            bool: 连接是否可用
+            IOSPyDeviceCollector: 采集器实例
         """
-        if self._connection is None:
-            try:
-                from insight_eyes.public.ios.pyios_connect import PyIOSConnection
+        if self._collector is None:
+            from insight_eyes.public.ios.pyios_collectors.pydevice_collector import IOSPyDeviceCollector
+            self._collector = IOSPyDeviceCollector(self.udid, self.bundleId)
+            logger.debug(f"[IOSAPM] 采集器已初始化: UDID={self.udid}, BundleID={self.bundleId}")
 
-                # iOS 15-16 有线连接：直接连接（不需要隧道）
-                # iOS 17-26 无线/USB：需要通过 pymobiledevice3 建立隧道
-                self._connection = PyIOSConnection(self.udid, remote_address=None)
-
-                if not self._connection.connect():
-                    logger.error("[IOSAPM] 连接失败")
-                    return False
-            except Exception as e:
-                logger.error(f"[IOSAPM] 连接异常: {e}")
-                return False
-
-        return self._connection.is_connected()
-
-    def _get_sysmontap_collector(self):
-        """获取或创建 SysMontap 采集器"""
-        if not self._ensure_connection():
-            return None
-
-        if self._sysmontap_collector is None:
-            try:
-                from insight_eyes.public.ios.pyios_collectors.sysmontap import SysMontapCollector
-                self._sysmontap_collector = SysMontapCollector(
-                    self._connection.rpc,
-                    self.bundleId
-                )
-                self._sysmontap_collector.configure()
-                self._sysmontap_collector.start()
-                logger.debug("[IOSAPM] SysMontap 采集器已启动")
-            except Exception as e:
-                logger.error(f"[IOSAPM] 创建 SysMontap 采集器失败: {e}")
-                return None
-
-        return self._sysmontap_collector
-
-    def _get_graphics_collector(self):
-        """获取或创建 Graphics 采集器"""
-        if not self._ensure_connection():
-            return None
-
-        if self._graphics_collector is None:
-            try:
-                from insight_eyes.public.ios.pyios_collectors.graphics import GraphicsCollector
-                self._graphics_collector = GraphicsCollector(
-                    self._connection.rpc,
-                    self.bundleId
-                )
-                self._graphics_collector.configure()
-                self._graphics_collector.start()
-                logger.debug("[IOSAPM] Graphics 采集器已启动")
-            except Exception as e:
-                logger.error(f"[IOSAPM] 创建 Graphics 采集器失败: {e}")
-                return None
-
-        return self._graphics_collector
-
-    def _get_energy_collector(self):
-        """获取或创建 Energy 采集器"""
-        if not self._ensure_connection():
-            return None
-
-        if self._energy_collector is None:
-            try:
-                from insight_eyes.public.ios.pyios_collectors.energy import EnergyCollector
-                self._energy_collector = EnergyCollector(
-                    self._connection.rpc,
-                    self.bundleId
-                )
-                self._energy_collector.configure()
-                self._energy_collector.start()
-                logger.debug("[IOSAPM] Energy 采集器已启动")
-            except Exception as e:
-                logger.error(f"[IOSAPM] 创建 Energy 采集器失败: {e}")
-                return None
-
-        return self._energy_collector
+        return self._collector
 
     def start(self):
-        """启动监控"""
-        if not self._ensure_connection():
-            logger.warning("[IOSAPM] 启动失败：连接不可用")
-            return
-        logger.info(f"iOS 性能监控已启动: BundleID={self.bundleId}")
+        """
+        启动监控
+
+        建立持久连接并启动 Instruments 服务监控
+        """
+        try:
+            collector = self._ensure_collector()
+
+            if not collector.start():
+                logger.warning(f"[IOSAPM] 启动失败: BundleID={self.bundleId}")
+                return
+
+            logger.info(f"[IOSAPM] ✓ 监控已启动: BundleID={self.bundleId}, UDID={self.udid}")
+
+        except Exception as e:
+            logger.error(f"[IOSAPM] 启动异常: {e}")
+            import traceback
+            logger.debug(traceback.format_exc())
 
     def stop(self):
-        """停止监控"""
-        # 停止所有采集器
-        if self._sysmontap_collector:
-            try:
-                self._sysmontap_collector.stop()
-            except Exception as e:
-                logger.warning(f"[IOSAPM] 停止 SysMontap 采集器失败: {e}")
+        """
+        停止监控
 
-        if self._graphics_collector:
-            try:
-                self._graphics_collector.stop()
-            except Exception as e:
-                logger.warning(f"[IOSAPM] 停止 Graphics 采集器失败: {e}")
+        停止 Instruments 服务并关闭持久连接
+        """
+        try:
+            if self._collector:
+                self._collector.stop()
+                logger.info(f"[IOSAPM] ✓ 监控已停止: BundleID={self.bundleId}")
 
-        if self._energy_collector:
-            try:
-                self._energy_collector.stop()
-            except Exception as e:
-                logger.warning(f"[IOSAPM] 停止 Energy 采集器失败: {e}")
-
-        # 断开连接
-        if self._connection:
-            try:
-                self._connection.disconnect()
-            except Exception as e:
-                logger.warning(f"[IOSAPM] 断开连接失败: {e}")
-
-        logger.info(f"iOS 性能监控已停止: BundleID={self.bundleId}")
+        except Exception as e:
+            logger.warning(f"[IOSAPM] 停止监控失败: {e}")
 
     def collectCpu(self):
         """
@@ -199,33 +113,10 @@ class IOSAPM:
             dict: {'appCpuRate': float, 'sysCpuRate': float} 或 None
         """
         try:
-            collector = self._get_sysmontap_collector()
-            if not collector:
-                return None
-
-            raw_data = collector.collect_cpu()
-
-            # 使用 IOSDataNormalizer 规范化数据
-            from insight_eyes.public.ios.data_normalizer import IOSDataNormalizer
-            return IOSDataNormalizer.normalize_cpu(raw_data)
-
+            collector = self._ensure_collector()
+            return collector.collect_cpu()
         except Exception as e:
-            logger.warning(f"[IOSAPM] py-ios-device CPU 采集失败: {e}，尝试降级到 tidevice")
-            return self._collect_cpu_tidevice()
-
-    def _collect_cpu_tidevice(self):
-        """
-        使用 tidevice 采集 CPU（降级方案）
-
-        Returns:
-            dict: {'appCpuRate': float, 'sysCpuRate': float} 或 None
-        """
-        try:
-            from insight_eyes.public.ios.cpu_collector import CPUCollector
-            collector = CPUCollector(self.udid)
-            return collector.collect()
-        except Exception as e:
-            logger.error(f"[IOSAPM] tidevice CPU 采集失败: {e}")
+            logger.error(f"[IOSAPM] CPU 采集失败: {e}")
             return None
 
     def collectMemory(self):
@@ -240,28 +131,10 @@ class IOSAPM:
             } 或 None
         """
         try:
-            collector = self._get_sysmontap_collector()
-            if not collector:
-                return None
-
-            raw_data = collector.collect_memory()
-
-            # 使用 IOSDataNormalizer 规范化数据
-            from insight_eyes.public.ios.data_normalizer import IOSDataNormalizer
-            return IOSDataNormalizer.normalize_memory(raw_data)
-
+            collector = self._ensure_collector()
+            return collector.collect_memory()
         except Exception as e:
-            logger.warning(f"[IOSAPM] py-ios-device Memory 采集失败: {e}，尝试降级到 tidevice")
-            return self._collect_memory_tidevice()
-
-    def _collect_memory_tidevice(self):
-        """使用 tidevice 采集 Memory（降级方案）"""
-        try:
-            from insight_eyes.public.ios.memory_collector import MemoryCollector
-            collector = MemoryCollector(self.udid, self.bundleId)
-            return collector.collect()
-        except Exception as e:
-            logger.error(f"[IOSAPM] tidevice Memory 采集失败: {e}")
+            logger.error(f"[IOSAPM] Memory 采集失败: {e}")
             return None
 
     def collectFps(self):
@@ -271,36 +144,29 @@ class IOSAPM:
         Returns:
             dict: {
                 'fps': int,             # 帧率
-                'jank': int,            # 普通卡顿次数
-                'bigJank': int,         # 严重卡顿次数
-                'ftime_avg': float,     # 平均帧时间 (ms)
-                'ftime_max': float,     # 最大帧时间 (ms)
-                'ftime_min': float,     # 最小帧时间 (ms)
+                'jank': int,            # 普通卡顿次数 (iOS 暂不支持)
+                'bigJank': int,         # 严重卡顿次数 (iOS 暂不支持)
+                'ftime_avg': float,     # 平均帧时间 (ms，iOS 暂不支持)
+                'ftime_max': float,     # 最大帧时间 (ms，iOS 暂不支持)
+                'ftime_min': float,     # 最小帧时间 (ms，iOS 暂不支持)
             } 或 None
         """
         try:
-            collector = self._get_graphics_collector()
-            if not collector:
-                return None
+            collector = self._ensure_collector()
+            fps_data = collector.collect_fps()
 
-            raw_data = collector.collect_fps()
+            if fps_data:
+                # 补充 iOS 暂不支持的字段
+                fps_data.setdefault('jank', 0)
+                fps_data.setdefault('bigJank', 0)
+                fps_data.setdefault('ftime_avg', 0.0)
+                fps_data.setdefault('ftime_max', 0.0)
+                fps_data.setdefault('ftime_min', 0.0)
 
-            # 使用 IOSDataNormalizer 规范化数据
-            from insight_eyes.public.ios.data_normalizer import IOSDataNormalizer
-            return IOSDataNormalizer.normalize_fps(raw_data)
+            return fps_data
 
         except Exception as e:
-            logger.warning(f"[IOSAPM] py-ios-device FPS 采集失败: {e}，尝试降级到 tidevice")
-            return self._collect_fps_tidevice()
-
-    def _collect_fps_tidevice(self):
-        """使用 tidevice 采集 FPS（降级方案）"""
-        try:
-            from insight_eyes.public.ios.fps_collector import FPSCollector
-            collector = FPSCollector(self.udid, self.bundleId)
-            return collector.collect()
-        except Exception as e:
-            logger.error(f"[IOSAPM] tidevice FPS 采集失败: {e}")
+            logger.error(f"[IOSAPM] FPS 采集失败: {e}")
             return None
 
     def collectFlow(self):
@@ -314,23 +180,8 @@ class IOSAPM:
             py-ios-device 支持网络流量采集
         """
         try:
-            collector = self._get_sysmontap_collector()
-            if not collector:
-                return None
-
-            raw_data = collector.collect_network()
-
-            # 使用 IOSDataNormalizer 规范化数据
-            from insight_eyes.public.ios.data_normalizer import IOSDataNormalizer
-            normalized = IOSDataNormalizer.normalize_network(raw_data)
-
-            # 首次成功采集时提示
-            if not self._network_warning_shown and normalized:
-                logger.info(f"[IOSAPM] ✓ 网络流量采集支持 (py-ios-device)")
-                self._network_warning_shown = True
-
-            return normalized
-
+            collector = self._ensure_collector()
+            return collector.collect_network()
         except Exception as e:
             logger.error(f"[IOSAPM] Network 采集失败: {e}")
             return None
@@ -344,34 +195,25 @@ class IOSAPM:
                 'level': int,           # 电量百分比
                 'temperature': float,   # 温度 (°C)
                 'current': float,       # 电流 (mA)
-                'voltage': float,       # 电压 (V)
-                'power': float,         # 功率 (W)
-                'status': str,          # 充电状态
+                'voltage': float,       # 电压 (V，iOS 暂不支持)
+                'power': float,         # 功率 (W，iOS 暂不支持)
+                'status': str,          # 充电状态 (iOS 暂不支持)
             } 或 None
         """
         try:
-            collector = self._get_energy_collector()
-            if not collector:
-                return None
+            collector = self._ensure_collector()
+            battery_data = collector.collect_battery()
 
-            raw_data = collector.collect_battery()
+            if battery_data:
+                # 补充 iOS 暂不支持的字段
+                battery_data.setdefault('voltage', 0.0)
+                battery_data.setdefault('power', 0.0)
+                battery_data.setdefault('status', 'unknown')
 
-            # 使用 IOSDataNormalizer 规范化数据
-            from insight_eyes.public.ios.data_normalizer import IOSDataNormalizer
-            return IOSDataNormalizer.normalize_battery(raw_data)
+            return battery_data
 
         except Exception as e:
-            logger.warning(f"[IOSAPM] py-ios-device Battery 采集失败: {e}，尝试降级到 tidevice")
-            return self._collect_battery_tidevice()
-
-    def _collect_battery_tidevice(self):
-        """使用 tidevice 采集 Battery（降级方案）"""
-        try:
-            from insight_eyes.public.ios.battery_collector import BatteryCollector
-            collector = BatteryCollector(self.udid)
-            return collector.collect()
-        except Exception as e:
-            logger.error(f"[IOSAPM] tidevice Battery 采集失败: {e}")
+            logger.error(f"[IOSAPM] Battery 采集失败: {e}")
             return None
 
     def collectGpu(self):
@@ -380,43 +222,19 @@ class IOSAPM:
 
         Returns:
             dict: {
-                'gpu': int,             # GPU 使用率
-                'gpu_freq': int,        # GPU 频率 (MHz)
+                'gpu': int,             # GPU 使用率 (iOS 暂不支持)
+                'gpu_freq': int,        # GPU 频率 (MHz，iOS 暂不支持)
                 'gpu_vendor': str,      # GPU 厂商
                 'gpu_model': str,       # GPU 型号
             }
         """
-        try:
-            collector = self._get_graphics_collector()
-            if not collector:
-                # 返回默认值
-                return {
-                    'gpu': 0,
-                    'gpu_freq': 0,
-                    'gpu_vendor': 'apple',
-                    'gpu_model': 'Apple GPU'
-                }
-
-            raw_data = collector.collect_gpu()
-
-            # 使用 IOSDataNormalizer 规范化数据
-            from insight_eyes.public.ios.data_normalizer import IOSDataNormalizer
-            normalized = IOSDataNormalizer.normalize_gpu(raw_data)
-            return normalized if normalized else {
-                'gpu': 0,
-                'gpu_freq': 0,
-                'gpu_vendor': 'apple',
-                'gpu_model': 'Apple GPU'
-            }
-
-        except Exception as e:
-            logger.error(f"[IOSAPM] GPU 采集失败: {e}")
-            return {
-                'gpu': 0,
-                'gpu_freq': 0,
-                'gpu_vendor': 'apple',
-                'gpu_model': 'Apple GPU'
-            }
+        # iOS GPU 监控暂未实现
+        return {
+            'gpu': 0,
+            'gpu_freq': 0,
+            'gpu_vendor': 'apple',
+            'gpu_model': 'Apple GPU'
+        }
 
     def getAllMetrics(self):
         """
