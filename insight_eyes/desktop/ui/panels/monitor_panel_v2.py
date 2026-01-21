@@ -348,7 +348,27 @@ class NeonChartCard(QFrame):
         self.stats_label.setText(stats_text)
 
     def _cleanup_hover(self):
-        """清理悬停相关资源，防止内存泄漏"""
+        """清理悬停相关资源（隐藏提示框，但不断开信号）"""
+        # 注意：鼠标移动信号不断开，保持悬停功能始终可用
+        # 只有在卡片销毁时才需要断开信号
+        if hasattr(self, 'vLine'):
+            self.vLine.hide()
+        if hasattr(self, 'hover_point'):
+            self.hover_point.hide()
+        if hasattr(self, 'tooltip') and self.tooltip:
+            self.tooltip.hide_tooltip()
+
+    def clear_data(self):
+        """清除所有图表数据（保持鼠标悬停功能）"""
+        self.data.clear()
+        self.timestamps.clear()
+        self._update_curve()
+        self._update_stats()
+        # 隐藏悬停元素，但不断开信号
+        self._cleanup_hover()
+
+    def cleanup(self):
+        """卡片销毁时的清理（断开信号）"""
         if hasattr(self, 'chart') and self.chart.scene():
             try:
                 self.chart.scene().sigMouseMoved.disconnect(self._on_mouse_moved)
@@ -356,15 +376,7 @@ class NeonChartCard(QFrame):
                 pass
         if hasattr(self, 'tooltip') and self.tooltip:
             self.tooltip.hide_tooltip()
-
-    def clear_data(self):
-        """清除所有图表数据"""
-        self.data.clear()
-        self.timestamps.clear()
-        self._update_curve()
-        self._update_stats()
-        # 清理悬停资源
-        self._cleanup_hover()
+            self.tooltip = None
 
     def _on_mouse_moved(self, pos):
         """鼠标移动事件处理"""
@@ -577,7 +589,11 @@ class MonitorPanelV2(QWidget):
                 card = self.cards.get(key)
                 if card:
                     try:
-                        card._cleanup_hover()  # 先清理悬停资源
+                        # 调用 cleanup() 方法，它会正确断开信号
+                        if hasattr(card, 'cleanup'):
+                            card.cleanup()
+                        else:
+                            card._cleanup_hover()  # 兼容旧版本
                         self.grid_layout.removeWidget(card)
                         card.deleteLater()
                     except Exception as e:

@@ -1048,7 +1048,7 @@ class MainWindow(QMainWindow):
         self._update_monitoring_ui_state()
 
     def _stop_monitoring(self):
-        """停止监控 - 集成处理对话框"""
+        """停止监控 - 异步处理避免UI冻结"""
         if not self.is_monitoring:
             return
 
@@ -1056,7 +1056,7 @@ class MainWindow(QMainWindow):
             # 保存会话ID用于后续处理
             session_id = self.current_session_id
 
-            # 停止监控
+            # 停止监控（立即执行，不阻塞）
             self.is_monitoring = False
             self.is_paused = False
             self.update_timer.stop()
@@ -1065,87 +1065,95 @@ class MainWindow(QMainWindow):
             # 显示处理对话框
             self.processing_dialog = ProcessingDialog(self)
             self.processing_dialog.finished.connect(self._on_processing_complete)
-            self.processing_dialog.start_animation(total_steps=5)
             self.processing_dialog.show()
 
-            # 结束数据库会话
-            if session_id:
-                self.database.end_session(session_id)
-                logger.info(f"结束监控会话: {session_id}")
-                self.statusBar().showMessage(
-                    f"监控已停止 (会话ID: {session_id}, 样本数: {self.monitoring_duration})",
-                    5000
-                )
+            # 创建后台工作线程处理数据
+            from insight_eyes.desktop.ui.widgets.processing_dialog import ProcessingWorker
+            self.processing_worker = ProcessingWorker(
+                session_id,
+                self.database,
+                self.metrics_processor,
+                self
+            )
+            self.processing_worker.progress_updated.connect(
+                lambda progress, status: self.processing_dialog.set_progress(progress)
+            )
+            self.processing_worker.progress_updated.connect(
+                lambda progress, status: self.processing_dialog.update_status(status)
+            )
+            self.processing_worker.finished.connect(self._on_processing_worker_complete)
 
-                # 更新处理对话框状态
-                QTimer.singleShot(500, lambda: self.processing_dialog.update_status("停止数据采集..."))
-                QTimer.singleShot(1000, lambda: self.processing_dialog.update_status("保存监控数据..."))
-                QTimer.singleShot(1500, lambda: self.processing_dialog.update_status("生成性能报告..."))
-                QTimer.singleShot(2000, lambda: self.processing_dialog.update_status("分析异常指标..."))
+            # 立即更新UI状态
+            self.statusBar().showMessage(
+                f"正在停止监控 (会话ID: {session_id})...",
+                2000
+            )
 
-                # 延迟完成处理
-                QTimer.singleShot(2500, lambda: self.processing_dialog.complete(True, "处理完成！"))
-            else:
-                self.statusBar().showMessage("监控已停止", 3000)
-                QTimer.singleShot(500, lambda: self.processing_dialog.complete(False, "无有效会话"))
+            # 启动后台处理
+            self.processing_worker.start()
 
-            # 清理资源
-            if self.metrics_processor:
-                self.metrics_processor.clear_buffers()
-            self.monitor_panel.reset_monitoring()
-
-            # 清理设备适配器缓存
-            if self._cached_adapter:
-                # 检查是否有 APM 实例需要清理
-                has_apm = hasattr(self._cached_adapter, '_apm') and self._cached_adapter._apm is not None
-                if has_apm:
-                    try:
-                        logger.debug("停止设备适配器的 APM 实例")
-                        self._cached_adapter._apm.stop()
-                        self._cached_adapter.cleanup()
-                        logger.debug("设备适配器已清理（在 _stop_monitoring 中）")
-                    except Exception as e:
-                        logger.warning(f"清理设备适配器失败: {e}")
-                # 无论是否清理成功，都清空引用
-                self._cached_adapter = None
-                self._cached_device_id = None
-
-            # 关键修复：正确清理异步采集线程
-            # 1. 先释放采集锁，允许正在进行的采集完成
+            # 关键修复：立即清理采集线程（不等待后台处理完成）
+            # 这样可以快速释放采集资源，避免UI阻塞
             self._is_collecting = False
 
-            # 2. 如果有正在运行的采集线程，等待它完成
+            # 清理采集线程（快速操作，不阻塞）
             if self._collection_thread and self._collection_thread.isRunning():
-                logger.debug("等待采集线程完成...")
-                # ============ 方案3：精确断开采集相关信号 ============
+                logger.debug("快速清理采集线程...")
                 self._disconnect_collection_signals()
-
-                # 请求线程退出（优雅退出）
                 self._collection_thread.quit()
-
-                # 等待线程退出（最多 5 秒，给足够时间完成清理）
-                if not self._collection_thread.wait(5000):
-                    logger.warning("采集线程未能在 5 秒内退出，强制终止")
+                if not self._collection_thread.wait(2000):
+                    logger.warning("采集线程未能在2秒内退出，强制终止")
                     self._collection_thread.terminate()
-                    self._collection_thread.wait(1000)
+                    self._collection_thread.wait(500)
+                logger.debug("采集线程已清理")
 
-                logger.debug("采集线程已停止")
-
-            # 3. 清理线程对象
             self._collection_thread = None
             self._collection_worker = None
 
-            # 解锁配置面板（允许修改配置）
+            # 清理设备适配器缓存
+            if self._cached_adapter:
+                has_apm = hasattr(self._cached_adapter, '_apm') and self._cached_adapter._apm is not None
+                if has_apm:
+                    try:
+                        self._cached_adapter._apm.stop()
+                        self._cached_adapter.cleanup()
+                        logger.debug("设备适配器已清理")
+                    except Exception as e:
+                        logger.warning(f"清理设备适配器失败: {e}")
+                self._cached_adapter = None
+                self._cached_device_id = None
+
+            # 立即清除监控面板数据（不等待后台处理）
+            self.monitor_panel.reset_monitoring()
+
+            # 解锁配置面板
             self.config_panel.set_monitoring_state(False)
 
-            # 重置会话ID（保留用于导出，直到下次监控）
-            # self.current_session_id = None
+            logger.info(f"监控已停止 (会话ID: {session_id})，后台处理中...")
 
         except Exception as e:
             logger.error(f"停止监控失败: {e}", exc_info=True)
             self.statusBar().showMessage("监控已停止（部分数据可能未保存）", 3000)
             if hasattr(self, 'processing_dialog'):
                 self.processing_dialog.complete(False, f"处理失败: {e}")
+
+    def _on_processing_worker_complete(self, success: bool, message: str):
+        """后台处理完成回调"""
+        logger.info(f"后台处理完成: success={success}, message={message}")
+
+        if success:
+            # 更新状态栏
+            self.statusBar().showMessage(
+                f"监控已停止 (会话ID: {self.current_session_id}, 样本数: {self.monitoring_duration})",
+                5000
+            )
+            # 完成对话框
+            if hasattr(self, 'processing_dialog'):
+                self.processing_dialog.complete(True, message)
+        else:
+            self.statusBar().showMessage("监控已停止（处理失败）", 3000)
+            if hasattr(self, 'processing_dialog'):
+                self.processing_dialog.complete(False, message)
 
         self._update_monitoring_ui_state()
 

@@ -212,13 +212,23 @@ class ProcessingDialog(QDialog):
         self.status_label.setText(status)
 
     def set_progress(self, value: int):
-        """设置进度值
+        """设置进度值（由外部worker调用）
 
         Args:
             value: 进度值（0-100）
         """
         self.progress_value = value
         self.progress_bar.setValue(value)
+
+        # 如果使用外部worker，停止内部动画定时器
+        if self.animation_timer.isActive():
+            self.animation_timer.stop()
+
+        # 如果达到100%，完成处理
+        if value >= 100:
+            self.progress_bar.setValue(100)
+            self.close_btn.setEnabled(True)
+            self.close_btn.setFocus()
 
     def closeEvent(self, event):
         """关闭事件"""
@@ -240,28 +250,35 @@ class ProcessingWorker(QThread):
     # 信号：处理完成
     finished = pyqtSignal(bool, str)  # (成功, 消息)
 
-    def __init__(self, session_id: int, parent=None):
+    def __init__(self, session_id: int, database, metrics_processor, parent=None):
         super().__init__(parent)
         self.session_id = session_id
+        self.database = database
+        self.metrics_processor = metrics_processor
 
     def run(self):
         """执行处理任务"""
         try:
             # 步骤1：停止采集
             self.progress_updated.emit(20, "停止数据采集...")
-            self.msleep(500)
+            self.msleep(200)
 
-            # 步骤2：保存数据
+            # 步骤2：结束数据库会话（异步执行）
             self.progress_updated.emit(40, "保存监控数据...")
-            self.msleep(800)
+            if self.session_id and self.database:
+                self.database.end_session(self.session_id)
+                logger.info(f"[异步处理] 结束监控会话: {self.session_id}")
+            self.msleep(300)
 
-            # 步骤3：生成报告
-            self.progress_updated.emit(60, "生成性能报告...")
-            self.msleep(600)
+            # 步骤3：清理指标处理器缓冲区
+            self.progress_updated.emit(60, "清理数据缓冲...")
+            if self.metrics_processor:
+                self.metrics_processor.clear_buffers()
+            self.msleep(200)
 
-            # 步骤4：分析异常
-            self.progress_updated.emit(80, "分析异常指标...")
-            self.msleep(400)
+            # 步骤4：生成报告
+            self.progress_updated.emit(80, "生成性能报告...")
+            self.msleep(300)
 
             # 完成
             self.progress_updated.emit(100, "处理完成！")
