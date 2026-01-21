@@ -1109,27 +1109,25 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
             bool: 是否连接成功
         """
         try:
-            # 检查设备是否在列表中
-            result = subprocess.run(
-                ['tidevice', 'list', '--json'],
-                capture_output=True,
-                text=True,
-                timeout=10
-            )
+            # 使用 py-ios-device 的 LockdownClient 检查设备连接
+            from ios_device.servers.Instrument import LockdownClient
 
-            if result.returncode != 0:
-                logger.error("获取iOS设备列表失败")
+            client = LockdownClient()
+            # 验证 UDID 匹配
+            if client.udid == self.device_id:
+                # 缓存设备信息
+                self._device_info_cache = {
+                    'udid': client.udid,
+                    'name': client.device_info.get('DeviceName', 'iOS Device'),
+                    'version': client.device_info.get('ProductVersion', '0')
+                }
+                logger.info(f"iOS设备连接成功: {self.device_id}")
+                client.close()
+                return True
+            else:
+                logger.error(f"UDID不匹配: 期望 {self.device_id}, 实际 {client.udid}")
+                client.close()
                 return False
-
-            devices = json.loads(result.stdout)
-            for device in devices:
-                if device.get('udid') == self.device_id:
-                    self._device_info_cache = device
-                    logger.info(f"iOS设备连接成功: {self.device_id}")
-                    return True
-
-            logger.error(f"未找到iOS设备: {self.device_id}")
-            return False
 
         except Exception as e:
             logger.error(f"iOS设备连接异常: {e}")
