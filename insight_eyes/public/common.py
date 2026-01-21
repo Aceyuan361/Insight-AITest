@@ -10,8 +10,6 @@ License: MIT License
 Author: Aceyuan361
 """
 import subprocess
-import json
-import shutil
 from logzero import logger
 from enum import Enum
 
@@ -26,18 +24,20 @@ class Devices:
     """设备检测工具类"""
 
     def __init__(self):
-        self._tidevice_available = None
+        self._pyios_available = None
 
     @property
-    def tidevice_available(self):
-        """检查 tidevice 是否可用（缓存结果）"""
-        if self._tidevice_available is None:
-            self._tidevice_available = shutil.which('tidevice') is not None
-            if self._tidevice_available:
-                logger.info("tidevice 可用")
-            else:
-                logger.warning("tidevice 未安装，iOS 设备检测不可用")
-        return self._tidevice_available
+    def pyios_available(self):
+        """检查 py-ios-device 是否可用（缓存结果）"""
+        if self._pyios_available is None:
+            try:
+                import ios_device
+                self._pyios_available = True
+                logger.info("py-ios-device 可用")
+            except ImportError:
+                self._pyios_available = False
+                logger.warning("py-ios-device 未安装，iOS 设备检测不可用")
+        return self._pyios_available
 
     def getDevices(self):
         """
@@ -54,10 +54,9 @@ class Devices:
             devices.append(f"Android {device_id}")
 
         # 获取 iOS 设备
-        if self.tidevice_available:
-            ios_devices = self._get_ios_devices()
-            for device in ios_devices:
-                devices.append(f"iOS {device['name']} ({device['udid']})")
+        ios_devices = self._get_ios_devices()
+        for device in ios_devices:
+            devices.append(f"iOS {device['name']} ({device['udid']})")
 
         return devices
 
@@ -86,23 +85,38 @@ class Devices:
             return []
 
     def _get_ios_devices(self):
-        """获取 iOS 设备列表"""
+        """获取 iOS 设备列表（使用 py-ios-device）"""
         try:
-            result = subprocess.run(
-                ['tidevice', 'list', '--json'],
-                capture_output=True,
-                text=True,
-                timeout=10
-            )
+            from ios_device.py_ios_device import get_device
 
-            if result.returncode != 0:
-                logger.error(f"获取 iOS 设备列表失败: {result.stderr}")
-                return []
+            result = []
 
-            return json.loads(result.stdout)
+            # 尝试获取设备（不传参数，自动获取第一个设备）
+            try:
+                device = get_device()
+                if device:
+                    udid = device.udid
+                    # 获取设备名称
+                    try:
+                        name = device.get_value('DeviceName')
+                    except Exception:
+                        name = 'iOS Device'
 
-        except json.JSONDecodeError as e:
-            logger.error(f"解析 iOS 设备列表失败: {e}")
+                    result.append({
+                        'udid': udid,
+                        'name': name,
+                        'type': 'iOS'
+                    })
+            except Exception as e:
+                logger.debug(f"未检测到 iOS 设备: {e}")
+
+            if not result:
+                logger.debug("未检测到 iOS 设备（请检查USB连接和信任状态）")
+
+            return result
+
+        except ImportError:
+            logger.warning("py-ios-device 未安装")
             return []
         except Exception as e:
             logger.error(f"获取 iOS 设备失败: {e}")
@@ -133,7 +147,7 @@ class Devices:
 
     def getPkgnameByiOS(self, udid):
         """
-        获取 iOS 设备上的应用包名列表
+        获取 iOS 设备上的应用包名列表（使用 py-ios-device）
 
         Args:
             udid: iOS 设备 UDID
@@ -142,27 +156,15 @@ class Devices:
             list: 应用包名列表
         """
         try:
-            result = subprocess.run(
-                ['tidevice', '--udid', udid, 'app', 'list'],
-                capture_output=True,
-                text=True,
-                timeout=30
-            )
+            from ios_device.py_ios_device import get_applications
 
-            if result.returncode != 0:
-                logger.error(f"获取 iOS 应用列表失败: {result.stderr}")
-                return []
-
+            # 获取应用列表
+            apps = get_applications(udid)
             packages = []
-            for line in result.stdout.split('\n'):
-                line = line.strip()
-                if line and not line.startswith('Total:'):
-                    # 格式: com.apple.mobilesafari (Mobile Safari)
-                    if ' ' in line:
-                        bundle_id = line.split(' ')[0]
-                        packages.append(bundle_id)
-                    else:
-                        packages.append(line)
+
+            for app in apps:
+                if 'CFBundleIdentifier' in app:
+                    packages.append(app['CFBundleIdentifier'])
 
             return packages
 
