@@ -22,7 +22,18 @@ logzero>=1.7.0
 # pandas>=2.0.0     # 数据处理
 reportlab>=4.0.0   # PDF导出
 
-# iOS设备支持 (可选)
+# ============================================================
+# iOS 设备支持
+# ============================================================
+# py-ios-device - iOS 性能采集（主要方案，iOS 15-26）
+py-ios-device>=0.7.0
+
+# pymobiledevice3 - iOS 设备通信和隧道（iOS 17-26）
+pymobiledevice3>=1.0.0
+
+# tidevice - 已弃用，仅用于向后兼容
+# 将在 v3.0 版本完全移除
+# 推荐使用 py-ios-device 架构代替
 # tidevice>=0.9.7
 
 # Android设备支持通过ADB实现，无需额外Python依赖
