@@ -735,6 +735,9 @@ class IOSAppEnumerator(BaseAppEnumerator):
             all_apps = self.enumerate_apps(include_system_apps=False)
             bundle_to_appinfo = {app.package_name: app for app in all_apps}
 
+            # 为每个应用创建匹配候选项（可能匹配多个）
+            process_to_candidates = {}  # process_name -> list of (bundle_id, app_info)
+
             # 匹配进程和应用
             for proc in processes:
                 if not proc.get('isApplication'):
@@ -744,32 +747,53 @@ class IOSAppEnumerator(BaseAppEnumerator):
                 if not process_name:
                     continue
 
-                # 尝试匹配 bundle ID
-                # 方式1: 直接匹配 bundle ID
-                matched_app = None
-                if process_name in bundle_to_appinfo:
-                    matched_app = bundle_to_appinfo[process_name]
+                candidates = []
 
-                # 方式2: 匹配 bundle ID 的第一部分（进程名通常是 bundle ID 的第一部分）
-                if not matched_app:
-                    for bundle_id, app_info in bundle_to_appinfo.items():
-                        # 获取 bundle ID 的第一部分
-                        first_part = bundle_id.split('.')[0]
-                        if first_part == process_name:
-                            matched_app = app_info
-                            break
+                # 方式1: 直接匹配 bundle ID
+                if process_name in bundle_to_appinfo:
+                    candidates.append((process_name, bundle_to_appinfo[process_name]))
+
+                # 方式2: 匹配 bundle ID 的第一部分
+                for bundle_id, app_info in bundle_to_appinfo.items():
+                    first_part = bundle_id.split('.')[0]
+                    if first_part == process_name:
+                        candidates.append((bundle_id, app_info))
 
                 # 方式3: 检查 bundle ID 是否包含进程名
-                if not matched_app:
-                    for bundle_id, app_info in bundle_to_appinfo.items():
-                        if '.' + process_name + '.' in bundle_id or bundle_id.endswith('.' + process_name):
-                            matched_app = app_info
-                            break
+                for bundle_id, app_info in bundle_to_appinfo.items():
+                    if ('.' + process_name + '.') in bundle_id or bundle_id.endswith('.' + process_name):
+                        candidates.append((bundle_id, app_info))
 
-                if matched_app:
-                    matched_app.is_running = True
-                    matched_app.status = AppStatus.RUNNING
-                    running_apps.append(matched_app)
+                if candidates:
+                    # 优先选择主应用（不是扩展）
+                    # 定义扩展后缀列表
+                    extension_suffixes = ['-Extension', '-Widget', '-Notification', '-PushService', '-Sharing', '-Watch']
+
+                    # 将候选应用分为扩展和主应用
+                    extensions = []
+                    main_apps = []
+                    for bundle_id, app_info in candidates:
+                        is_extension = any(bundle_id.endswith(suffix) for suffix in extension_suffixes)
+                        if is_extension:
+                            extensions.append((bundle_id, app_info))
+                        else:
+                            main_apps.append((bundle_id, app_info))
+
+                    # 优先选择主应用，如果主应用为空则选择扩展
+                    if main_apps:
+                        # 在主应用中选择 bundle ID 最长的
+                        main_apps.sort(key=lambda x: len(x[0]), reverse=True)
+                        selected_bundle_id, selected_app = main_apps[0]
+                    else:
+                        # 在扩展中选择 bundle ID 最长的
+                        extensions.sort(key=lambda x: len(x[0]), reverse=True)
+                        selected_bundle_id, selected_app = extensions[0]
+
+                    # 避免重复添加同一个应用
+                    if selected_app not in running_apps:
+                        selected_app.is_running = True
+                        selected_app.status = AppStatus.RUNNING
+                        running_apps.append(selected_app)
 
             return running_apps
 
