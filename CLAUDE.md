@@ -16,7 +16,7 @@ insight_eyes/
 ├── public/               # 核心性能监控库
 │   ├── adb/              # ADB 封装，用于 Android 通信
 │   ├── android/          # Android 平台采集器
-│   ├── ios/              # iOS 平台采集器 (使用 tidevice)
+│   ├── ios/              # iOS 平台采集器 (使用 py-ios-device)
 │   └── common.py         # 设备检测 (Devices, Platform 枚举)
 └── desktop/              # PyQt6 桌面应用
     ├── main.py           # 桌面应用入口
@@ -55,8 +55,8 @@ python insight_eyes/desktop/tests/test_all_fixes.py
 # 安装桌面应用依赖
 pip install -r insight_eyes/desktop/requirements.txt
 
-# 安装 iOS 支持 (可选)
-pip install tidevice>=0.9.7
+# 安装 iOS 支持 (推荐)
+pip install py-ios-device>=0.7.0 pymobiledevice3>=1.0.0
 ```
 
 ## Architecture
@@ -85,10 +85,10 @@ pip install tidevice>=0.9.7
 └─────────────────────┘           └─────────────────────┘
          │                                   │
          ▼                                   ▼
-┌─────────────────────┐           ┌─────────────────────┐
-│   ADB (adb/)        │           │   tidevice (ext)    │
-│   ADBHelper class   │           │   subprocess 调用   │
-└─────────────────────┘           └─────────────────────┘
+┌─────────────────────┐           ┌─────────────────────────────┐
+│   ADB (adb/)        │           │   py-ios-device (ext)       │
+│   ADBHelper class   │           │   Instruments 服务通信      │
+└─────────────────────┘           └─────────────────────────────┘
 ```
 
 ### 设计模式
@@ -111,13 +111,14 @@ logzero>=1.7.0        # 日志
 
 ### 平台特定
 ```
-tidevice>=0.9.7       # iOS 设备支持 (可选)
-sqlite3               # 内置于 Python
+py-ios-device>=0.7.0   # iOS 设备支持 (推荐)
+pymobiledevice3>=1.0.0 # iOS 17+ 隧道支持 (可选)
+sqlite3                # 内置于 Python
 ```
 
 ### 外部工具
 - **ADB** (Android Debug Bridge) - Android 设备通信必需
-- **tidevice** - iOS 设备通信必需
+- **py-ios-device** - iOS 设备通信推荐（替代已弃用的 tidevice）
 
 ## Key Classes and Interfaces
 
@@ -224,10 +225,12 @@ devices = adb.devices()
 - **Battery**: 解析 `dumpsys battery` 输出
 
 ### iOS Collectors
-- **CPU/Memory/FPS**: 使用 `tidevice perf --bundleid <bundle_id> --io`
-- **Network**: 返回 0 (不支持)
-- **Battery**: 返回默认值 (支持有限)
-- **GPU**: 返回 0 (未实现)
+- **推荐架构**: 使用 `py-ios-device` 通过 Instruments 服务采集
+- **CPU/Memory/FPS**: 通过 SysMontap 和 Graphics 采集器
+- **Network**: 支持网络流量采集 (iOS 15+)
+- **Battery**: 支持电池状态采集
+- **GPU**: 支持基础 GPU 指标
+- **弃用**: tidevice 采集器已标记 `@deprecated`，将在 v3.0 移除
 
 ## Data Flow Pattern
 
@@ -272,41 +275,55 @@ Android FPS 采集器 (`android/fps_collector.py`) 比较复杂:
 
 ## Known Limitations
 
-1. **iOS 17+ 需要额外依赖** - py-ios-device 和 pymobiledevice3（可选，会自动降级到 tidevice）
-2. **GPU 监控未实现** - 两个平台都不支持
-3. **iOS 网络流量** - 支持有限（iOS 17+ 可通过 py-ios-device 获取）
-4. **Android FPS** - 需要 stop() 获取数据 (设计限制)
+1. **iOS 17+ 需要额外依赖** - py-ios-device 和 pymobiledevice3（推荐安装）
+2. **GPU 监控** - iOS 支持基础 GPU 指标，Android 暂未实现
+3. **Android FPS** - 需要 stop() 获取数据 (设计限制)
+4. **tidevice 弃用** - 旧架构将在 v3.0 版本完全移除
 
-## iOS Monitoring Enhancement (2025-01-20)
+## iOS Monitoring (2025-01-21 更新)
 
-### 混合架构
-自动根据 iOS 版本选择最佳采集方案：
-- **iOS 15-16**: tidevice（标准方案）
-- **iOS 17-26**: py-ios-device + pymobiledevice3（优化方案），失败时自动降级到 tidevice
+**当前架构: py-ios-device 主要方案**
 
-### 新增组件
+**核心组件:**
 | 组件 | 文件 | 功能 |
 |------|------|------|
-| IOSDependencyChecker | `dependency_checker.py` | 检测 py-ios-device 和 pymobiledevice3 可用性 |
-| PyIOSConnection | `pyios_connect.py` | 管理 Instruments 服务连接 |
-| IOSDataNormalizer | `data_normalizer.py` | 统一数据格式（兼容 tidevice） |
-| IOSTunnelManager | `tunnel_manager.py` | pymobiledevice3 隧道管理 |
-| SysMontapCollector | `pyios_collectors/sysmontap.py` | CPU/Memory/Network 采集 |
-| GraphicsCollector | `pyios_collectors/graphics.py` | FPS/GPU 采集 |
-| EnergyCollector | `pyios_collectors/energy.py` | Battery 采集 |
+| IOSAPM | `public/ios/ios_apm.py` | iOS APM 主类 |
+| PyIOSConnection | `public/ios/pyios_connect.py` | 连接管理器 |
+| SysMontapCollector | `public/ios/pyios_collectors/sysmontap.py` | CPU/Memory/Network |
+| GraphicsCollector | `public/ios/pyios_collectors/graphics.py` | FPS/GPU |
+| EnergyCollector | `public/ios/pyios_collectors/energy.py` | Battery |
+| IOSDataNormalizer | `public/ios/data_normalizer.py` | 数据规范化 |
 
-### 安装完整支持
+**版本支持:**
+- iOS 15-26: py-ios-device（推荐）
+- iOS 17-26: pymobiledevice3 隧道支持
+
+**依赖:**
 ```bash
 pip install py-ios-device pymobiledevice3
 ```
 
-### 安全增强
-- ✅ UDID 验证（防止命令注入）
-- ✅ 线程安全（网络速率计算）
-- ✅ 资源清理健壮性
+**弃用说明:**
+- tidevice 采集器已标记 `@deprecated`
+- 将在 v3.0 版本完全移除
+- 推荐迁移到 py-ios-device 架构
+
+**迁移指南:**
+```python
+# 旧方式 (已弃用)
+from insight_eyes.public.ios.cpu_collector import CPUCollector
+
+# 新方式 (推荐)
+from insight_eyes.public.ios.ios_apm import IOSAPM
+
+apm = IOSAPM(bundle_id, udid)
+apm.start()
+cpu_data = apm.collectCpu()
+apm.stop()
+```
 
 ### 文档
-- 设计文档: `docs/plans/2025-01-20-ios-monitoring-upgrade-design.md`
+- 迁移指南: `docs/MIGRATION_GUIDE.md`
 - 实施报告: `docs/ios-monitoring-upgrade-implementation-report.md`
 
 ---
