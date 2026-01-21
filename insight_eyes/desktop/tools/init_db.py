@@ -84,15 +84,7 @@ def create_sample_data(db: DatabaseManager):
         os_version='Android 13'
     )
 
-    db.upsert_device(
-        device_id='iphone-test-001',
-        name='iPhone Test Device',
-        platform='ios',
-        model='iPhone 14',
-        os_version='iOS 17.0'
-    )
-
-    print("  [OK] 添加了2个测试设备")
+    print("  [OK] 添加了1个测试设备")
 
     # 2. 创建测试App
     db.upsert_app('emulator-5554', 'com.example.app', 'Example App')

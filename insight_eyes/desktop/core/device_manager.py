@@ -90,19 +90,12 @@ class DeviceScannerThread(QThread):
 
                 current_devices = set()
 
-                # 处理每个设备
+                # 处理每个设备（仅支持 Android）
                 for device_str in device_list:
                     # 解析设备信息
                     if device_str.startswith("Android "):
                         device_id = device_str[8:].strip()
                         platform = Platform.ANDROID
-                    elif device_str.startswith("iOS "):
-                        # iOS: "iOS iPhone (udid)"
-                        if '(' in device_str and ')' in device_str:
-                            device_id = device_str.split('(')[1].split(')')[0].strip()
-                        else:
-                            device_id = device_str[4:].strip()
-                        platform = Platform.IOS
                     else:
                         continue
 

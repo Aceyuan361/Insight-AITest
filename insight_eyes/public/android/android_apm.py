@@ -80,8 +80,6 @@ class AndroidAPM:
     - 华为设备：优先使用 dumpsys_cpuinfo
     - OPPO/vivo：优先使用 top
     - 三星/Google：优先使用 dumpsys_cpuinfo
-
-    与 IOSAPM 接口保持一致
     """
 
     def __init__(self, package_name, device_id, frequency=1.0, surfaceview=True, device_profile=None, **kwargs):

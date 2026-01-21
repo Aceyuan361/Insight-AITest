@@ -39,7 +39,6 @@ from insight_eyes.desktop.config.config_manager import AppConfig, UIConfig
 from insight_eyes.desktop.data.database import DatabaseManager
 from insight_eyes.desktop.data.exporter import DataExporter
 from insight_eyes.desktop.analytics.metrics_batch_collector import MetricsBatchCollector, MetricsSnapshot
-from insight_eyes.desktop.analytics.ios_serial_collector import IOSSerialCollector
 from insight_eyes.desktop.ui.widgets.processing_dialog import ProcessingDialog
 
 
@@ -178,16 +177,10 @@ class DatabaseSaveRunnable(QRunnable):
 
 class MetricsCollectionWorker(QObject):
     """
-    采集协调器 - 根据平台选择最佳策略
+    采集协调器 - 并行批量采集策略
 
     架构说明：
-    - iOS：使用串行采集（避免 tidevice 资源竞争）
     - Android：使用并行批量采集（快速响应）
-
-    iOS 串行采集：
-    - CPU (1秒) → Memory (1秒) → FPS (2秒) → Network → Battery
-    - 总耗时：2-4 秒
-    - 优势：稳定，无资源竞争
 
     Android 并行采集：
     - 5 个线程同时采集
@@ -208,50 +201,19 @@ class MetricsCollectionWorker(QObject):
         self.adapter = adapter
         self.package_name = package_name
         self.batch_collector = None  # 并行批量采集器（Android）
-        self.serial_collector = None  # 串行采集器（iOS）
 
         logger.debug(f"采集协调器初始化: package={package_name}")
 
     def collect_metrics(self):
         """
-        根据平台选择最佳采集策略
-
-        - iOS：串行采集（稳定，避免资源竞争）
-        - Android：并行批量采集（快速响应）
+        并行批量采集策略（Android）
         """
         try:
             import time
             start_time = time.time()
 
-            # 检测平台类型（修复：使用枚举值检测而不是字符串比较）
-            from insight_eyes.public.common import Platform
-
-            # 调试日志：检查 platform 属性
-            has_platform = hasattr(self.adapter, 'platform')
-            logger.info(f"[DEBUG] hasattr(adapter, 'platform') = {has_platform}")
-
-            if has_platform:
-                platform_obj = self.adapter.platform
-                logger.info(f"[DEBUG] adapter.platform = {platform_obj}")
-                logger.info(f"[DEBUG] type(adapter.platform) = {type(platform_obj)}")
-                has_value = hasattr(platform_obj, 'value')
-                logger.info(f"[DEBUG] hasattr(platform, 'value') = {has_value}")
-                if has_value:
-                    platform_value = platform_obj.value
-                    logger.info(f"[DEBUG] platform.value = {platform_value}")
-
-            is_ios = (hasattr(self.adapter, 'platform') and
-                     hasattr(self.adapter.platform, 'value') and
-                     self.adapter.platform.value == 'iOS')
-
-            logger.info(f"[DEBUG] is_ios = {is_ios}")
-
-            if is_ios:
-                logger.info("===== 开始 iOS 串行指标采集 =====")
-                raw_metrics = self._collect_ios_serial()
-            else:
-                logger.info("===== 开始 Android 并行指标采集 =====")
-                raw_metrics = self._collect_android_batch()
+            logger.info("===== 开始 Android 并行指标采集 =====")
+            raw_metrics = self._collect_android_batch()
 
             # 记录采集完成
             elapsed_time = (time.time() - start_time) * 1000
@@ -262,8 +224,7 @@ class MetricsCollectionWorker(QObject):
             fps_val = raw_metrics.get('fps', {}).get('fps', 0)
             jank_val = raw_metrics.get('fps', {}).get('jank', 0)
 
-            platform_str = "iOS" if is_ios else "Android"
-            logger.info(f"[✓] {platform_str} 采集完成: "
+            logger.info(f"[✓] Android 采集完成: "
                        f"CPU={cpu_val}%, Memory={mem_val}MB, FPS={fps_val}, Jank={jank_val}, "
                        f"耗时={elapsed_time:.0f}ms")
 
@@ -279,24 +240,6 @@ class MetricsCollectionWorker(QObject):
             self.collection_failed.emit(str(e))
             if self.thread():
                 self.thread().quit()
-
-    def _collect_ios_serial(self) -> dict:
-        """iOS 串行采集（避免 tidevice 资源竞争）"""
-        import time
-
-        # 获取 APM 实例
-        apm = self.adapter._get_apm(self.package_name)
-
-        # 创建串行采集器（首次）
-        if self.serial_collector is None:
-            self.serial_collector = IOSSerialCollector(apm)
-            logger.debug("iOS 串行采集器创建成功")
-
-        # 执行串行采集
-        device_id = self.adapter.device_id
-        raw_metrics = self.serial_collector.collect_serial(device_id, self.package_name)
-
-        return raw_metrics
 
     def _collect_android_batch(self) -> dict:
         """Android 并行批量采集（快速响应）"""
@@ -911,7 +854,7 @@ class MainWindow(QMainWindow):
         QMessageBox.information(
             self, "使用说明",
             "Insight-Eye 移动设备性能监控工具\n\n"
-            "1. 连接Android或iOS设备\n"
+            "1. 连接 Android 设备\n"
             "2. 在左侧选择要监控的应用\n"
             "3. 点击\"开始\"或按F5开始监控\n"
             "4. 查看实时性能数据和趋势图\n"
@@ -937,7 +880,7 @@ class MainWindow(QMainWindow):
             self, "关于 Insight-Eye",
             "<h2>Insight-Eye v1.0.0</h2>"
             "<p>移动设备性能监控工具</p>"
-            "<p>支持 Android 和 iOS 平台</p>"
+            "<p>支持 Android 平台</p>"
             "<hr>"
             "<p>Copyright (c) 2025 Aceyuan361</p>"
             "<p>GitHub: https://github.com/Aceyuan361/Insight-Eye</p>"
@@ -1074,7 +1017,7 @@ class MainWindow(QMainWindow):
                 # 锁定配置面板（监控过程中不允许修改配置）
                 self.config_panel.set_monitoring_state(True)
 
-                # iOS 和 Android 都使用定时采集（IOSAPM 现在使用 py-ios-device 架构）
+                # 使用定时采集
                 logger.info("===== 启动定时采集 =====")
                 # 启动定时器
                 self.update_timer.start(config.interval_ms)
@@ -2006,12 +1949,6 @@ class MainWindow(QMainWindow):
                     if device_str.startswith("Android "):
                         device_id = device_str[8:].strip()
                         platform = Platform.Android
-                    elif device_str.startswith("iOS "):
-                        if '(' in device_str and ')' in device_str:
-                            device_id = device_str.split('(')[1].split(')')[0].strip()
-                        else:
-                            device_id = device_str[4:].strip()
-                        platform = Platform.iOS
                     else:
                         continue
 

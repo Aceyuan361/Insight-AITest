@@ -134,7 +134,7 @@ class DatabaseManager:
             CREATE TABLE IF NOT EXISTS devices (
                 device_id TEXT PRIMARY KEY,
                 name TEXT NOT NULL,
-                platform TEXT NOT NULL CHECK(platform IN ('android', 'ios')),
+                platform TEXT NOT NULL CHECK(platform IN ('android')),
                 model TEXT,
                 os_version TEXT,
                 first_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -271,7 +271,7 @@ class DatabaseManager:
         Args:
             device_id: 设备ID
             name: 设备名称
-            platform: 平台类型 ('android' 或 'ios')
+            platform: 平台类型 ('android')
             model: 设备型号
             os_version: 系统版本
 

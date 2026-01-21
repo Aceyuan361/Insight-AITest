@@ -61,7 +61,7 @@ class ReportPanel(QWidget):
 
         # 筛选控件
         self.filter_combo = QComboBox()
-        self.filter_combo.addItems(["全部设备", "Android", "iOS"])
+        self.filter_combo.addItems(["全部设备", "Android"])
         self.filter_combo.setMinimumWidth(120)
         self.filter_combo.setStyleSheet("""
             QComboBox {
@@ -231,10 +231,6 @@ class ReportPanel(QWidget):
                     # 需要从设备信息判断平台
                     device = self.db.get_device(session['device_id'])
                     if device and device['platform'] != 'android':
-                        continue
-                elif platform_filter == "iOS":
-                    device = self.db.get_device(session['device_id'])
-                    if device and device['platform'] != 'ios':
                         continue
 
                 # 搜索筛选

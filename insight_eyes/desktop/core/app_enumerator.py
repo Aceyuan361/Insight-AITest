@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-应用枚举器
-负责枚举Android/iOS设备上安装的应用
+应用枚举器（仅支持 Android）
+负责枚举 Android 设备上安装的应用
 
 Copyright (c) 2025 Aceyuan361
 GitHub: https://github.com/Aceyuan361/Insight-Eye
@@ -65,7 +65,7 @@ class BaseAppEnumerator(ABC):
         获取指定应用的详细信息
 
         Args:
-            package_name: 包名（Android）或Bundle ID（iOS）
+            package_name: 包名（Android）
 
         Returns:
             AppInfo: 应用信息，未找到返回None
@@ -394,7 +394,7 @@ class AndroidAppEnumerator(BaseAppEnumerator):
 
                         # 判断是否前台应用 - 扩展判断条件
                         # 前台应用通常的 adj 值：
-                        # - _FOREGROUND_APP, _FOREGOUND
+                        # - _FOREGROUND_APP, _FOREGROUND
                         # - 0 (前台进程)
                         # - 100 (前台服务)
                         # - 200 (可见进程)
@@ -594,243 +594,9 @@ class AndroidAppEnumerator(BaseAppEnumerator):
             return 0.0
 
 
-class IOSAppEnumerator(BaseAppEnumerator):
-    """
-    iOS应用枚举器
-    通过tidevice获取iOS设备上的应用信息
-    """
-
-    def __init__(self, device_id: str):
-        """
-        初始化iOS应用枚举器
-
-        Args:
-            device_id: iOS设备UDID
-        """
-        super().__init__(device_id)
-        self._check_tidevice()
-
-    def _check_tidevice(self):
-        """检查tidevice是否可用"""
-        try:
-            result = subprocess.run(
-                ['tidevice', 'version'],
-                capture_output=True,
-                text=True,
-                timeout=5
-            )
-            if result.returncode == 0:
-                logger.info(f"iOS应用枚举器初始化成功: {self.device_id}")
-            else:
-                logger.warning("tidevice不可用")
-        except Exception as e:
-            logger.error(f"检查tidevice失败: {e}")
-
-    def _execute_tidevice(self, args: List[str], timeout: int = 30) -> str:
-        """
-        执行tidevice命令
-
-        Args:
-            args: 命令参数列表
-            timeout: 超时时间（秒）
-
-        Returns:
-            str: 命令输出
-        """
-        try:
-            cmd = ['tidevice', '--udid', self.device_id] + args
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=timeout
-            )
-
-            if result.returncode == 0:
-                return result.stdout
-            else:
-                logger.error(f"tidevice命令执行失败: {result.stderr}")
-                return ""
-
-        except subprocess.TimeoutExpired:
-            logger.error(f"tidevice命令超时: {' '.join(args)}")
-            return ""
-        except Exception as e:
-            logger.error(f"tidevice命令执行异常: {e}")
-            return ""
-
-    def enumerate_apps(self, include_system_apps: bool = False) -> List[AppInfo]:
-        """
-        枚举iOS设备上的所有应用（使用 py-ios-device）
-
-        Args:
-            include_system_apps: 是否包含系统应用
-
-        Returns:
-            List[AppInfo]: 应用信息列表
-        """
-        try:
-            # 使用 py-ios-device 获取应用列表
-            from ios_device.py_ios_device import PyiOSDevice
-
-            device = PyiOSDevice(self.device_id)
-            apps_data = device.get_applications()
-            device.stop()
-
-            if not apps_data:
-                return []
-
-            # 解析应用列表
-            apps = []
-            for app in apps_data:
-                bundle_id = app.get('CFBundleIdentifier', '')
-                app_name = app.get('CFBundleDisplayName', app.get('CFBundleName', bundle_id))
-
-                if not bundle_id:
-                    continue
-
-                # 过滤系统应用
-                if not include_system_apps and bundle_id.startswith('com.apple.'):
-                    continue
-
-                app_info = AppInfo(
-                    package_name=bundle_id,
-                    app_name=app_name,
-                    is_running=False,
-                    status=AppStatus.STOPPED
-                )
-
-                apps.append(app_info)
-
-            self._cached_apps = apps
-            logger.info(f"枚举iOS应用完成: {len(apps)}个应用")
-            return apps
-
-        except Exception as e:
-            logger.error(f"枚举iOS应用失败: {e}")
-            return []
-
-    def get_running_apps(self) -> List[AppInfo]:
-        """
-        获取正在运行的iOS应用（使用 py-ios-device）
-
-        Returns:
-            List[AppInfo]: 运行中的应用列表
-        """
-        try:
-            # 使用 py-ios-device 获取进程列表
-            from ios_device.py_ios_device import PyiOSDevice
-
-            device = PyiOSDevice(self.device_id)
-            processes = device.get_processes()
-            device.stop()
-
-            if not processes:
-                return []
-
-            # 解析运行中的应用
-            running_apps = []
-
-            # 首先获取所有已安装应用列表，用于匹配
-            all_apps = self.enumerate_apps(include_system_apps=False)
-            bundle_to_appinfo = {app.package_name: app for app in all_apps}
-
-            # 为每个应用创建匹配候选项（可能匹配多个）
-            process_to_candidates = {}  # process_name -> list of (bundle_id, app_info)
-
-            # 匹配进程和应用
-            for proc in processes:
-                if not proc.get('isApplication'):
-                    continue
-
-                process_name = proc.get('name', '')
-                if not process_name:
-                    continue
-
-                candidates = []
-
-                # 方式1: 直接匹配 bundle ID
-                if process_name in bundle_to_appinfo:
-                    candidates.append((process_name, bundle_to_appinfo[process_name]))
-
-                # 方式2: 匹配 bundle ID 的第一部分
-                for bundle_id, app_info in bundle_to_appinfo.items():
-                    first_part = bundle_id.split('.')[0]
-                    if first_part == process_name:
-                        candidates.append((bundle_id, app_info))
-
-                # 方式3: 检查 bundle ID 是否包含进程名
-                for bundle_id, app_info in bundle_to_appinfo.items():
-                    if ('.' + process_name + '.') in bundle_id or bundle_id.endswith('.' + process_name):
-                        candidates.append((bundle_id, app_info))
-
-                if candidates:
-                    # 优先选择主应用（不是扩展）
-                    # 定义扩展后缀列表
-                    extension_suffixes = ['-Extension', '-Widget', '-Notification', '-PushService', '-Sharing', '-Watch']
-
-                    # 将候选应用分为扩展和主应用
-                    extensions = []
-                    main_apps = []
-                    for bundle_id, app_info in candidates:
-                        is_extension = any(bundle_id.endswith(suffix) for suffix in extension_suffixes)
-                        if is_extension:
-                            extensions.append((bundle_id, app_info))
-                        else:
-                            main_apps.append((bundle_id, app_info))
-
-                    # 优先选择主应用，如果主应用为空则选择扩展
-                    if main_apps:
-                        # 在主应用中选择 bundle ID 最长的
-                        main_apps.sort(key=lambda x: len(x[0]), reverse=True)
-                        selected_bundle_id, selected_app = main_apps[0]
-                    else:
-                        # 在扩展中选择 bundle ID 最长的
-                        extensions.sort(key=lambda x: len(x[0]), reverse=True)
-                        selected_bundle_id, selected_app = extensions[0]
-
-                    # 避免重复添加同一个应用
-                    if selected_app not in running_apps:
-                        selected_app.is_running = True
-                        selected_app.status = AppStatus.RUNNING
-                        running_apps.append(selected_app)
-
-            return running_apps
-
-        except Exception as e:
-            logger.error(f"获取运行中的iOS应用失败: {e}")
-            return []
-
-    def get_app_info(self, package_name: str) -> Optional[AppInfo]:
-        """
-        获取iOS应用详细信息
-
-        Args:
-            package_name: Bundle ID
-
-        Returns:
-            AppInfo: 应用信息
-        """
-        # 先检查缓存
-        for app in self._cached_apps:
-            if app.package_name == package_name:
-                return app
-
-        # 缓存中不存在，创建一个新的
-        app_info = AppInfo(
-            package_name=package_name,
-            app_name=package_name,
-            is_running=False,
-            status=AppStatus.STOPPED
-        )
-
-        return app_info
-
-
 class AppEnumeratorFactory:
     """
-    应用枚举器工厂
-    根据平台创建对应的应用枚举器
+    应用枚举器工厂（仅支持 Android）
     """
 
     @staticmethod
@@ -840,15 +606,13 @@ class AppEnumeratorFactory:
 
         Args:
             device_id: 设备ID
-            platform: 平台类型
+            platform: 平台类型（仅支持 Android）
 
         Returns:
             BaseAppEnumerator: 应用枚举器实例
         """
         if platform == Platform.ANDROID:
             return AndroidAppEnumerator(device_id)
-        elif platform == Platform.IOS:
-            return IOSAppEnumerator(device_id)
         else:
-            logger.error(f"不支持的平台: {platform}")
+            logger.error(f"不支持的平台: {platform}，仅支持 Android")
             return None

@@ -153,22 +153,19 @@ public/
 │   ├── network_collector.py
 │   ├── battery_collector.py
 │   └── gpu_collector.py
-├── ios/                   # iOS 采集器
-│   ├── ios_apm.py
-│   └── (同 Android 结构)
 └── common.py              # 设备检测
 ```
 
 **采集指标**：
 
-| 指标 | Android 实现 | iOS 实现 |
-|------|-------------|---------|
-| CPU | `dumpsys cpuinfo` | `tidevice perf` |
-| 内存 | `dumpsys meminfo` | `tidevice perf` |
-| FPS | `SurfaceFlinger` | `tidevice perf` |
-| 网络 | `/proc/uid_stat` | 不支持 |
-| 电池 | `dumpsys battery` | `tidevice` |
-| GPU | 未实现 | 未实现 |
+| 指标 | Android 实现 |
+|------|-------------|
+| CPU | `dumpsys cpuinfo` |
+| 内存 | `dumpsys meminfo` |
+| FPS | `SurfaceFlinger` |
+| 网络 | `/proc/uid_stat` |
+| 电池 | `dumpsys battery` |
+| GPU | 未实现 |
 
 ### 3.3 分析模块 (analytics/)
 
