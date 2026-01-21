@@ -730,16 +730,46 @@ class IOSAppEnumerator(BaseAppEnumerator):
 
             # 解析运行中的应用
             running_apps = []
+
+            # 首先获取所有已安装应用列表，用于匹配
+            all_apps = self.enumerate_apps(include_system_apps=False)
+            bundle_to_appinfo = {app.package_name: app for app in all_apps}
+
+            # 匹配进程和应用
             for proc in processes:
-                bundle_id = proc.get('bundleId', '')
-                if not bundle_id:
+                if not proc.get('isApplication'):
                     continue
 
-                app_info = self.get_app_info(bundle_id)
-                if app_info:
-                    app_info.is_running = True
-                    app_info.status = AppStatus.RUNNING
-                    running_apps.append(app_info)
+                process_name = proc.get('name', '')
+                if not process_name:
+                    continue
+
+                # 尝试匹配 bundle ID
+                # 方式1: 直接匹配 bundle ID
+                matched_app = None
+                if process_name in bundle_to_appinfo:
+                    matched_app = bundle_to_appinfo[process_name]
+
+                # 方式2: 匹配 bundle ID 的第一部分（进程名通常是 bundle ID 的第一部分）
+                if not matched_app:
+                    for bundle_id, app_info in bundle_to_appinfo.items():
+                        # 获取 bundle ID 的第一部分
+                        first_part = bundle_id.split('.')[0]
+                        if first_part == process_name:
+                            matched_app = app_info
+                            break
+
+                # 方式3: 检查 bundle ID 是否包含进程名
+                if not matched_app:
+                    for bundle_id, app_info in bundle_to_appinfo.items():
+                        if '.' + process_name + '.' in bundle_id or bundle_id.endswith('.' + process_name):
+                            matched_app = app_info
+                            break
+
+                if matched_app:
+                    matched_app.is_running = True
+                    matched_app.status = AppStatus.RUNNING
+                    running_apps.append(matched_app)
 
             return running_apps
 
