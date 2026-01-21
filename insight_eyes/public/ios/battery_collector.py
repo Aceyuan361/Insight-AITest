@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-iOS 电池采集器
+iOS 电池采集器 (已弃用)
+
+.. deprecated::
+    请使用 py-ios-device 架构（PyIOSConnection + EnergyCollector）
+    此类仅为向后兼容保留，将在未来版本中移除。
+
 使用 tidevice 实现无需越狱的 iOS 电池数据采集
 
 Copyright (c) 2025 Aceyuan361
@@ -16,7 +21,11 @@ from logzero import logger
 
 class BatteryCollector:
     """
-    iOS 电池状态采集器
+    iOS 电池状态采集器（已弃用）
+
+    .. deprecated::
+        请使用 py-ios-device 架构（PyIOSConnection + EnergyCollector）
+        此类仅为向后兼容保留，将在未来版本中移除。
 
     使用 tidevice info 命令获取设备的电池信息
     """
@@ -28,6 +37,7 @@ class BatteryCollector:
         Args:
             udid: iOS 设备唯一标识符
         """
+        logger.warning("[DEPRECATED] BatteryCollector 已弃用，请使用 py-ios-device 架构")
         self.udid = udid
         self._check_tidevice()
 

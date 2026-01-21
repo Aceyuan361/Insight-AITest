@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-iOS FPS 采集器
+iOS FPS 采集器 (已弃用)
+
+.. deprecated::
+    请使用 py-ios-device 架构（PyIOSConnection + GraphicsCollector）
+    此类仅为向后兼容保留，将在未来版本中移除。
+
 使用 tidevice 实现无需越狱的 iOS FPS 性能数据采集
 
 Copyright (c) 2025 Aceyuan361
@@ -17,7 +22,11 @@ from logzero import logger
 
 class FPSCollector:
     """
-    iOS FPS 帧率采集器
+    iOS FPS 帧率采集器（已弃用）
+
+    .. deprecated::
+        请使用 py-ios-device 架构（PyIOSConnection + GraphicsCollector）
+        此类仅为向后兼容保留，将在未来版本中移除。
 
     使用 tidevice perf 命令获取应用的 FPS 信息
     """
@@ -29,6 +38,7 @@ class FPSCollector:
         Args:
             udid: iOS 设备唯一标识符
         """
+        logger.warning("[DEPRECATED] FPSCollector 已弃用，请使用 py-ios-device 架构")
         self.udid = udid
         self._check_tidevice()
 
@@ -94,7 +104,7 @@ class FPSCollector:
         """
         执行 tidevice perf 命令（持续输出型）
 
-        使用 Popen 持续读取输出，在获取数据或超时后终止进程
+        使用 subprocess.run() 等待固定时间后获取所有输出
 
         Args:
             cmd: 完整的命令列表
@@ -103,75 +113,37 @@ class FPSCollector:
         Returns:
             str: 捕获的输出
         """
-        import threading
-        import time
-
-        output_buffer = []
-        process = None
-        stop_reading = threading.Event()
-
-        def read_output():
-            nonlocal output_buffer
-            try:
-                for line in process.stdout:
-                    if stop_reading.is_set():
-                        break
-                    line = line.decode('utf-8', errors='ignore').strip()
-                    if line:
-                        output_buffer.append(line)
-                        # 读取 3 行数据以跳过初始的 0 值
-                        # tidevice perf 每秒输出 1 行，前几行可能是 0
-                        if len(output_buffer) >= 3:
-                            break
-            except Exception:
-                pass  # 线程退出时忽略错误
-
         try:
-            process = subprocess.Popen(
-                cmd,
+            # 修复：使用 shell=True 否则 tidevice perf 会检测到输出重定向而抑制输出
+            cmd_str = ' '.join(cmd)
+            logger.debug(f"[_run_tidevice_perf] 启动进程: {cmd_str}")
+
+            # 使用 run() 等待固定时间后获取输出
+            # FPS 采集需要较长超时以获取多行数据并跳过初始的 fps=0
+            result = subprocess.run(
+                cmd_str,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.DEVNULL,  # 忽略 stderr
-                text=False
+                stderr=subprocess.STDOUT,  # 合并 stderr 到 stdout
+                text=True,
+                shell=True,  # 关键修复：使用 shell=True
+                encoding='utf-8',
+                errors='ignore',
+                timeout=timeout  # run() 原生支持超时
             )
 
-            # 启动线程读取输出
-            reader_thread = threading.Thread(target=read_output, daemon=True)
-            reader_thread.start()
-
-            # 等待获取数据或超时
-            # FPS 采集需要等待 3 行数据以跳过初始的 0 值
-            start_time = time.time()
-            while time.time() - start_time < timeout:
-                # 等待至少有 3 行数据
-                if len(output_buffer) >= 3:
-                    break
-                time.sleep(0.1)
-
-            # 清理进程
-            stop_reading.set()  # 通知线程停止读取
-
-            # 先关闭管道，让进程能够正常退出
-            try:
-                if process.stdout:
-                    process.stdout.close()
-            except:
-                pass
-
-            # 强制终止进程（Windows 上需要 kill）
-            try:
-                process.kill()
-                process.wait(timeout=2)
-            except:
-                pass
-
-            if output_buffer:
-                output = '\n'.join(output_buffer)
-                logger.debug(f"tidevice perf 成功获取 {len(output_buffer)} 行数据")
-                return output
+            if result.stdout:
+                lines = result.stdout.splitlines()
+                logger.debug(f"tidevice perf 成功获取 {len(lines)} 行数据")
+                return result.stdout
             else:
-                logger.warning(f"tidevice perf 超时未获取到数据")
+                logger.warning(f"tidevice perf 未获取到数据")
                 return None
 
+        except subprocess.TimeoutExpired:
+            # 超时是正常的，因为 tidevice perf 会持续输出
+            # 我们只关心是否获取到了数据
+            logger.debug(f"tidevice perf 超时（这是正常的）")
+            return None
         except Exception as e:
             logger.error(f"tidevice perf 执行异常: {e}")
             return None
@@ -200,7 +172,7 @@ class FPSCollector:
         """
         try:
             # 使用 tidevice perf 获取性能数据
-            output = self._run_tidevice(['perf', '-B', bundle_id, '-o', 'fps'], timeout=5)
+            output = self._run_tidevice(['perf', '-B', bundle_id, '-o', 'fps'], timeout=3)
 
             if output:
                 # 解析 FPS 数据

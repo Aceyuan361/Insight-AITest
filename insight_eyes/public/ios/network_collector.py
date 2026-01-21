@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-iOS 网络流量采集器
+iOS 网络流量采集器 (已弃用)
+
+.. deprecated::
+    请使用 py-ios-device 架构（PyIOSConnection + SysMontapCollector）
+    此类仅为向后兼容保留，将在未来版本中移除。
+
 使用 tidevice 实现无需越狱的 iOS 网络流量数据采集
 
 Copyright (c) 2025 Aceyuan361
@@ -16,7 +21,11 @@ from logzero import logger
 
 class NetworkCollector:
     """
-    iOS 网络流量采集器
+    iOS 网络流量采集器（已弃用）
+
+    .. deprecated::
+        请使用 py-ios-device 架构（PyIOSConnection + SysMontapCollector）
+        此类仅为向后兼容保留，将在未来版本中移除。
 
     注意：
         - iOS 网络流量采集受到系统限制
@@ -31,6 +40,7 @@ class NetworkCollector:
         Args:
             udid: iOS 设备唯一标识符
         """
+        logger.warning("[DEPRECATED] NetworkCollector 已弃用，请使用 py-ios-device 架构")
         self.udid = udid
         self._check_tidevice()
 

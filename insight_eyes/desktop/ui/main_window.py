@@ -39,6 +39,7 @@ from insight_eyes.desktop.config.config_manager import AppConfig, UIConfig
 from insight_eyes.desktop.data.database import DatabaseManager
 from insight_eyes.desktop.data.exporter import DataExporter
 from insight_eyes.desktop.analytics.metrics_batch_collector import MetricsBatchCollector, MetricsSnapshot
+from insight_eyes.desktop.analytics.ios_serial_collector import IOSSerialCollector
 from insight_eyes.desktop.ui.widgets.processing_dialog import ProcessingDialog
 
 
@@ -177,22 +178,21 @@ class DatabaseSaveRunnable(QRunnable):
 
 class MetricsCollectionWorker(QObject):
     """
-    批量采集协调器 - 时间窗口快照架构
+    采集协调器 - 根据平台选择最佳策略
 
-    核心改进：
-    - 使用 MetricsBatchCollector 在同一时间窗口内并行采集所有指标
-    - 所有指标使用统一的时间戳
-    - 确保数据时间一致性
+    架构说明：
+    - iOS：使用串行采集（避免 tidevice 资源竞争）
+    - Android：使用并行批量采集（快速响应）
 
-    数据流：
-    20:00:01.000 并行采集开始 → 20:00:01.300 采集完成
-    → MetricsSnapshot { timestamp: 20:00:01.000, cpu: 3.7%, ... }
-    → 一次性更新监控面板
+    iOS 串行采集：
+    - CPU (1秒) → Memory (1秒) → FPS (2秒) → Network → Battery
+    - 总耗时：2-4 秒
+    - 优势：稳定，无资源竞争
 
-    性能：
-    - 并行采集：5 个线程同时采集
-    - 总耗时：~300ms（原来 750ms）
-    - 提升：60%
+    Android 并行采集：
+    - 5 个线程同时采集
+    - 总耗时：~300ms
+    - 优势：快速响应
     """
     # 信号：采集完成，发送原始指标数据
     collection_finished = pyqtSignal(dict)
@@ -207,101 +207,139 @@ class MetricsCollectionWorker(QObject):
         super().__init__()
         self.adapter = adapter
         self.package_name = package_name
-        self.batch_collector = None  # 批量采集器（延迟初始化）
+        self.batch_collector = None  # 并行批量采集器（Android）
+        self.serial_collector = None  # 串行采集器（iOS）
 
-        logger.debug(f"批量采集协调器初始化: package={package_name}")
+        logger.debug(f"采集协调器初始化: package={package_name}")
 
     def collect_metrics(self):
         """
-        使用批量采集器执行时间窗口快照采集
+        根据平台选择最佳采集策略
 
-        改进：
-        - 所有指标在同一时间窗口内采集
-        - 使用统一的时间戳
-        - 转换为兼容的 raw_metrics 格式
+        - iOS：串行采集（稳定，避免资源竞争）
+        - Android：并行批量采集（快速响应）
         """
         try:
             import time
             start_time = time.time()
 
-            logger.debug("===== 开始批量指标采集 =====")
+            # 检测平台类型（修复：使用枚举值检测而不是字符串比较）
+            from insight_eyes.public.common import Platform
 
-            # 获取 APM 实例
-            apm = self.adapter._get_apm(self.package_name)
+            # 调试日志：检查 platform 属性
+            has_platform = hasattr(self.adapter, 'platform')
+            logger.info(f"[DEBUG] hasattr(adapter, 'platform') = {has_platform}")
 
-            # 创建批量采集器（首次）
-            if self.batch_collector is None:
-                # 增加超时时间到 5 秒（Memory 采集可能需要较长时间）
-                self.batch_collector = MetricsBatchCollector(apm, timeout_seconds=5.0)
-                logger.debug("批量采集器创建成功")
+            if has_platform:
+                platform_obj = self.adapter.platform
+                logger.info(f"[DEBUG] adapter.platform = {platform_obj}")
+                logger.info(f"[DEBUG] type(adapter.platform) = {type(platform_obj)}")
+                has_value = hasattr(platform_obj, 'value')
+                logger.info(f"[DEBUG] hasattr(platform, 'value') = {has_value}")
+                if has_value:
+                    platform_value = platform_obj.value
+                    logger.info(f"[DEBUG] platform.value = {platform_value}")
 
-            # 预热 APM 实例，避免首次采集延迟
-            logger.debug("预热 APM 实例...")
-            time.sleep(0.05)  # 等待 50ms
+            is_ios = (hasattr(self.adapter, 'platform') and
+                     hasattr(self.adapter.platform, 'value') and
+                     self.adapter.platform.value == 'iOS')
 
-            # 执行批量采集
-            device_id = self.adapter.device_id
-            snapshot = self.batch_collector.collect_batch(device_id, self.package_name)
+            logger.info(f"[DEBUG] is_ios = {is_ios}")
 
-            # 转换 MetricsSnapshot 为 raw_metrics 格式（兼容现有代码）
-            raw_metrics = {
-                'fps': snapshot.fps if snapshot.fps else {},
-                'memory': snapshot.memory if snapshot.memory else {},
-                'cpu': snapshot.cpu if snapshot.cpu else {},
-                'network': snapshot.network if snapshot.network else {},
-                'battery': snapshot.battery if snapshot.battery else {},
-                'app_status': {
-                    'is_alive': True,
-                    'status_changed': False
-                },
-                # 新增：快照元数据
-                'snapshot_timestamp': snapshot.snapshot_timestamp,
-                'collection_duration_ms': snapshot.collection_duration_ms,
-                'collection_success': snapshot.collection_success
-            }
-
-            # 记录未完成的指标
-            if snapshot.incomplete_metrics:
-                for metric in snapshot.incomplete_metrics:
-                    raw_metrics[metric] = {'error': snapshot.collection_errors.get(metric, 'Unknown')}
-                    logger.warning(f"[{metric}] 采集失败")
+            if is_ios:
+                logger.info("===== 开始 iOS 串行指标采集 =====")
+                raw_metrics = self._collect_ios_serial()
+            else:
+                logger.info("===== 开始 Android 并行指标采集 =====")
+                raw_metrics = self._collect_android_batch()
 
             # 记录采集完成
             elapsed_time = (time.time() - start_time) * 1000
 
             # 打印性能指标摘要
-            cpu_val = snapshot.cpu.get('appCpuRate', 0) if snapshot.cpu else 0
-            mem_val = snapshot.memory.get('totalPass', 0) if snapshot.memory else 0
-            fps_val = snapshot.fps.get('fps', 0) if snapshot.fps else 0
-            jank_val = snapshot.fps.get('jank', 0) if snapshot.fps else 0
-            status = "✓" if snapshot.is_complete() else "✗"
+            cpu_val = raw_metrics.get('cpu', {}).get('appCpuRate', 0)
+            mem_val = raw_metrics.get('memory', {}).get('totalPass', 0)
+            fps_val = raw_metrics.get('fps', {}).get('fps', 0)
+            jank_val = raw_metrics.get('fps', {}).get('jank', 0)
 
-            logger.info(f"[{status}] 批量采集完成: "
+            platform_str = "iOS" if is_ios else "Android"
+            logger.info(f"[✓] {platform_str} 采集完成: "
                        f"CPU={cpu_val}%, Memory={mem_val}MB, FPS={fps_val}, Jank={jank_val}, "
                        f"耗时={elapsed_time:.0f}ms")
-
-            # 如果有指标采集失败，打印详细信息
-            if snapshot.incomplete_metrics:
-                for metric in snapshot.incomplete_metrics:
-                    error = snapshot.collection_errors.get(metric, 'Unknown')
-                    logger.warning(f"  └─ [{metric}] 采集失败: {error}")
 
             # 发送采集完成信号
             self.collection_finished.emit(raw_metrics)
 
-            # 通知线程退出（关键修复：QThread 事件循环需要显式退出）
+            # 通知线程退出
             if self.thread():
                 self.thread().quit()
-                if hasattr(self, 'adapter') and hasattr(self.adapter, 'device_id'):
-                    logger.debug(f"[Worker] 请求线程退出: device={self.adapter.device_id}")
 
         except Exception as e:
-            logger.error(f"批量采集失败: {e}", exc_info=True)
+            logger.error(f"采集失败: {e}", exc_info=True)
             self.collection_failed.emit(str(e))
-            # 即使失败也要请求线程退出
             if self.thread():
                 self.thread().quit()
-                logger.debug("[Worker] 异常后请求线程退出")
+
+    def _collect_ios_serial(self) -> dict:
+        """iOS 串行采集（避免 tidevice 资源竞争）"""
+        import time
+
+        # 获取 APM 实例
+        apm = self.adapter._get_apm(self.package_name)
+
+        # 创建串行采集器（首次）
+        if self.serial_collector is None:
+            self.serial_collector = IOSSerialCollector(apm)
+            logger.debug("iOS 串行采集器创建成功")
+
+        # 执行串行采集
+        device_id = self.adapter.device_id
+        raw_metrics = self.serial_collector.collect_serial(device_id, self.package_name)
+
+        return raw_metrics
+
+    def _collect_android_batch(self) -> dict:
+        """Android 并行批量采集（快速响应）"""
+        import time
+
+        # 获取 APM 实例
+        apm = self.adapter._get_apm(self.package_name)
+
+        # 创建批量采集器（首次）
+        if self.batch_collector is None:
+            self.batch_collector = MetricsBatchCollector(apm, timeout_seconds=3.0)
+            logger.debug("Android 批量采集器创建成功")
+
+        # 预热 APM 实例
+        time.sleep(0.05)
+
+        # 执行批量采集
+        device_id = self.adapter.device_id
+        snapshot = self.batch_collector.collect_batch(device_id, self.package_name)
+
+        # 转换为 raw_metrics 格式
+        raw_metrics = {
+            'fps': snapshot.fps if snapshot.fps else {},
+            'memory': snapshot.memory if snapshot.memory else {},
+            'cpu': snapshot.cpu if snapshot.cpu else {},
+            'network': snapshot.network if snapshot.network else {},
+            'battery': snapshot.battery if snapshot.battery else {},
+            'app_status': {
+                'is_alive': True,
+                'status_changed': False
+            },
+            'snapshot_timestamp': snapshot.snapshot_timestamp,
+            'collection_duration_ms': snapshot.collection_duration_ms,
+            'collection_success': snapshot.collection_success
+        }
+
+        # 记录未完成的指标
+        if snapshot.incomplete_metrics:
+            for metric in snapshot.incomplete_metrics:
+                raw_metrics[metric] = {'error': snapshot.collection_errors.get(metric, 'Unknown')}
+                logger.warning(f"[{metric}] 采集失败")
+
+        return raw_metrics
 
 
 class MainWindow(QMainWindow):
@@ -1036,6 +1074,8 @@ class MainWindow(QMainWindow):
                 # 锁定配置面板（监控过程中不允许修改配置）
                 self.config_panel.set_monitoring_state(True)
 
+                # iOS 和 Android 都使用定时采集（IOSAPM 现在使用 py-ios-device 架构）
+                logger.info("===== 启动定时采集 =====")
                 # 启动定时器
                 self.update_timer.start(config.interval_ms)
                 self.duration_timer.start()
@@ -1939,8 +1979,8 @@ class MainWindow(QMainWindow):
 
         try:
             # 直接扫描设备（不使用 DeviceScannerThread）
-            from insight_eyes.public.common import Devices
-            from insight_eyes.desktop.core.models import Platform, DeviceStatus
+            from insight_eyes.public.common import Devices, Platform
+            from insight_eyes.desktop.core.models import DeviceStatus
             from insight_eyes.desktop.core.device_manager import DeviceAdapterFactory
 
             devices_detector = Devices()
@@ -1965,13 +2005,13 @@ class MainWindow(QMainWindow):
                     # 解析设备信息
                     if device_str.startswith("Android "):
                         device_id = device_str[8:].strip()
-                        platform = Platform.ANDROID
+                        platform = Platform.Android
                     elif device_str.startswith("iOS "):
                         if '(' in device_str and ')' in device_str:
                             device_id = device_str.split('(')[1].split(')')[0].strip()
                         else:
                             device_id = device_str[4:].strip()
-                        platform = Platform.IOS
+                        platform = Platform.iOS
                     else:
                         continue
 
