@@ -10,9 +10,9 @@
 
 | 类型 | 数量 | 详情 |
 |------|------|------|
-| 临时测试文件 | 53 | 移动到 tests/debug/ |
-| 备份文件 | 3 | 移动到 archive/backup/ |
-| 旧文档 | 2 | 移动到 archive/docs/ |
+| 临时测试文件目录 | 1 | 创建 tests/debug/ 目录（测试文件未被 Git 跟踪） |
+| 备份文件 | 3 | 移动到 archive/backup/ (fps_collector_backup.py, main_window_fixed.py, main_window_batch.py) |
+| 旧文档 | 2 | 移动到 archive/docs/plans/ (findings.md, task_plan.md) |
 
 ### 代码改进
 
@@ -44,16 +44,20 @@ tests/debug/
 
 ```
 insight_eye-1.0.0/
-├── test_*.py (53个临时测试文件散落根目录)
-├── *_backup.py (备份文件散落各处)
-├── docs/plans/ (包含已完成的设计文档)
+├── test_*.py (多个临时测试文件未被 Git 跟踪)
+├── fps_collector_backup.py (备份文件)
+├── main_window_fixed.py (备份文件)
+├── main_window_batch.py (备份文件)
+├── docs/plans/findings.md (已完成的设计文档)
+├── docs/plans/task_plan.md (已完成的设计文档)
 └── 代码中存在大量旧注释和 TODO 标记
 ```
 
 **问题:**
-- 根目录混乱，临时文件与核心代码混杂
+- 临时测试文件未被版本控制管理
+- 备份文件散落在项目根目录
+- 已完成的设计文档仍在 docs/plans/ 目录
 - 缺少归档管理策略
-- 文档未及时更新
 - 依赖说明不清晰
 
 #### After (清理后)
@@ -91,74 +95,17 @@ insight_eye-1.0.0/
 
 **Git 提交:** `3b59ad9` - 创建归档目录结构和 README 文件
 
-### Task 2: 移动临时测试文件
+### Task 2: 创建调试测试目录
 
-**目标:** 清理项目根目录的临时测试文件
+**目标:** 为临时测试文件建立专门的存放位置
 
 **实施:**
-- 识别 53 个 `test_*.py` 临时文件
-- 移动到 `tests/debug/` 目录
-- 创建 README.md 说明这些文件的用途
+- 创建 `tests/debug/` 目录
+- 添加 README.md 说明文件用途
+- **注意:** 项目根目录中存在大量 `test_*.py` 文件，但这些文件未被 Git 跟踪（在 .gitignore 中）
+- 这些文件主要由开发者本地使用，用于调试和验证功能
 
-**移动的文件示例:**
-```
-test_code_structure.py
-test_config_fix.py
-test_config_manager.py
-test_deadlock_scenario.py
-test_diagnose_startup.py
-test_debug.py
-test_debug_getattr.py
-test_debug_init.py
-test_debug_new.py
-test_direct.py
-test_direct_call.py
-test_ensure_dir.py
-test_fps_comprehensive.py
-test_fps_fix.py
-test_import_only.py
-test_indent_check.py
-test_init_debug.py
-test_integration_simple.py
-test_just_import.py
-test_main_window_fix.py
-test_manual_new_init.py
-test_minimal.py
-test_minimal_blocking.py
-test_monitoring.py
-test_no_init_check.py
-test_original.py
-test_original_pattern.py
-test_print_debug.py
-test_qobject.py
-test_qobject_init.py
-test_report_integration.py
-test_save_config_deadlock.py
-test_simple.py
-test_simple_verify.py
-test_singleton_behavior.py
-test_singleton_simple.py
-test_singleton_v3.py
-test_startup.py
-test_startup_debug.py
-test_startup_final.py
-test_startup_verification.py
-test_step_by_step.py
-test_task3_final_review.py
-test_task3_main_window_delayed_init.py
-test_variant_pattern.py
-test_with_qapp.py
-test_without_qapp.py
-verify_docs.py
-verify_fix.py
-verify_fix_simple.py
-verify_fix_v2.py
-verify_logic.py
-verify_spec_compliance.py
-verify_task3.py
-```
-
-**Git 提交:** `750a357` - 移动 53 个临时测试文件到 tests/debug/
+**Git 提交:** `750a357` - 创建 tests/debug 目录结构
 
 ### Task 3: 归档备份文件
 
@@ -166,13 +113,14 @@ verify_task3.py
 
 **实施:**
 - 识别 3 个备份文件
-- 移动到 `archive/backup/` 目录
+- 移动到 `archive/backup/` 对应的子目录
+- 创建归档脚本 `scripts/archive_backups.py` 用于后续维护
 - 记录备份时间和原因
 
 **备份文件:**
-- `fix_qthread_crash.py` - QThread 崩溃修复备份
-- `diagnose_and_fix.py` - 诊断脚本备份
-- `final_test.py` - 最终测试备份
+- `fps_collector_backup.py` - FPS 采集器备份 → `archive/backup/android/fps_collector_backup.py`
+- `main_window_fixed.py` - 主窗口修复备份 → `archive/backup/desktop/ui/main_window_fixed.py`
+- `main_window_batch.py` - 主窗口批量操作备份 → `archive/backup/desktop/ui/main_window_batch.py`
 
 **Git 提交:** `d6f33a9` - 归档 3 个备份文件到 archive/backup/
 
@@ -219,12 +167,14 @@ verify_task3.py
 
 **实施:**
 - 识别已完成的设计文档
-- 移动到 `archive/docs/` 目录
+- 移动到 `archive/docs/plans/` 目录
 - 更新文档索引
 
 **归档文档:**
-- `2025-01-20-ios-monitoring-upgrade-design.md` - iOS 监控升级设计文档 (已完成实施)
-- `ios-monitoring-upgrade-implementation-report.md` - 实施报告 (已归档)
+- `findings.md` - 调查发现文档 → `archive/docs/plans/findings.md`
+- `task_plan.md` - 任务计划文档 → `archive/docs/plans/task_plan.md`
+
+**说明:** 这些文档对应的计划已完成并实施，保留用于历史参考。
 
 **Git 提交:** `edd55f0` - 归档已完成的设计文档
 
@@ -255,12 +205,14 @@ tidevice>=0.9.7                # [DEPRECATED] 将在 v3.0 移除
 ### 1. 项目根目录更干净
 
 **改进前:**
-- 根目录包含 53 个临时测试文件
-- 文件列表超过 100 个，难以浏览
+- 根目录包含多个未被版本控制的临时测试文件
+- 备份文件散落在项目根目录
+- 已完成的设计文档仍在 docs/plans/ 目录
 
 **改进后:**
-- 根目录仅保留核心文件和目录
-- 临时文件集中管理在 `tests/debug/`
+- 创建了 `tests/debug/` 目录用于临时测试文件
+- 备份文件归档到 `archive/backup/` 对应子目录
+- 已完成的文档归档到 `archive/docs/plans/`
 
 ### 2. 归档结构规范
 
@@ -310,11 +262,11 @@ tidevice>=0.9.7                # [DEPRECATED] 将在 v3.0 移除
 | 任务 | 提交 SHA | 描述 | 日期 |
 |------|----------|------|------|
 | Task 1 | 3b59ad9 | 创建归档目录结构和 README 文件 | 2025-01-21 |
-| Task 2 | 750a357 | 移动 53 个临时测试文件到 tests/debug/ | 2025-01-21 |
+| Task 2 | 750a357 | 创建 tests/debug 目录结构 | 2025-01-21 |
 | Task 3 | d6f33a9 | 归档 3 个备份文件到 archive/backup/ | 2025-01-21 |
 | Task 4 | 45b166d | 更新 CLAUDE.md 和创建 MIGRATION_GUIDE.md | 2025-01-21 |
 | Task 5 | ca80a8e | 创建 tidevice 相关注释扫描脚本和审查报告 | 2025-01-21 |
-| Task 6 | edd55f0 | 归档已完成的设计文档 | 2025-01-21 |
+| Task 6 | edd55f0 | 归档已完成的设计文档 (findings.md, task_plan.md) | 2025-01-21 |
 | Task 7 | e38b152 | 更新 requirements.txt 依赖说明 | 2025-01-21 |
 
 ## 遗留工作
@@ -339,9 +291,9 @@ tidevice>=0.9.7                # [DEPRECATED] 将在 v3.0 移除
 
 ## 清理验证清单
 
-- [x] 所有临时测试文件已移动到 `tests/debug/`
-- [x] 所有备份文件已归档到 `archive/backup/`
-- [x] 所有旧文档已归档到 `archive/docs/`
+- [x] 创建 tests/debug/ 目录用于临时测试文件
+- [x] 所有备份文件已归档到 `archive/backup/` (fps_collector_backup.py, main_window_fixed.py, main_window_batch.py)
+- [x] 所有旧文档已归档到 `archive/docs/plans/` (findings.md, task_plan.md)
 - [x] 归档目录都有 README.md 说明
 - [x] CLAUDE.md 已更新
 - [x] MIGRATION_GUIDE.md 已创建
@@ -390,12 +342,13 @@ tidevice>=0.9.7                # [DEPRECATED] 将在 v3.0 移除
 通过本次清理，项目结构更加清晰，代码更加简洁，文档更加完善。
 
 **主要成果:**
-- 移除了 53 个临时测试文件
-- 归档了 3 个备份文件和 2 个旧文档
+- 创建了 tests/debug/ 目录用于临时测试文件管理
+- 归档了 3 个备份文件 (fps_collector_backup.py, main_window_fixed.py, main_window_batch.py)
+- 归档了 2 个已完成的设计文档 (findings.md, task_plan.md)
 - 创建了 5 个归档目录和对应的 README
-- 更新了 3 个核心文档
-- 创建了代码审查工具
-- 标注了依赖状态
+- 更新了 3 个核心文档 (CLAUDE.md, MIGRATION_GUIDE.md, requirements.txt)
+- 创建了代码审查工具 (scan_old_comments.py)
+- 标注了依赖状态 (py-ios-device 主要方案，tidevice 已弃用)
 
 **项目状态:** ✅ 生产就绪
 
