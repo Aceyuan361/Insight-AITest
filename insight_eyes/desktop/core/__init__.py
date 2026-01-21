@@ -29,14 +29,12 @@ from .models import (
 from .device_adapters import (
     BaseDeviceAdapter,
     AndroidDeviceAdapter,
-    IOSDeviceAdapter,
     DeviceAdapterFactory,
 )
 
 from .app_enumerator import (
     BaseAppEnumerator,
     AndroidAppEnumerator,
-    IOSAppEnumerator,
     AppEnumeratorFactory,
 )
 
@@ -62,13 +60,11 @@ __all__ = [
     # 设备适配器
     'BaseDeviceAdapter',
     'AndroidDeviceAdapter',
-    'IOSDeviceAdapter',
     'DeviceAdapterFactory',
 
     # 应用枚举器
     'BaseAppEnumerator',
     'AndroidAppEnumerator',
-    'IOSAppEnumerator',
     'AppEnumeratorFactory',
 
     # 设备管理器
