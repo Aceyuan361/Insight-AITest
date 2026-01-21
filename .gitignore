@@ -20,6 +20,15 @@ wheels/
 .installed.cfg
 *.egg
 
+# PyInstaller 打包临时文件
+build/
+dist/
+*.manifest
+
+# 打包输出
+Insight-Eye-Portable/
+installer/
+
 # IDE
 .vscode/
 .idea/
