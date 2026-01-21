@@ -68,13 +68,20 @@ class IOSAPM:
         """
         确保连接已建立
 
+        对于 iOS 15-16 使用直接连接（remote_address=None）
+        对于 iOS 17-26 使用隧道连接（需要 IOSTunnelManager）
+
         Returns:
             bool: 连接是否可用
         """
         if self._connection is None:
             try:
                 from insight_eyes.public.ios.pyios_connect import PyIOSConnection
-                self._connection = PyIOSConnection(self.udid)
+
+                # iOS 15-16 有线连接：直接连接（不需要隧道）
+                # iOS 17-26 无线/USB：需要通过 pymobiledevice3 建立隧道
+                self._connection = PyIOSConnection(self.udid, remote_address=None)
+
                 if not self._connection.connect():
                     logger.error("[IOSAPM] 连接失败")
                     return False
