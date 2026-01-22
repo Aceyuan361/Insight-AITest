@@ -150,8 +150,8 @@ def create_portable_package():
         shutil.rmtree(portable_dir)
     portable_dir.mkdir()
 
-    # 复制可执行文件
-    exe_src = DIST_DIR / "Insight-Eye" / "insight_eye.exe"
+    # 复制可执行文件（PyInstaller 生成的文件名是 Insight-Eye.exe）
+    exe_src = DIST_DIR / "Insight-Eye" / "Insight-Eye.exe"
     if exe_src.exists():
         shutil.copy2(exe_src, portable_dir / "Insight-Eye.exe")
         log(f"复制可执行文件到: {portable_dir}")
