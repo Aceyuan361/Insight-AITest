@@ -79,36 +79,35 @@ class DeviceScannerThread(QThread):
         修复内容（崩溃修复）：
         - 使用短 sleep (100ms) 循环，可快速响应停止信号
         - 避免使用 time.sleep() 阻塞
+        - 新增：支持 iOS 设备扫描
         """
         from insight_eyes.public.common import Devices
 
         while self._running:
             try:
-                # 获取当前连接的设备
-                devices_detector = Devices()
-                device_list = devices_detector.getDevices()
-
                 current_devices = set()
 
-                # 处理每个设备（仅支持 Android）
-                for device_str in device_list:
-                    # 解析设备信息
-                    if device_str.startswith("Android "):
-                        device_id = device_str[8:].strip()
-                        platform = Platform.ANDROID
-                    else:
-                        continue
-
-                    current_devices.add(device_id)
+                # 扫描 Android 设备
+                android_devices = self._scan_android_devices()
+                for device_info in android_devices:
+                    current_devices.add(device_info.device_id)
 
                     # 检查是否是新设备
-                    if device_id not in self._known_devices:
-                        # 创建设备信息
-                        device_info = self._create_device_info(device_id, platform, device_str)
-                        if device_info:
-                            self.device_discovered.emit(device_info)
-                            self._known_devices.add(device_id)
-                            logger.info(f"发现新设备: {device_info.name} ({device_info.platform.value})")
+                    if device_info.device_id not in self._known_devices:
+                        self.device_discovered.emit(device_info)
+                        self._known_devices.add(device_info.device_id)
+                        logger.info(f"发现新设备: {device_info.name} ({device_info.platform.value})")
+
+                # 扫描 iOS 设备
+                ios_devices = self._scan_ios_devices()
+                for device_info in ios_devices:
+                    current_devices.add(device_info.device_id)
+
+                    # 检查是否是新设备
+                    if device_info.device_id not in self._known_devices:
+                        self.device_discovered.emit(device_info)
+                        self._known_devices.add(device_info.device_id)
+                        logger.info(f"发现新设备: {device_info.name} ({device_info.platform.value})")
 
                 # 检查是否有设备断开
                 lost_devices = self._known_devices - current_devices
@@ -126,6 +125,74 @@ class DeviceScannerThread(QThread):
             while elapsed < self._scan_interval * 1000 and self._running:
                 self.msleep(100)  # PyQt6 的可中断 sleep
                 elapsed += 100
+
+    def _scan_android_devices(self) -> List[DeviceInfo]:
+        """
+        扫描 Android 设备
+
+        Returns:
+            List[DeviceInfo]: Android 设备列表
+        """
+        from insight_eyes.public.common import Devices
+
+        devices = []
+        try:
+            # 获取当前连接的设备
+            devices_detector = Devices()
+            device_list = devices_detector.getDevices()
+
+            # 处理每个 Android 设备
+            for device_str in device_list:
+                if device_str.startswith("Android "):
+                    device_id = device_str[8:].strip()
+                    device_info = self._create_device_info(device_id, Platform.ANDROID, device_str)
+                    if device_info:
+                        devices.append(device_info)
+
+        except Exception as e:
+            logger.error(f"扫描 Android 设备异常: {e}")
+
+        return devices
+
+    def _scan_ios_devices(self) -> List[DeviceInfo]:
+        """
+        扫描 iOS 设备
+
+        Returns:
+            List[DeviceInfo]: iOS 设备列表
+        """
+        devices = []
+
+        try:
+            # 尝试导入 pymobiledevice3
+            try:
+                from pymobiledevice3.usbmux import list_devices
+            except ImportError:
+                # pymobiledevice3 未安装，返回空列表
+                logger.debug("pymobiledevice3 未安装，跳过 iOS 设备扫描")
+                return devices
+
+            # 扫描 iOS 设备
+            ios_device_list = list_devices()
+
+            for device in ios_device_list:
+                try:
+                    # 获取设备 UDID
+                    device_id = str(device.serial)
+
+                    # 创建设备信息
+                    device_info = self._create_device_info(device_id, Platform.IOS, f"iOS {device_id}")
+                    if device_info:
+                        devices.append(device_info)
+                        logger.debug(f"检测到 iOS 设备: {device_info.name} ({device_id})")
+
+                except Exception as e:
+                    logger.warning(f"处理 iOS 设备信息失败: {e}")
+
+        except Exception as e:
+            logger.debug(f"扫描 iOS 设备异常: {e}")
+
+        return devices
 
     def _create_device_info(self, device_id: str, platform: Platform, device_str: str) -> Optional[DeviceInfo]:
         """

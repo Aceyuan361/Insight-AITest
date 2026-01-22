@@ -104,7 +104,7 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
         try:
             # 尝试导入 pymobiledevice3
             try:
-                from pymobiledevice3 import LockdownClient
+                from pymobiledevice3.lockdown import LockdownClient
             except ImportError:
                 logger.error("pymobiledevice3 未安装，无法连接 iOS 设备")
                 logger.error("请运行: pip install pymobiledevice3")
