@@ -129,7 +129,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=None,  # TODO: 添加图标文件
+    icon='insight_eye_icon.ico',  # 应用图标
 )
 
 # 收集必要的 DLL 和数据文件

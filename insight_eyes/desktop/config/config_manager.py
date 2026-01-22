@@ -115,8 +115,25 @@ class AppConfig:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'AppConfig':
-        """从字典创建配置对象"""
-        collection = CollectionConfig(**data.get('collection', {}))
+        """从字典创建配置对象（带向后兼容性）"""
+        # 处理 collection 配置，添加向后兼容性
+        collection_data = data.get('collection', {})
+
+        # 向后兼容：旧的 enable_network 字段
+        if 'enable_network' in collection_data and 'enable_network_up' not in collection_data:
+            collection_data['enable_network_up'] = collection_data['enable_network']
+            collection_data['enable_network_down'] = collection_data['enable_network']
+
+        # 清理未知字段（避免 __init__ 错误）
+        valid_collection_fields = {
+            'interval_ms', 'enable_cpu', 'enable_memory', 'enable_fps',
+            'enable_network_up', 'enable_network_down', 'enable_gpu',
+            'fps_threshold', 'memory_threshold_mb', 'cpu_threshold_percent',
+            'data_retention_days', 'max_samples_per_chart'
+        }
+        collection_data = {k: v for k, v in collection_data.items() if k in valid_collection_fields}
+
+        collection = CollectionConfig(**collection_data)
         ui = UIConfig(**data.get('ui', {}))
         device = DeviceConfig(**data.get('device', {}))
 
@@ -390,6 +407,11 @@ class ConfigManager(QObject):
 
                 # 更新配置项
                 for key, value in kwargs.items():
+                    # 类型转换：Path 对象转为字符串
+                    from pathlib import Path
+                    if isinstance(value, Path):
+                        value = str(value)
+
                     if hasattr(self._config, key):
                         setattr(self._config, key, value)
                         self.config_changed.emit(key, value)

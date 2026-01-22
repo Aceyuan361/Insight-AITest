@@ -71,3 +71,6 @@ test_results.txt
 insight_eyes/data/*.db
 insight_eyes/data/*.db-shm
 insight_eyes/data/*.db-wal
+
+# Icon temporary files (保留 .ico)
+*_icon.png
