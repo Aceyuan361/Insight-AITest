@@ -115,8 +115,17 @@ class IOSAPM:
 
         # 连接设备
         self.adapter = IOSDeviceAdapter(self.device_id)
-        if not self.adapter.connect():
-            raise ConnectionError(f"无法连接 iOS 设备: {self.device_id}")
+
+        try:
+            self.adapter.connect()
+        except Exception as e:
+            from insight_eyes.public.ios.exceptions import IOSMonitorError
+            if isinstance(e, IOSMonitorError):
+                # 重新抛出 iOS 专用异常
+                raise
+            else:
+                # 包装为通用连接错误
+                raise ConnectionError(f"无法连接 iOS 设备: {self.device_id}, 原因: {e}")
 
         # 初始化各采集器
         from insight_eyes.public.ios.cpu_collector import CPUCollector

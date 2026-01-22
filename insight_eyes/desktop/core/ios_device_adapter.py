@@ -15,6 +15,11 @@ from logzero import logger
 
 from .models import DeviceInfo, Platform, DeviceStatus, AppInfo
 from abc import ABC, abstractmethod
+from insight_eyes.public.ios.exceptions import (
+    DeviceNotTrustedError,
+    DeviceConnectionError,
+    PMD3NotInstalledError
+)
 
 
 # 复制定义基类以避免循环导入
@@ -104,15 +109,21 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
 
         Returns:
             bool: 是否连接成功
+
+        Raises:
+            PMD3NotInstalledError: pymobiledevice3 未安装
+            DeviceNotTrustedError: 设备未信任
+            DeviceConnectionError: 连接失败
         """
         try:
             # 尝试导入 pymobiledevice3
             try:
                 from pymobiledevice3.lockdown import LockdownClient
             except ImportError:
-                logger.error("pymobiledevice3 未安装，无法连接 iOS 设备")
-                logger.error("请运行: pip install pymobiledevice3")
-                return False
+                error = PMD3NotInstalledError()
+                logger.error(str(error))
+                logger.error(error.get_install_command())
+                raise error
 
             # 创建 LockdownClient 连接
             self._lockdown_client = LockdownClient(self.device_id)
@@ -122,13 +133,28 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
                 logger.info(f"iOS设备连接成功: {self.device_id}")
                 return True
             else:
-                logger.error(f"iOS设备连接失败: {self.device_id}")
-                return False
+                error = DeviceConnectionError(self.device_id, "LockdownClient 创建失败")
+                logger.error(str(error))
+                raise error
 
+        except DeviceNotTrustedError:
+            # 重新抛出设备未信任异常
+            raise
+        except PMD3NotInstalledError:
+            # 重新抛出库未安装异常
+            raise
         except Exception as e:
-            logger.error(f"iOS设备连接异常: {e}")
-            self._connected = False
-            return False
+            error_msg = str(e).lower()
+            # 检测常见的信任问题
+            if 'not paired' in error_msg or 'trust' in error_msg or 'pairing' in error_msg:
+                error = DeviceNotTrustedError(self.device_id)
+                logger.error(str(error))
+                logger.info(error.get_user_guide())
+                raise error
+            else:
+                error = DeviceConnectionError(self.device_id, str(e))
+                logger.error(str(error))
+                raise error
 
     def disconnect(self) -> bool:
         """
