@@ -240,6 +240,25 @@ class SessionReportWidget(QWidget):
         self.interval_label.setStyleSheet("color: #e0e6ed;")
         layout.addWidget(self.interval_label, 3, 3)
 
+        # iOS 数据限制提示（默认隐藏）
+        self.ios_disclaimer_label = QLabel(
+            "⚠️ iOS 性能数据限制：\n"
+            "• CPU: 估算值（pymobiledevice3 无 sysmon 服务）\n"
+            "• Memory: 设备总内存（无应用使用量）\n"
+            "• Battery: 真实数据"
+        )
+        self.ios_disclaimer_label.setStyleSheet("""
+            color: #ffa500;
+            font-size: 11px;
+            padding: 8px;
+            background-color: rgba(255, 165, 0, 0.1);
+            border-radius: 6px;
+            border: 1px solid rgba(255, 165, 0, 0.3);
+        """)
+        self.ios_disclaimer_label.setWordWrap(True)
+        self.ios_disclaimer_label.hide()  # 默认隐藏
+        layout.addWidget(self.ios_disclaimer_label, 4, 0, 1, 4)
+
         return card
 
     def _create_stats_card(self) -> QFrame:
@@ -549,6 +568,12 @@ class SessionReportWidget(QWidget):
         # 采样间隔
         interval = self.session_data.get('sample_interval', 1000)
         self.interval_label.setText(f"{interval}ms")
+
+        # iOS 数据限制提示
+        if device and device.get('platform') == 'ios':
+            self.ios_disclaimer_label.show()
+        else:
+            self.ios_disclaimer_label.hide()
 
     def _update_stats_table(self):
         """更新性能指标统计表格"""
