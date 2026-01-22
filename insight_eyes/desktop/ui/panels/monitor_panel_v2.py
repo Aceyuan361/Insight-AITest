@@ -74,6 +74,7 @@ class NeonChartCard(QFrame):
         self.tooltip = None
         self.vLine = None
         self.hover_point = None
+        self._hide_timer = None  # 自动隐藏定时器
 
         self._init_ui()
 
@@ -244,16 +245,18 @@ class NeonChartCard(QFrame):
             int(hex_color[4:6], 16)
         )
 
-    def add_data_point(self, value: float):
+    def add_data_point(self, value: float, timestamp: datetime = None):
         """
         添加数据点
 
         Args:
             value: 数值
+            timestamp: 时间戳（可选，默认使用当前时间）
         """
         # 记录时间戳
-        current_time = datetime.now()
-        self.timestamps.append(current_time)
+        if timestamp is None:
+            timestamp = datetime.now()
+        self.timestamps.append(timestamp)
         if len(self.timestamps) > 120:  # 从 60 改为 120，获得更平滑的曲线
             self.timestamps.pop(0)
 
@@ -368,23 +371,54 @@ class NeonChartCard(QFrame):
         self._cleanup_hover()
 
     def cleanup(self):
-        """卡片销毁时的清理（断开信号）"""
+        """卡片销毁时的清理（断开信号和清理定时器）"""
+        # 清理自动隐藏定时器（不使用 deleteLater，避免重复删除）
+        if hasattr(self, '_hide_timer') and self._hide_timer is not None:
+            try:
+                self._hide_timer.stop()
+                # 直接断开信号连接
+                try:
+                    self._hide_timer.timeout.disconnect(self._hide_tooltip_delayed)
+                except TypeError:
+                    pass  # 没有连接，忽略
+            except Exception:
+                pass  # 其他异常也忽略
+            # 不调用 deleteLater()，由调用者负责
+            self._hide_timer = None
+
+        # 断开鼠标移动信号
         if hasattr(self, 'chart') and self.chart.scene():
             try:
                 self.chart.scene().sigMouseMoved.disconnect(self._on_mouse_moved)
             except:
                 pass
+
+        # 清理提示框
         if hasattr(self, 'tooltip') and self.tooltip:
             self.tooltip.hide_tooltip()
             self.tooltip = None
 
+        # 清理悬停元素
+        if hasattr(self, 'vLine'):
+            self.vLine.hide()
+        if hasattr(self, 'hover_point'):
+            self.hover_point.hide()
+
     def _on_mouse_moved(self, pos):
         """鼠标移动事件处理"""
+        # 首先停止旧的定时器（不使用 deleteLater，避免异步问题）
+        if self._hide_timer is not None:
+            self._hide_timer.stop()
+            try:
+                self._hide_timer.timeout.disconnect(self._hide_tooltip_delayed)
+            except TypeError:
+                pass
+
         if not self.chart.plotItem.vb.sceneBoundingRect().contains(pos):
+            # 鼠标离开图表区域，延迟隐藏提示框
+            self._schedule_hide_tooltip()
             self.vLine.hide()
             self.hover_point.hide()
-            if self.tooltip:
-                self.tooltip.hide_tooltip()
             return
 
         # 转换为图表坐标
@@ -421,6 +455,35 @@ class NeonChartCard(QFrame):
                 'unit': self.y_axis_config.get('unit', '')
             }
             self.tooltip.show_tooltip(tooltip_pos, tooltip_data)
+
+            # 设置自动隐藏定时器（2秒后自动隐藏）
+            self._schedule_hide_tooltip()
+
+    def _schedule_hide_tooltip(self):
+        """安排定时隐藏提示框"""
+        if self._hide_timer is not None:
+            self._hide_timer.stop()
+            # 断开旧连接，不使用 deleteLater（异步操作可能导致问题）
+            try:
+                self._hide_timer.timeout.disconnect(self._hide_tooltip_delayed)
+            except TypeError:
+                # 没有连接，忽略
+                pass
+
+        # 创建新的定时器
+        self._hide_timer = QTimer()
+        self._hide_timer.setSingleShot(True)
+        self._hide_timer.timeout.connect(self._hide_tooltip_delayed)
+        self._hide_timer.start(2000)  # 2秒后自动隐藏
+
+    def _hide_tooltip_delayed(self):
+        """延迟隐藏提示框"""
+        self.vLine.hide()
+        self.hover_point.hide()
+        if self.tooltip:
+            self.tooltip.hide_tooltip()
+        if self._hide_timer is not None:
+            self._hide_timer = None
 
 
 class MonitorPanelV2(QWidget):

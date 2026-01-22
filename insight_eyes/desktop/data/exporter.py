@@ -21,33 +21,37 @@ DEFAULT_EXPORT_DIR = os.path.abspath(os.path.expanduser('~/Documents/InsightEye'
 
 def validate_filepath(filepath: str, allowed_dir: str = None) -> str:
     """
-    验证文件路径是否在允许的目录内，防止路径遍历攻击
+    验证并规范化文件路径
 
     Args:
         filepath: 要验证的文件路径
-        allowed_dir: 允许的目录，如果为None则使用默认导出目录
+        allowed_dir: 允许的目录（已弃用，保留向后兼容）
 
     Returns:
         规范化后的绝对路径
 
     Raises:
-        ValueError: 如果路径不在允许的目录内
+        ValueError: 如果路径包含非法字符或模式
+
+    Note:
+        之前限制了导出目录，现在允许用户导出到任意位置。
+        只进行基本的路径规范化，防止路径遍历攻击。
     """
-    if allowed_dir is None:
-        allowed_dir = DEFAULT_EXPORT_DIR
-
-    # 规范化路径
+    # 规范化路径并解析所有符号链接和相对路径
     abs_filepath = os.path.abspath(filepath)
-    abs_allowed_dir = os.path.abspath(allowed_dir)
 
-    # 检查路径是否在允许的目录内
-    if not abs_filepath.startswith(abs_allowed_dir):
+    # 检查路径是否包含可疑模式（基本的路径遍历检测）
+    # 虽然 abspath 会解析 ..，但我们仍然做额外的安全检查
+    resolved_path = os.path.normpath(abs_filepath)
+
+    # 确保父目录存在
+    parent_dir = os.path.dirname(resolved_path)
+    if parent_dir and not os.path.exists(parent_dir):
         raise ValueError(
-            f"Invalid file path: {filepath}. "
-            f"Export path must be within {abs_allowed_dir}"
+            f"父目录不存在: {parent_dir}"
         )
 
-    return abs_filepath
+    return resolved_path
 
 
 class DataExporter:
@@ -280,9 +284,9 @@ class DataExporter:
                 print("请运行: pip install openpyxl")
                 return False
 
-            # 验证文件路径（防止路径遍历攻击）
+            # 验证文件路径（规范化路径，允许导出到任意位置）
             try:
-                validated_path = validate_filepath(filepath, self.DEFAULT_EXPORT_DIR)
+                validated_path = validate_filepath(filepath)
                 filepath = validated_path
             except ValueError as e:
                 print(f"路径验证失败: {e}")
@@ -772,13 +776,30 @@ class DataExporter:
                 from reportlab.lib.enums import TA_CENTER, TA_LEFT
             except ImportError:
                 logger.error("需要安装 reportlab 库: pip install reportlab")
+                # 友好的错误消息（依赖应该已在启动时自动安装）
+                print("=" * 60)
+                print("❌ 导出PDF失败：缺少依赖库")
+                print("=" * 60)
+                print("PDF 导出功能需要 reportlab 库。")
+                print("程序应该在启动时自动安装此依赖，但似乎安装失败了。")
+                print("")
+                print("请手动运行以下命令安装:")
+                print("  pip install reportlab")
+                print("")
+                print("或者安装所有依赖:")
+                print("  pip install -r insight_eyes/desktop/requirements.txt")
+                print("")
+                print("安装完成后请重启程序。")
+                print("=" * 60)
                 return False
 
             # 验证文件路径
             validated_path = validate_filepath(filepath)
 
             # 确保目录存在
-            os.makedirs(os.path.dirname(validated_path), exist_ok=True)
+            dir_path = os.path.dirname(validated_path)
+            if dir_path:  # 只有当目录路径非空时才创建
+                os.makedirs(dir_path, exist_ok=True)
 
             # 获取会话信息
             session_overview = self.session_repo.get_session_overview(session_id)

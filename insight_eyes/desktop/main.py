@@ -149,6 +149,69 @@ def setup_application_post(app):
     app.setFont(font)
 
 
+def check_and_install_dependencies():
+    """
+    检查并安装缺失的依赖库
+    主要用于自动安装 PDF 导出所需的 reportlab 库
+    """
+    import subprocess
+    import sys
+
+    # 需要检查的依赖库
+    required_packages = {
+        'reportlab': 'reportlab>=4.0.0',
+    }
+
+    missing_packages = []
+
+    # 检查每个依赖是否已安装
+    for package_name in required_packages:
+        try:
+            __import__(package_name)
+            logger.info(f"✓ {package_name} 已安装")
+        except ImportError:
+            logger.warning(f"✗ {package_name} 未安装")
+            missing_packages.append(required_packages[package_name])
+
+    # 如果有缺失的包，自动安装
+    if missing_packages:
+        logger.info("=" * 60)
+        logger.info(f"检测到缺失的依赖库，准备自动安装: {', '.join(missing_packages)}")
+        logger.info("=" * 60)
+
+        try:
+            # 使用 pip 安装缺失的包
+            for package_spec in missing_packages:
+                logger.info(f"正在安装 {package_spec}...")
+                subprocess.check_call([
+                    sys.executable,
+                    '-m',
+                    'pip',
+                    'install',
+                    package_spec,
+                    '--quiet'
+                ])
+                logger.info(f"✓ {package_spec} 安装成功")
+
+            logger.info("=" * 60)
+            logger.info("所有依赖库安装完成！")
+            logger.info("=" * 60)
+
+            return True
+
+        except subprocess.CalledProcessError as e:
+            logger.error(f"安装依赖失败: {e}")
+            logger.error("请手动运行以下命令安装依赖:")
+            for pkg in missing_packages:
+                logger.error(f"  pip install {pkg}")
+            return False
+        except Exception as e:
+            logger.error(f"安装依赖时发生异常: {e}")
+            return False
+
+    return True
+
+
 def is_debug_mode():
     """
     检查是否启用调试模式
@@ -232,6 +295,11 @@ def main():
 
     # 将debug模式存储到app属性中，供全局使用
     app.debug_mode = debug_mode
+
+    # 检查并安装缺失的依赖（如 reportlab）
+    logger.info("检查程序依赖...")
+    if not check_and_install_dependencies():
+        logger.warning("部分依赖安装失败，PDF导出功能可能不可用")
 
     # 设置Qt信号槽异常处理
     # 注意：PyQt6没有内置的slot异常处理，我们需要在每个槽函数中使用try-except

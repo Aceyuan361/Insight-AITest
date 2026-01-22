@@ -226,7 +226,7 @@ class MonitoringSession:
     package_name: str = ""      # 应用包名
     start_time: datetime = field(default_factory=datetime.now)
     end_time: Optional[datetime] = None
-    status: Literal["running", "paused", "stopped"] = "running"
+    status: Literal["running", "stopped"] = "running"
     metrics_count: int = 0      # 已采集指标数
     alert_count: int = 0        # 告警数
 

@@ -245,8 +245,11 @@ class ReportPanel(QWidget):
             self.sessions_table.setRowCount(len(filtered_data))
 
             for row, session in enumerate(filtered_data):
-                # 时间
-                start_time = datetime.fromisoformat(session['start_time'])
+                # 时间（数据库存储UTC时间，需要转换为本地时间）
+                from datetime import timezone
+                start_time_utc = datetime.fromisoformat(session['start_time'])
+                start_time_utc = start_time_utc.replace(tzinfo=timezone.utc)
+                start_time = start_time_utc.astimezone().replace(tzinfo=None)
                 time_item = QTableWidgetItem(start_time.strftime("%Y-%m-%d %H:%M:%S"))
                 time_item.setData(Qt.ItemDataRole.UserRole, session['id'])
                 self.sessions_table.setItem(row, 0, time_item)
@@ -261,7 +264,9 @@ class ReportPanel(QWidget):
 
                 # 时长
                 if session['end_time']:
-                    end_time = datetime.fromisoformat(session['end_time'])
+                    end_time_utc = datetime.fromisoformat(session['end_time'])
+                    end_time_utc = end_time_utc.replace(tzinfo=timezone.utc)
+                    end_time = end_time_utc.astimezone().replace(tzinfo=None)
                     duration = (end_time - start_time).total_seconds()
                     duration_str = f"{int(duration // 60)}:{int(duration % 60):02d}"
                 else:

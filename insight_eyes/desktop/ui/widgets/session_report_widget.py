@@ -520,12 +520,17 @@ class SessionReportWidget(QWidget):
         # 应用信息
         self.app_label.setText(self.session_data['package_name'])
 
-        # 时间信息
-        start_time = datetime.fromisoformat(self.session_data['start_time'])
+        # 时间信息（数据库存储UTC时间，需要转换为本地时间）
+        from datetime import timezone
+        start_time_utc = datetime.fromisoformat(self.session_data['start_time'])
+        start_time_utc = start_time_utc.replace(tzinfo=timezone.utc)
+        start_time = start_time_utc.astimezone().replace(tzinfo=None)
         self.start_time_label.setText(start_time.strftime("%Y-%m-%d %H:%M:%S"))
 
         if self.session_data['end_time']:
-            end_time = datetime.fromisoformat(self.session_data['end_time'])
+            end_time_utc = datetime.fromisoformat(self.session_data['end_time'])
+            end_time_utc = end_time_utc.replace(tzinfo=timezone.utc)
+            end_time = end_time_utc.astimezone().replace(tzinfo=None)
             self.end_time_label.setText(end_time.strftime("%Y-%m-%d %H:%M:%S"))
 
             # 计算持续时间
@@ -649,6 +654,29 @@ class SessionReportWidget(QWidget):
 
             # 遍历所有指标数据点
             for metric in self.metrics_data:
+                # 提取时间戳（数据库存储的是UTC时间，需要转换为本地时间）
+                timestamp_str = metric.get('timestamp')
+                if timestamp_str:
+                    try:
+                        if isinstance(timestamp_str, str):
+                            # SQLite 的 CURRENT_TIMESTAMP 返回 UTC 时间，格式为 "YYYY-MM-DD HH:MM:SS"
+                            # 需要将其解析为 UTC 时间，然后转换为本地时间
+                            utc_timestamp = datetime.fromisoformat(timestamp_str)
+                            # 标记为 UTC 时间
+                            from datetime import timezone
+                            utc_timestamp = utc_timestamp.replace(tzinfo=timezone.utc)
+                            # 转换为本地时间（东八区）
+                            timestamp = utc_timestamp.astimezone().replace(tzinfo=None)
+                        else:
+                            # 假设是 Unix 时间戳（已经是 UTC）
+                            from datetime import timezone
+                            timestamp = datetime.fromtimestamp(timestamp_str, tz=timezone.utc).astimezone().replace(tzinfo=None)
+                    except (ValueError, TypeError, OSError) as e:
+                        logger.debug(f"时间戳解析失败，使用当前时间: {e}")
+                        timestamp = datetime.now()
+                else:
+                    timestamp = datetime.now()
+
                 # 提取指标数据
                 fps_val = metric['fps'] or 0
                 cpu_val = metric['cpu_app'] or 0
@@ -657,19 +685,19 @@ class SessionReportWidget(QWidget):
                 down_val = metric['network_down_speed'] or 0
                 gpu_val = metric.get('gpu_usage') or 0
 
-                # 根据实际存在的图表卡片添加数据
+                # 根据实际存在的图表卡片添加数据（传递时间戳）
                 if 'fps' in self.chart_cards:
-                    self.chart_cards['fps'].add_data_point(fps_val)
+                    self.chart_cards['fps'].add_data_point(fps_val, timestamp)
                 if 'cpu' in self.chart_cards:
-                    self.chart_cards['cpu'].add_data_point(cpu_val)
+                    self.chart_cards['cpu'].add_data_point(cpu_val, timestamp)
                 if 'memory' in self.chart_cards:
-                    self.chart_cards['memory'].add_data_point(mem_val)
+                    self.chart_cards['memory'].add_data_point(mem_val, timestamp)
                 if 'network_up' in self.chart_cards:
-                    self.chart_cards['network_up'].add_data_point(up_val)
+                    self.chart_cards['network_up'].add_data_point(up_val, timestamp)
                 if 'network_down' in self.chart_cards:
-                    self.chart_cards['network_down'].add_data_point(down_val)
+                    self.chart_cards['network_down'].add_data_point(down_val, timestamp)
                 if 'gpu' in self.chart_cards:
-                    self.chart_cards['gpu'].add_data_point(gpu_val)
+                    self.chart_cards['gpu'].add_data_point(gpu_val, timestamp)
 
             logger.info(f"图表数据更新完成，共 {len(self.metrics_data)} 个数据点")
 

@@ -294,7 +294,6 @@ class MainWindow(QMainWindow):
     # 信号定义
     monitoring_started = pyqtSignal()
     monitoring_stopped = pyqtSignal()
-    monitoring_paused = pyqtSignal()
 
     # UI 更新频率限制（防止卡顿）
     MAX_UI_UPDATE_FPS = 30  # 最大 UI 更新频率
@@ -356,7 +355,6 @@ class MainWindow(QMainWindow):
 
         # 监控状态
         self.is_monitoring = False
-        self.is_paused = False
         self.current_device_id: Optional[str] = None
         self.current_package_name: Optional[str] = None
         self.current_session_id: Optional[int] = None  # 当前监控会话ID
@@ -605,11 +603,6 @@ class MainWindow(QMainWindow):
         self.start_action.setShortcut(QKeySequence("F5"))
         self.start_action.triggered.connect(self._start_monitoring)
 
-        self.pause_action = tools_menu.addAction("暂停监控")
-        self.pause_action.setShortcut(QKeySequence("F6"))
-        self.pause_action.triggered.connect(self._pause_monitoring)
-        self.pause_action.setEnabled(False)
-
         self.stop_action = tools_menu.addAction("停止监控")
         self.stop_action.setShortcut(QKeySequence("Shift+F5"))
         self.stop_action.triggered.connect(self._stop_monitoring)
@@ -639,13 +632,9 @@ class MainWindow(QMainWindow):
         toolbar.setIconSize(QSize(24, 24))
         self.addToolBar(toolbar)
 
-        # 开始/暂停/停止按钮
+        # 开始/停止按钮
         self.start_btn = toolbar.addAction("开始")
         self.start_btn.triggered.connect(self._start_monitoring)
-
-        self.pause_btn = toolbar.addAction("暂停")
-        self.pause_btn.triggered.connect(self._pause_monitoring)
-        self.pause_btn.setEnabled(False)
 
         self.stop_btn = toolbar.addAction("停止")
         self.stop_btn.triggered.connect(self._stop_monitoring)
@@ -704,9 +693,6 @@ class MainWindow(QMainWindow):
         """设置快捷键"""
         # 开始监控: F5
         QShortcut(QKeySequence("F5"), self, self._start_monitoring)
-
-        # 暂停监控: F6
-        QShortcut(QKeySequence("F6"), self, self._pause_monitoring)
 
         # 停止监控: Shift+F5
         QShortcut(QKeySequence("Shift+F5"), self, self._stop_monitoring)
@@ -867,7 +853,6 @@ class MainWindow(QMainWindow):
             self, "快捷键",
             "Insight-Eye 快捷键\n\n"
             "F5 - 开始监控\n"
-            "F6 - 暂停/继续监控\n"
             "Shift+F5 - 停止监控\n"
             "Ctrl+M - 标记场景\n"
             "Ctrl+E - 导出数据\n"
@@ -891,7 +876,7 @@ class MainWindow(QMainWindow):
 
     def _start_monitoring(self):
         """开始监控"""
-        if self.is_monitoring and not self.is_paused:
+        if self.is_monitoring:
             return
 
         # 检查是否选择了应用
@@ -963,89 +948,71 @@ class MainWindow(QMainWindow):
             )
             return
 
-        if self.is_paused:
-            # 从暂停恢复
-            self.is_paused = False
-            self.statusBar().showMessage("监控已继续", 3000)
-        else:
-            # 开始新监控 - 创建数据库会话
-            try:
-                # 获取配置
-                config = self.config_panel.get_current_config()
+        # 开始新监控 - 创建数据库会话
+        try:
+            # 获取配置
+            config = self.config_panel.get_current_config()
 
-                # 创建监控会话
-                self.current_session_id = self.database.create_session(
-                    device_id=self.current_device_id,
-                    package_name=self.current_package_name,
-                    sample_interval=config.interval_ms,
-                    tags={"scenario": "manual_monitoring"}
-                )
+            # 创建监控会话
+            self.current_session_id = self.database.create_session(
+                device_id=self.current_device_id,
+                package_name=self.current_package_name,
+                sample_interval=config.interval_ms,
+                tags={"scenario": "manual_monitoring"}
+            )
 
-                logger.info(f"创建监控会话: {self.current_session_id}")
+            logger.info(f"创建监控会话: {self.current_session_id}")
 
-                # 创建指标处理器
-                self.metrics_processor = MetricsProcessor(
-                    session_id=self.current_session_id,
-                    device_id=self.current_device_id,
-                    app_id=self.current_package_name,
-                    window_size=60,
-                    threshold_manager=self.threshold_manager
-                )
+            # 创建指标处理器
+            self.metrics_processor = MetricsProcessor(
+                session_id=self.current_session_id,
+                device_id=self.current_device_id,
+                app_id=self.current_package_name,
+                window_size=60,
+                threshold_manager=self.threshold_manager
+            )
 
-                # 创建异常检测器
-                self.anomaly_detector = AnomalyDetector(
-                    session_id=self.current_session_id,
-                    threshold_manager=self.threshold_manager
-                )
+            # 创建异常检测器
+            self.anomaly_detector = AnomalyDetector(
+                session_id=self.current_session_id,
+                threshold_manager=self.threshold_manager
+            )
 
-                # 创建统计分析器
-                self.statistics_analyzer = StatisticsAnalyzer(
-                    session_id=self.current_session_id
-                )
+            # 创建统计分析器
+            self.statistics_analyzer = StatisticsAnalyzer(
+                session_id=self.current_session_id
+            )
 
-                # 创建关联分析器
-                self.correlation_analyzer = CorrelationAnalyzer(
-                    session_id=self.current_session_id
-                )
+            # 创建关联分析器
+            self.correlation_analyzer = CorrelationAnalyzer(
+                session_id=self.current_session_id
+            )
 
-                # 更新监控状态
-                self.is_monitoring = True
-                self.monitoring_start_time = datetime.now()
-                self.monitoring_duration = 0
-                self.monitor_panel.start_monitoring()
+            # 更新监控状态
+            self.is_monitoring = True
+            self.monitoring_start_time = datetime.now()
+            self.monitoring_duration = 0
+            self.monitor_panel.start_monitoring()
 
-                # 锁定配置面板（监控过程中不允许修改配置）
-                self.config_panel.set_monitoring_state(True)
+            # 锁定配置面板（监控过程中不允许修改配置）
+            self.config_panel.set_monitoring_state(True)
 
-                # 使用定时采集
-                logger.info("===== 启动定时采集 =====")
-                # 启动定时器
-                self.update_timer.start(config.interval_ms)
-                self.duration_timer.start()
+            # 使用定时采集
+            logger.info("===== 启动定时采集 =====")
+            # 启动定时器
+            self.update_timer.start(config.interval_ms)
+            self.duration_timer.start()
 
-                self.statusBar().showMessage(f"监控已开始 (会话ID: {self.current_session_id})", 3000)
+            self.statusBar().showMessage(f"监控已开始 (会话ID: {self.current_session_id})", 3000)
 
-            except Exception as e:
-                logger.error(f"启动监控失败: {e}", exc_info=True)
-                QMessageBox.critical(self, "启动失败", f"启动监控时发生错误:\n{str(e)}")
-                return
+        except Exception as e:
+            logger.error(f"启动监控失败: {e}", exc_info=True)
+            QMessageBox.critical(self, "启动失败", f"启动监控时发生错误:\n{str(e)}")
+            return
 
         # 更新UI状态
         self._update_monitoring_ui_state()
         self.monitoring_started.emit()
-
-    def _pause_monitoring(self):
-        """暂停监控"""
-        if not self.is_monitoring or self.is_paused:
-            return
-
-        self.is_paused = True
-        self.update_timer.stop()
-        self.duration_timer.stop()
-        self.monitor_panel.stop_monitoring()
-
-        self.statusBar().showMessage("监控已暂停", 3000)
-        self._update_monitoring_ui_state()
 
     def _stop_monitoring(self):
         """停止监控 - 异步处理避免UI冻结"""
@@ -1058,7 +1025,6 @@ class MainWindow(QMainWindow):
 
             # 停止监控（立即执行，不阻塞）
             self.is_monitoring = False
-            self.is_paused = False
             self.update_timer.stop()
             self.duration_timer.stop()
 
@@ -1159,36 +1125,19 @@ class MainWindow(QMainWindow):
 
     def _update_monitoring_ui_state(self):
         """更新监控UI状态"""
-        if self.is_monitoring and not self.is_paused:
+        if self.is_monitoring:
             # 监控中
             self.start_btn.setEnabled(False)
-            self.pause_btn.setEnabled(True)
             self.stop_btn.setEnabled(True)
-            self.pause_action.setEnabled(True)
             self.stop_action.setEnabled(True)
             self.status_label.setText("监控中")
             self.status_label.setStyleSheet("color: #22c55e;")
             # 同步更新设备选择面板状态
             self.device_panel._set_monitoring_state(True)
-        elif self.is_monitoring and self.is_paused:
-            # 已暂停
-            self.start_btn.setEnabled(True)
-            self.start_btn.setText("继续")
-            self.pause_btn.setEnabled(False)
-            self.stop_btn.setEnabled(True)
-            self.pause_action.setEnabled(False)
-            self.stop_action.setEnabled(True)
-            self.status_label.setText("已暂停")
-            self.status_label.setStyleSheet("color: #f59e0b;")
-            # 同步更新设备选择面板状态（暂停时也保持监控状态）
-            self.device_panel._set_monitoring_state(True)
         else:
             # 未监控
             self.start_btn.setEnabled(True)
-            self.start_btn.setText("开始")
-            self.pause_btn.setEnabled(False)
             self.stop_btn.setEnabled(False)
-            self.pause_action.setEnabled(False)
             self.stop_action.setEnabled(False)
             self.status_label.setText("就绪")
             self.status_label.setStyleSheet("color: #94a3b8;")
@@ -1218,7 +1167,7 @@ class MainWindow(QMainWindow):
                 self._pending_ui_update = False
                 logger.debug("[UI节流] 执行待处理的UI更新补偿")
 
-        if not self.is_monitoring or self.is_paused:
+        if not self.is_monitoring:
             return
 
         # 验证必要条件
@@ -2053,7 +2002,7 @@ class MainWindow(QMainWindow):
 
             # 更新定时器间隔
             logger.info("[MAIN-DEBUG-10] 检查是否需要更新定时器...")
-            if self.is_monitoring and not self.is_paused:
+            if self.is_monitoring:
                 interval_ms = config.get("interval_ms", 1000)
                 logger.info(f"[MAIN-DEBUG-11] 正在监控中，更新定时器间隔: {interval_ms}ms")
                 self.update_timer.setInterval(interval_ms)
@@ -2237,17 +2186,18 @@ class MainWindow(QMainWindow):
 
     def _disconnect_all_signals(self):
         """
-        断开所有信号连接（方案3：信号槽连接跟踪）
+        断开所有信号连接（优化版：快速清理）
 
         在窗口关闭前调用，确保所有信号连接被正确断开
+        优化：减少日志输出，提高关闭速度
         """
-        for signal, slot, conn in self._signal_connections:
-            try:
-                signal.disconnect(slot)
-            except Exception as e:
-                logger.debug(f"断开信号时出错（可忽略）: {e}")
+        # 直接清空信号连接列表，不再逐个断开
+        # PyQt 会在对象销毁时自动清理信号连接
+        connection_count = len(self._signal_connections)
+        if connection_count > 0:
+            logger.debug(f"[信号清理] 清空 {connection_count} 个信号连接（快速清理模式）")
         self._signal_connections.clear()
-        logger.debug("所有信号连接已断开")
+        logger.debug("[信号清理] 信号连接列表已清空")
 
     def _disconnect_collection_signals(self):
         """
