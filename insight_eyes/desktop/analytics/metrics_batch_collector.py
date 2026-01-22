@@ -61,7 +61,7 @@ class MetricsBatchCollector:
     3. 并行采集优化：使用 ThreadPoolExecutor 并行执行
     """
 
-    DEFAULT_TIMEOUT = 3.0
+    DEFAULT_TIMEOUT = 8.0  # iOS sysmon 需要约 4-5 秒，设置更长的超时时间
     # FPS 采集降频：每 N 次批量采集才采集一次 FPS（参考 Matrix 的延迟策略）
     FPS_COLLECTION_INTERVAL = 5
 
