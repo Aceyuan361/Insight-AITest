@@ -9,6 +9,7 @@ License: MIT License
 Author: Aceyuan361
 """
 
+import threading
 from typing import Optional, Dict, Any
 from logzero import logger
 
@@ -93,6 +94,9 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
         super().__init__(device_id)
         self._lockdown_client = None
         self._connected = False
+        self._apm = None  # IOSAPM 实例缓存
+        self._apm_lock = threading.Lock()  # APM 实例锁
+        self.platform = Platform.IOS  # 平台标识
 
     def connect(self) -> bool:
         """
@@ -402,6 +406,63 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
         logger.warning("iOS 电池采集功能尚未实现")
         return None
 
+    # ========== APM 管理方法 ==========
+
+    def _get_apm(self, bundle_name: str):
+        """
+        获取或初始化 IOSAPM 实例 - 线程安全版本
+
+        使用双重检查锁定模式（Double-Checked Locking）：
+        1. 快速检查（无锁）：如果已有匹配的 APM 实例，直接返回
+        2. 锁保护检查：在锁内再次检查，防止竞态条件
+        3. 创建新实例：仅在需要时创建，避免重复初始化
+
+        Args:
+            bundle_name: 应用 Bundle ID（使用 "__battery__" 表示电池采集）
+
+        Returns:
+            IOSAPM: APM 实例
+        """
+        # 特殊处理：电池采集不需要包名，使用现有的 APM 实例（如果有）
+        if bundle_name == "__battery__":
+            with self._apm_lock:
+                # 如果已有 APM 实例，直接复用（不需要包名）
+                if self._apm:
+                    return self._apm
+                # 如果没有 APM 实例，创建一个不带包名的实例用于电池采集
+                from insight_eyes.public.ios.ios_apm import IOSAPM
+                logger.debug(f"[APM管理] 创建电池专用 APM 实例: device={self.device_id}")
+                self._apm = IOSAPM("", self.device_id)
+                return self._apm
+
+        # 快速路径：如果已有匹配的 APM 实例，直接返回（无锁，利用 Python GIL）
+        if self._apm is not None and self._apm.bundle_name == bundle_name:
+            return self._apm
+
+        # 慢速路径：需要创建或更换 APM，使用锁保护
+        with self._apm_lock:
+            # 双重检查：可能在等待锁时已被其他线程创建
+            if self._apm is not None and self._apm.bundle_name == bundle_name:
+                return self._apm
+
+            from insight_eyes.public.ios.ios_apm import IOSAPM
+
+            # 如果之前的 APM 存在且包名不同，先停止旧实例
+            if self._apm is not None:
+                try:
+                    logger.debug(f"[APM管理] 停止旧 APM 实例: {self._apm.bundle_name}")
+                    self._apm.stop()
+                except Exception as e:
+                    logger.warning(f"[APM管理] 停止旧 APM 失败: {e}")
+
+            # 创建新的 APM 实例
+            logger.debug(f"[APM管理] 创建新 APM 实例: bundle={bundle_name}, device={self.device_id}")
+            self._apm = IOSAPM(bundle_name, self.device_id)
+            # 启动 APM
+            self._apm.start()
+
+        return self._apm
+
     def cleanup(self):
         """
         清理设备适配器资源
@@ -409,6 +470,14 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
         logger.info(f"开始清理iOS设备适配器: {self.device_id}")
 
         try:
+            # 停止 APM 实例
+            if self._apm:
+                try:
+                    self._apm.stop()
+                    self._apm = None
+                except Exception as e:
+                    logger.warning(f"停止 IOSAPM 失败: {e}")
+
             self.disconnect()
             logger.info(f"iOS设备适配器已清理: {self.device_id}")
 

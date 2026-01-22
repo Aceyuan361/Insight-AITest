@@ -206,27 +206,46 @@ class MetricsCollectionWorker(QObject):
 
     def collect_metrics(self):
         """
-        并行批量采集策略（Android）
+        并行批量采集策略（支持 Android 和 iOS）
         """
         try:
             import time
             start_time = time.time()
 
-            logger.info("===== 开始 Android 并行指标采集 =====")
-            raw_metrics = self._collect_android_batch()
+            # 检测平台类型
+            from desktop.core.models import Platform
+
+            platform = self.adapter.platform if hasattr(self.adapter, 'platform') else None
+
+            if platform == Platform.IOS:
+                logger.info("===== 开始 iOS 指标采集 =====")
+                raw_metrics = self._collect_ios()
+            else:
+                logger.info("===== 开始 Android 并行指标采集 =====")
+                raw_metrics = self._collect_android_batch()
 
             # 记录采集完成
             elapsed_time = (time.time() - start_time) * 1000
 
-            # 打印性能指标摘要
-            cpu_val = raw_metrics.get('cpu', {}).get('appCpuRate', 0)
-            mem_val = raw_metrics.get('memory', {}).get('totalPass', 0)
-            fps_val = raw_metrics.get('fps', {}).get('fps', 0)
-            jank_val = raw_metrics.get('fps', {}).get('jank', 0)
+            # 打印性能指标摘要（兼容两种平台的格式）
+            if platform == Platform.IOS:
+                cpu_val = raw_metrics.get('cpu', {}).get('cpu_app', 0)
+                mem_val = raw_metrics.get('memory', {}).get('used_mb', 0)
+                fps_val = raw_metrics.get('fps', {}).get('fps', 0)
+                jank_val = raw_metrics.get('fps', {}).get('jank', 0)
 
-            logger.info(f"[✓] Android 采集完成: "
-                       f"CPU={cpu_val}%, Memory={mem_val}MB, FPS={fps_val}, Jank={jank_val}, "
-                       f"耗时={elapsed_time:.0f}ms")
+                logger.info(f"[✓] iOS 采集完成: "
+                           f"CPU={cpu_val}%, Memory={mem_val}MB, FPS={fps_val}, Jank={jank_val}, "
+                           f"耗时={elapsed_time:.0f}ms")
+            else:
+                cpu_val = raw_metrics.get('cpu', {}).get('appCpuRate', 0)
+                mem_val = raw_metrics.get('memory', {}).get('totalPass', 0)
+                fps_val = raw_metrics.get('fps', {}).get('fps', 0)
+                jank_val = raw_metrics.get('fps', {}).get('jank', 0)
+
+                logger.info(f"[✓] Android 采集完成: "
+                           f"CPU={cpu_val}%, Memory={mem_val}MB, FPS={fps_val}, Jank={jank_val}, "
+                           f"耗时={elapsed_time:.0f}ms")
 
             # 发送采集完成信号
             self.collection_finished.emit(raw_metrics)
@@ -281,6 +300,34 @@ class MetricsCollectionWorker(QObject):
             for metric in snapshot.incomplete_metrics:
                 raw_metrics[metric] = {'error': snapshot.collection_errors.get(metric, 'Unknown')}
                 logger.warning(f"[{metric}] 采集失败")
+
+        return raw_metrics
+
+    def _collect_ios(self) -> dict:
+        """iOS 串行采集（简化实现）"""
+        import time
+
+        # 获取 APM 实例
+        apm = self.adapter._get_apm(self.package_name)
+
+        # 预热 APM 实例
+        time.sleep(0.05)
+
+        # 采集各指标
+        raw_metrics = {
+            'cpu': apm.collectCpu() or {},
+            'memory': apm.collectMemory() or {},
+            'fps': apm.collectFps() or {},
+            'network': apm.collectFlow() or {},
+            'battery': apm.collectBattery() or {},
+            'app_status': {
+                'is_alive': True,
+                'status_changed': False
+            },
+            'snapshot_timestamp': time.time(),
+            'collection_duration_ms': 0,
+            'collection_success': True
+        }
 
         return raw_metrics
 

@@ -439,6 +439,14 @@ class DeviceSelectionPanel(QWidget):
 
     # ========== 公共方法 ==========
 
+    def _get_platform_icon(self, platform: str) -> str:
+        """获取平台图标"""
+        platform_lower = platform.lower() if platform else ""
+        return {
+            'android': '🤖',
+            'ios': '🍎'
+        }.get(platform_lower, '📱')
+
     def set_devices(self, devices: List[DeviceInfo]):
         """
         设置设备列表
@@ -460,7 +468,8 @@ class DeviceSelectionPanel(QWidget):
 
         for device in devices:
             status_text = self._get_device_status_text(device.status)
-            display_text = f"{device.name} ({status_text})"
+            icon = self._get_platform_icon(device.platform.value if hasattr(device.platform, 'value') else str(device.platform))
+            display_text = f"{icon} {device.name} ({status_text})"
             self.device_combo.addItem(display_text, device.device_id)
 
         # 尝试恢复之前的选择
