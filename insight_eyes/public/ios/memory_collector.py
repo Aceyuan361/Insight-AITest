@@ -4,11 +4,9 @@ iOS 内存使用情况采集器
 
 提供 iOS 设备的内存使用数据采集功能
 
-使用 pymobiledevice3 developer dvt sysmon 获取真实进程内存数据。
-
-要求：
-- Developer Mode 已启用
-- DeveloperDiskImage 已挂载
+数据采集优先级：
+1. pymobiledevice3 developer dvt sysmon（首选，Developer Mode）
+2. py-ios-device instruments（降级方案，instruments 协议）
 
 Copyright (c) 2025 Aceyuan361
 GitHub: https://github.com/Aceyuan361/Insight-Eye
@@ -23,14 +21,11 @@ class MemoryCollector:
     """iOS 内存使用采集"""
 
     # iOS 设备典型内存配置（MB）
-    # 不同设备的物理内存不同，这里使用常见值
     DEVICE_MEMORY_MAP = {
-        # iPhone 系列
         'iPhone14,': 6 * 1024,  # 6GB
         'iPhone13,': 4 * 1024,  # 4GB
         'iPhone12,': 4 * 1024,  # 4GB
         'iPhone11,': 4 * 1024,  # 4GB
-        # 默认值（适用于大多数现代 iOS 设备）
         'default': 4 * 1024,  # 4GB
     }
 
@@ -45,82 +40,110 @@ class MemoryCollector:
         self.adapter = adapter
         self.bundle_id = bundle_id
         self._sysmon_helper = None
-        self._total_memory_mb = None  # 缓存总内存
+        self._py_ios_device_helper = None
+        self._total_memory_mb = None
 
     def collect(self) -> Dict[str, float]:
         """
         采集内存使用情况
 
-        通过 pymobiledevice3 developer dvt sysmon 获取真实数据。
+        数据采集优先级：
+        1. pymobiledevice3 developer dvt sysmon（首选）
+        2. py-ios-device instruments（降级方案）
+        3. 默认值（最终降级）
 
         Returns:
             {'used_mb': float, 'total_mb': float, 'percentage': float}
         """
-        try:
-            from .sysmon_helper import SysmonHelper
-
-            # 延迟初始化 SysmonHelper
-            if self._sysmon_helper is None:
-                self._sysmon_helper = SysmonHelper()
-
-            if not self._sysmon_helper.is_available():
-                logger.warning("Sysmon 服务不可用，使用降级方案")
-                return self._collect_fallback()
-
-            # 获取设备总内存
-            if self._total_memory_mb is None:
-                self._total_memory_mb = self._get_device_total_memory()
-
-            # 通过 Bundle ID 查找进程
-            process = self._sysmon_helper.get_process_by_bundle_id(self.bundle_id)
-
-            if process:
-                memory_data = self._sysmon_helper.parse_memory_usage(process)
-                logger.info(
-                    f"===== iOS 内存采集成功 =====\n"
-                    f"API: pymobiledevice3 developer dvt sysmon process single\n"
-                    f"Bundle ID: {self.bundle_id}\n"
-                    f"PID: {process.get('pid')}\n"
-                    f"内存使用: {memory_data['used_mb']}MB / {memory_data['total_mb']}MB ({memory_data['percentage']}%)"
-                )
-                return memory_data
-            else:
-                logger.warning(f"未找到进程: {self.bundle_id}，使用降级方案")
-                return self._collect_fallback()
-
-        except ImportError:
-            logger.warning("无法导入 SysmonHelper，使用降级方案")
-            return self._collect_fallback()
-
-        except Exception as e:
-            logger.debug(f"内存采集失败: {e}")
-            return self._collect_fallback()
-
-    def _collect_fallback(self) -> Dict[str, float]:
-        """
-        降级方案：返回设备总内存（固定值）
-
-        当 Sysmon 服务不可用时使用。
-
-        Returns:
-            {'used_mb': float, 'total_mb': float, 'percentage': float}
-        """
-        # 获取设备总内存
+        # 获取设备总内存（用于计算百分比）
         if self._total_memory_mb is None:
             self._total_memory_mb = self._get_device_total_memory()
 
+        # 方案 1: 尝试 pymobiledevice3 sysmon
+        try:
+            from .sysmon_helper import SysmonHelper
+
+            if self._sysmon_helper is None:
+                self._sysmon_helper = SysmonHelper()
+
+            if self._sysmon_helper.is_available():
+                process = self._sysmon_helper.get_process_by_bundle_id(self.bundle_id)
+
+                if process:
+                    memory_data = self._sysmon_helper.parse_memory_usage(process)
+                    # 更新 total_mb 为实际设备内存
+                    memory_data['total_mb'] = float(self._total_memory_mb)
+                    memory_data['percentage'] = round((memory_data['used_mb'] / self._total_memory_mb * 100), 2)
+
+                    logger.info(
+                        f"===== iOS 内存采集成功 (sysmon) =====\n"
+                        f"API: pymobiledevice3 developer dvt sysmon process single\n"
+                        f"Bundle ID: {self.bundle_id}\n"
+                        f"PID: {process.get('pid')}\n"
+                        f"内存使用: {memory_data['used_mb']}MB / {memory_data['total_mb']}MB ({memory_data['percentage']}%)"
+                    )
+                    return memory_data
+
+        except ImportError:
+            logger.debug("SysmonHelper 不可用，尝试降级方案")
+        except Exception as e:
+            logger.debug(f"Sysmon 采集失败: {e}，尝试降级方案")
+
+        # 方案 2: 尝试 py-ios-device
+        try:
+            from .py_ios_device_helper import PyiOSDeviceHelper
+
+            if self._py_ios_device_helper is None:
+                self._py_ios_device_helper = PyiOSDeviceHelper()
+
+            if self._py_ios_device_helper.is_available():
+                process_data = self._py_ios_device_helper.get_process_cpu_memory(self.bundle_id)
+
+                if process_data:
+                    memory_data = self._py_ios_device_helper.parse_memory_usage(process_data)
+                    # 更新 total_mb 为实际设备内存
+                    memory_data['total_mb'] = float(self._total_memory_mb)
+                    memory_data['percentage'] = round((memory_data['used_mb'] / self._total_memory_mb * 100), 2)
+
+                    logger.info(
+                        f"===== iOS 内存采集成功 (py-ios-device) =====\n"
+                        f"API: py-ios-device instruments sysmontap\n"
+                        f"Bundle ID: {self.bundle_id}\n"
+                        f"PID: {process_data.get('pid')}\n"
+                        f"内存使用: {memory_data['used_mb']}MB / {memory_data['total_mb']}MB ({memory_data['percentage']}%)"
+                    )
+                    return memory_data
+
+        except ImportError:
+            logger.debug("py-ios-device 未安装，使用最终降级方案")
+        except Exception as e:
+            logger.debug(f"py-ios-device 采集失败: {e}，使用最终降级方案")
+
+        # 方案 3: 最终降级方案
+        return self._collect_final_fallback()
+
+    def _collect_final_fallback(self) -> Dict[str, float]:
+        """
+        最终降级方案：返回设备总内存
+
+        当所有采集方案都不可用时使用。
+
+        Returns:
+            {'used_mb': float, 'total_mb': float, 'percentage': float}
+        """
         logger.warning(
-            "===== iOS 内存采集（降级方案）=====\n"
-            "状态: Sysmon 服务不可用\n"
-            "说明: 请确保 Developer Mode 已启用且 DeveloperDiskImage 已挂载\n"
+            "===== iOS 内存采集（最终降级方案）=====\n"
+            "状态: 所有真实数据源均不可用\n"
+            "说明:\n"
+            "  - pymobiledevice3 sysmon: 需要 Developer Mode\n"
+            "  - py-ios-device: 请运行 pip install py-ios-device\n"
             f"返回数据: used_mb=0.0 (无法获取), total_mb={self._total_memory_mb}MB (设备总内存)"
         )
 
-        # 返回总内存作为参考（无法获取真实使用量）
         return {
-            'used_mb': 0.0,  # 使用量无法获取
+            'used_mb': 0.0,
             'total_mb': float(self._total_memory_mb),
-            'percentage': 0.0  # 使用率无法计算
+            'percentage': 0.0
         }
 
     def _get_device_total_memory(self) -> int:

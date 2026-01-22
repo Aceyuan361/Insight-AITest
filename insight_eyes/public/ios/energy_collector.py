@@ -4,7 +4,10 @@ iOS 能耗监控采集器
 
 提供 iOS 设备的能耗监控数据采集功能
 
-使用 pymobiledevice3 developer dvt energy 获取真实进程能耗数据。
+数据采集：
+- pymobiledevice3 developer dvt energy（仅支持此方法）
+
+注意：py-ios-device 不支持能耗监控，因此没有降级方案。
 
 要求：
 - Developer Mode 已启用
@@ -33,13 +36,15 @@ class EnergyCollector:
         self.adapter = adapter
         self.bundle_id = bundle_id
         self._sysmon_helper = None
-        self._cached_pid = None  # 缓存进程 PID
+        self._cached_pid = None
 
     def collect(self) -> Dict[str, float]:
         """
         采集能耗数据
 
         通过 pymobiledevice3 developer dvt energy 获取真实数据。
+
+        注意：此功能需要 Developer Mode，且无降级方案。
 
         Returns:
             {
@@ -57,15 +62,15 @@ class EnergyCollector:
                 self._sysmon_helper = SysmonHelper()
 
             if not self._sysmon_helper.is_available():
-                logger.warning("Sysmon 服务不可用，使用降级方案")
-                return self._collect_fallback()
+                logger.warning("Sysmon 服务不可用，能耗监控需要 Developer Mode")
+                return self._get_fallback_value()
 
             # 先获取进程信息（以得到 PID）
             process = self._sysmon_helper.get_process_by_bundle_id(self.bundle_id)
 
             if not process:
-                logger.warning(f"未找到进程: {self.bundle_id}，使用降级方案")
-                return self._collect_fallback()
+                logger.warning(f"未找到进程: {self.bundle_id}，无法获取能耗数据")
+                return self._get_fallback_value()
 
             pid = process.get('pid')
             self._cached_pid = pid
@@ -94,22 +99,25 @@ class EnergyCollector:
                 )
                 return result
             else:
-                logger.warning(f"无法获取能耗数据: PID {pid}，使用降级方案")
-                return self._collect_fallback()
+                logger.warning(f"无法获取能耗数据: PID {pid}")
+                return self._get_fallback_value()
 
         except ImportError:
-            logger.warning("无法导入 SysmonHelper，使用降级方案")
-            return self._collect_fallback()
+            logger.warning("无法导入 SysmonHelper，能耗监控需要 Developer Mode")
+            return self._get_fallback_value()
 
         except Exception as e:
             logger.debug(f"能耗采集失败: {e}")
-            return self._collect_fallback()
+            return self._get_fallback_value()
 
-    def _collect_fallback(self) -> Dict[str, float]:
+    def _get_fallback_value(self) -> Dict[str, float]:
         """
         降级方案：返回零值
 
-        当 Sysmon 服务不可用时使用。
+        注意：
+        - 能耗监控仅支持 pymobiledevice3 developer dvt energy
+        - py-ios-device 不支持能耗监控
+        - 因此没有可用的降级方案
 
         Returns:
             能耗数据字典（全部为零）
@@ -117,7 +125,11 @@ class EnergyCollector:
         logger.warning(
             "===== iOS 能耗采集（降级方案）=====\n"
             "状态: Sysmon 服务不可用\n"
-            "说明: 请确保 Developer Mode 已启用且 DeveloperDiskImage 已挂载\n"
+            "说明:\n"
+            "  - 能耗监控仅支持 pymobiledevice3 developer dvt energy\n"
+            "  - 需要 Developer Mode 已启用\n"
+            "  - 需要 DeveloperDiskImage 已挂载\n"
+            "  - py-ios-device 不支持能耗监控（instruments 协议限制）\n"
             "返回数据: 能耗数据全部为 0 (无法获取)"
         )
 
