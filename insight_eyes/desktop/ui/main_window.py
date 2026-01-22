@@ -1034,9 +1034,9 @@ class MainWindow(QMainWindow):
             # 获取配置
             config = self.config_panel.get_current_config()
 
-            # 获取平台信息
+            # 获取平台信息（转换为小写以匹配数据库约束）
             device = self.device_manager.get_device(self.current_device_id)
-            platform_value = device.platform.value if device else 'android'
+            platform_value = device.platform.value.lower() if device else 'android'
 
             # 创建监控会话
             self.current_session_id = self.database.create_session(
