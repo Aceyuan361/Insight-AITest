@@ -269,7 +269,7 @@ class MetricsCollectionWorker(QObject):
 
         # 创建批量采集器（首次）
         if self.batch_collector is None:
-            self.batch_collector = MetricsBatchCollector(apm, timeout_seconds=3.0)
+            self.batch_collector = MetricsBatchCollector(apm)  # 使用默认超时（8秒，适配 iOS sysmon）
             logger.debug("Android 批量采集器创建成功")
 
         # 预热 APM 实例
