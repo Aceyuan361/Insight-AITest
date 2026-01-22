@@ -596,7 +596,7 @@ class AndroidAppEnumerator(BaseAppEnumerator):
 
 class AppEnumeratorFactory:
     """
-    应用枚举器工厂（仅支持 Android）
+    应用枚举器工厂（支持 Android 和 iOS）
     """
 
     @staticmethod
@@ -606,13 +606,23 @@ class AppEnumeratorFactory:
 
         Args:
             device_id: 设备ID
-            platform: 平台类型（仅支持 Android）
+            platform: 平台类型（Android 或 iOS）
 
         Returns:
             BaseAppEnumerator: 应用枚举器实例
         """
-        if platform == Platform.ANDROID:
-            return AndroidAppEnumerator(device_id)
+        # 比较枚举值而不是枚举本身
+        if hasattr(platform, 'value'):
+            platform_value = platform.value
         else:
-            logger.error(f"不支持的平台: {platform}，仅支持 Android")
+            platform_value = str(platform)
+
+        if platform_value == "Android":
+            return AndroidAppEnumerator(device_id)
+        elif platform_value == "iOS":
+            # 导入 iOS 枚举器
+            from .ios_app_enumerator import IOSAppEnumerator
+            return IOSAppEnumerator(device_id)
+        else:
+            logger.error(f"不支持的平台: {platform} (值: {platform_value})")
             return None

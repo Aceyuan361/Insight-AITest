@@ -18,8 +18,9 @@ from PyQt6.QtCore import QObject, pyqtSignal
 
 
 class Platform(Enum):
-    """平台枚举（仅支持 Android）"""
+    """平台枚举"""
     ANDROID = "Android"
+    IOS = "iOS"
     UNKNOWN = "Unknown"
 
 

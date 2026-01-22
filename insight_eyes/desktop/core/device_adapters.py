@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-设备连接适配器（仅支持 Android）
+设备连接适配器（支持 Android 和 iOS）
 
 Copyright (c) 2025 Aceyuan361
 GitHub: https://github.com/Aceyuan361/Insight-Eye
@@ -18,6 +18,14 @@ from abc import ABC, abstractmethod
 from logzero import logger
 
 from .models import DeviceInfo, Platform, DeviceStatus, AppInfo, AppStatus
+
+# 导入 iOS 适配器（如果文件存在）
+try:
+    from .ios_device_adapter import IOSDeviceAdapter
+    _IOS_ADAPTER_AVAILABLE = True
+except ImportError:
+    _IOS_ADAPTER_AVAILABLE = False
+    logger.debug("IOSDeviceAdapter 不可用（这是正常的，如果使用骨架实现）")
 
 
 class BaseDeviceAdapter(ABC):
@@ -820,7 +828,7 @@ class AndroidDeviceAdapter(BaseDeviceAdapter):
 
 class DeviceAdapterFactory:
     """
-    设备适配器工厂（仅支持 Android）
+    设备适配器工厂
     """
 
     @staticmethod
@@ -830,7 +838,7 @@ class DeviceAdapterFactory:
 
         Args:
             device_id: 设备ID
-            platform: 平台类型（仅支持 Android）
+            platform: 平台类型
 
         Returns:
             BaseDeviceAdapter: 设备适配器实例
@@ -846,8 +854,15 @@ class DeviceAdapterFactory:
 
         if platform_value == "Android":
             adapter = AndroidDeviceAdapter(device_id)
+        elif platform_value == "iOS":
+            # 使用已导入的 iOS 适配器（在文件顶部导入）
+            if _IOS_ADAPTER_AVAILABLE:
+                adapter = IOSDeviceAdapter(device_id)
+            else:
+                logger.error(f"iOS 适配器不可用")
+                return None
         else:
-            logger.error(f"不支持的平台: {platform} (值: {platform_value})，仅支持 Android")
+            logger.error(f"不支持的平台: {platform} (值: {platform_value})")
             return None
 
         # 设置 platform 属性，供 main_window.py 检测平台类型

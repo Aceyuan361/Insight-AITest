@@ -29,6 +29,7 @@ from .models import (
 from .device_adapters import (
     BaseDeviceAdapter,
     AndroidDeviceAdapter,
+    IOSDeviceAdapter,
     DeviceAdapterFactory,
 )
 
@@ -37,6 +38,14 @@ from .app_enumerator import (
     AndroidAppEnumerator,
     AppEnumeratorFactory,
 )
+
+# iOS 应用枚举器在单独的文件中
+try:
+    from .ios_app_enumerator import IOSAppEnumerator
+    _IOS_ENUMERATOR_AVAILABLE = True
+except ImportError:
+    _IOS_ENUMERATOR_AVAILABLE = False
+    IOSAppEnumerator = None  # type: ignore
 
 from .device_manager import (
     DeviceScannerThread,
@@ -60,11 +69,13 @@ __all__ = [
     # 设备适配器
     'BaseDeviceAdapter',
     'AndroidDeviceAdapter',
+    'IOSDeviceAdapter',
     'DeviceAdapterFactory',
 
     # 应用枚举器
     'BaseAppEnumerator',
     'AndroidAppEnumerator',
+    'IOSAppEnumerator',
     'AppEnumeratorFactory',
 
     # 设备管理器
