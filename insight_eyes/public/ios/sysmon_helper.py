@@ -119,6 +119,24 @@ class SysmonHelper:
 
             # 查找匹配的进程
             logger.debug(f"正在搜索匹配 '{bundle_id}' 的进程...")
+
+            # 提取应用名（智能处理 Bundle ID）
+            # 例如: Sango.Sango.com -> Sango (不是 com)
+            #       com.ubercab.UberClient -> UberClient
+            #       com.example.app -> app
+            parts = bundle_id.split('.')
+            if len(parts) > 1:
+                # 常见的 TLD 后缀，如果最后一部分是这些，则取倒数第二部分
+                common_tlds = {'com', 'net', 'org', 'io', 'co', 'app'}
+                if parts[-1].lower() in common_tlds and len(parts) >= 2:
+                    app_name = parts[-2]
+                else:
+                    app_name = parts[-1]
+            else:
+                app_name = bundle_id
+
+            logger.debug(f"提取应用名: {app_name} (从 Bundle ID: {bundle_id})")
+
             for i, process in enumerate(processes):
                 # 匹配 execName 或 comm 字段
                 exec_name = process.get('execName', '')
@@ -129,9 +147,10 @@ class SysmonHelper:
                 if i % 10 == 0:
                     logger.debug(f"  检查进程 {i}: name='{name}', execName='{exec_name[:50] if exec_name else ''}'")
 
-                if (bundle_id in exec_name or
-                    bundle_id in comm or
-                    bundle_id in name):
+                # 使用应用名进行匹配（更灵活）
+                if (app_name in exec_name or
+                    app_name in comm or
+                    app_name in name):
 
                     logger.info(f"✓ 找到进程!")
                     logger.info(f"  PID: {process.get('pid')}")
