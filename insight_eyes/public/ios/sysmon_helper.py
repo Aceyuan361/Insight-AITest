@@ -313,7 +313,7 @@ class SysmonHelper:
         logger.debug(f"解析内存: physFootprint={phys_footprint}, memResidentSize={resident_size}")
 
         # 以字节为单位的内存使用量
-        used_bytes = physFootprint if phys_footprint > 0 else resident_size
+        used_bytes = phys_footprint if phys_footprint > 0 else resident_size
 
         used_mb = used_bytes / 1024 / 1024
 
