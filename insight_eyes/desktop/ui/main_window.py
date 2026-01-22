@@ -958,53 +958,67 @@ class MainWindow(QMainWindow):
             return
 
         # 检查应用是否正在运行
+        # 注意：iOS 平台由于 pymobiledevice3 限制，无法检测运行状态，跳过检查直接监控
         try:
-            # 强制刷新应用列表以获取最新的运行状态
-            apps = self.device_manager.get_device_apps(
-                self.current_device_id,
-                force_refresh=True
-            )
+            # 获取设备平台信息
+            from insight_eyes.desktop.core.models import Platform
+            device = self.device_manager.get_device(self.current_device_id)
+            is_ios = device and device.platform == Platform.IOS
 
-            # 查找目标应用
-            target_app = None
-            for app in apps:
-                if app.package_name == self.current_package_name:
-                    target_app = app
-                    break
-
-            # 检查应用是否正在运行
-            if not target_app or not target_app.is_running:
-                app_name = target_app.app_name if target_app else self.current_package_name
-                QMessageBox.warning(
-                    self,
-                    "应用未运行",
-                    f"没有找到应用正在运行的进程\n\n"
-                    f"应用: {app_name}\n\n"
-                    f"请检查应用是否在运行中，然后重试。"
+            if is_ios:
+                # iOS 平台：跳过运行状态检查，直接尝试监控
+                logger.info(f"iOS 平台检测到，跳过运行状态检查，直接监控应用: {self.current_package_name}")
+                logger.info(f"iOS 设备: {device.name if device else self.current_device_id}")
+                logger.info(f"iOS Bundle ID: {self.current_package_name}")
+                target_app = None
+            else:
+                # Android 平台：正常检查运行状态
+                # 强制刷新应用列表以获取最新的运行状态
+                apps = self.device_manager.get_device_apps(
+                    self.current_device_id,
+                    force_refresh=True
                 )
-                logger.warning(f"应用未运行，无法启动监控: {self.current_package_name}")
-                return
 
-            # 检查应用是否在后台运行
-            if target_app.status == AppStatus.BACKGROUND:
-                app_name = target_app.app_name
-                reply = QMessageBox.question(
-                    self,
-                    "应用在后台运行",
-                    f"应用正在后台运行（非前台）\n\n"
-                    f"应用: {app_name}\n"
-                    f"PID: {target_app.pid}\n\n"
-                    f"后台运行时可能无法采集到完整的性能数据。\n"
-                    f"是否继续监控？",
-                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                    QMessageBox.StandardButton.No
-                )
-                if reply == QMessageBox.StandardButton.No:
-                    logger.info(f"用户取消后台应用监控: {self.current_package_name}")
+                # 查找目标应用
+                target_app = None
+                for app in apps:
+                    if app.package_name == self.current_package_name:
+                        target_app = app
+                        break
+
+                # 检查应用是否正在运行
+                if not target_app or not target_app.is_running:
+                    app_name = target_app.app_name if target_app else self.current_package_name
+                    QMessageBox.warning(
+                        self,
+                        "应用未运行",
+                        f"没有找到应用正在运行的进程\n\n"
+                        f"应用: {app_name}\n\n"
+                        f"请检查应用是否在运行中，然后重试。"
+                    )
+                    logger.warning(f"应用未运行，无法启动监控: {self.current_package_name}")
                     return
-                logger.info(f"用户确认继续监控后台应用: {self.current_package_name}")
 
-            logger.info(f"应用运行状态检查通过: {target_app.app_name} (PID: {target_app.pid}, 状态: {target_app.status.value})")
+                # 检查应用是否在后台运行
+                if target_app.status == AppStatus.BACKGROUND:
+                    app_name = target_app.app_name
+                    reply = QMessageBox.question(
+                        self,
+                        "应用在后台运行",
+                        f"应用正在后台运行（非前台）\n\n"
+                        f"应用: {app_name}\n"
+                        f"PID: {target_app.pid}\n\n"
+                        f"后台运行时可能无法采集到完整的性能数据。\n"
+                        f"是否继续监控？",
+                        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                        QMessageBox.StandardButton.No
+                    )
+                    if reply == QMessageBox.StandardButton.No:
+                        logger.info(f"用户取消后台应用监控: {self.current_package_name}")
+                        return
+                    logger.info(f"用户确认继续监控后台应用: {self.current_package_name}")
+
+                logger.info(f"应用运行状态检查通过: {target_app.app_name} (PID: {target_app.pid}, 状态: {target_app.status.value})")
 
         except Exception as e:
             logger.error(f"检查应用运行状态失败: {e}", exc_info=True)
@@ -1950,64 +1964,83 @@ class MainWindow(QMainWindow):
         self.device_panel.clear()
 
         try:
-            # 直接扫描设备（不使用 DeviceScannerThread）
-            from insight_eyes.public.common import Devices, Platform
-            from insight_eyes.desktop.core.models import DeviceStatus
-            from insight_eyes.desktop.core.device_manager import DeviceAdapterFactory
+            # 使用 DeviceManager 扫描设备（支持 Android 和 iOS）
+            from insight_eyes.desktop.core.models import Platform, DeviceStatus
+            from insight_eyes.public.common import Devices
 
-            devices_detector = Devices()
-            device_list = devices_detector.getDevices()
-            logger.info(f"扫描到 {len(device_list)} 个设备")
+            # 扫描 Android 设备
+            android_devices_info = []
+            try:
+                devices_detector = Devices()
+                device_list = devices_detector.getDevices()
+                logger.info(f"Android 扫描结果: {device_list}")
+
+                for device_str in device_list:
+                    if device_str.startswith("Android "):
+                        device_id = device_str[8:].strip()
+                        from insight_eyes.desktop.core.device_adapters import AndroidDeviceAdapter
+
+                        adapter = AndroidDeviceAdapter(device_id)
+                        if adapter.connect():
+                            device_info = adapter.get_device_info()
+                            if device_info:
+                                device_info.status = DeviceStatus.CONNECTED
+                                android_devices_info.append(device_info)
+
+            except Exception as e:
+                logger.error(f"扫描 Android 设备失败: {e}")
+
+            # 扫描 iOS 设备
+            ios_devices_info = []
+            try:
+                from pymobiledevice3.usbmux import list_devices
+                ios_devices = list_devices()
+                logger.info(f"iOS 扫描结果: {len(ios_devices)} 个设备")
+
+                for ios_device in ios_devices:
+                    udid = ios_device.serial
+                    from insight_eyes.desktop.core.ios_device_adapter import IOSDeviceAdapter
+
+                    adapter = IOSDeviceAdapter(udid)
+                    if adapter.connect():
+                        device_info = adapter.get_device_info()
+                        if device_info:
+                            device_info.status = DeviceStatus.CONNECTED
+                            ios_devices_info.append(device_info)
+
+            except Exception as e:
+                logger.error(f"扫描 iOS 设备失败: {e}")
+
+            # 合并设备列表
+            devices_info = android_devices_info + ios_devices_info
+            logger.info(f"总共扫描到 {len(devices_info)} 个设备")
 
             # 如果没有设备，提示用户
-            if not device_list:
+            if not devices_info:
                 logger.warning("未获取到任何设备，请检查:")
                 logger.warning("  1. 设备是否通过USB连接")
                 logger.warning("  2. 设备是否开启开发者模式")
                 logger.warning("  3. 是否允许USB调试")
-                self.statusBar().showMessage("未检测到设备，请检查USB连接和ADB调试设置", 5000)
+                self.statusBar().showMessage("未检测到设备，请检查USB连接和调试设置", 5000)
                 return
 
-            # 收集设备信息
-            devices_info = []
-
-            # 处理每个设备
-            for device_str in device_list:
+            # 预加载应用列表到 DeviceManager
+            for device_info in devices_info:
                 try:
-                    # 解析设备信息
-                    if device_str.startswith("Android "):
-                        device_id = device_str[8:].strip()
-                        platform = Platform.Android
-                    else:
-                        continue
+                    logger.info(f"正在处理设备: {device_info.device_id} ({device_info.platform.value})")
 
-                    logger.info(f"正在处理设备: {device_id} ({platform.value})")
+                    # 先将设备添加到 DeviceManager（因为 get_device_apps 需要设备已存在）
+                    self.device_manager._on_device_discovered(device_info)
 
-                    # 创建适配器并获取设备信息
-                    adapter = DeviceAdapterFactory.create_adapter(device_id, platform)
-                    if adapter and adapter.connect():
-                        device_info = adapter.get_device_info()
-                        if device_info:
-                            device_info.status = DeviceStatus.CONNECTED
-
-                            # 添加到 DeviceManager
-                            self.device_manager._devices[device_id] = device_info
-                            devices_info.append(device_info)
-
-                            # 预加载应用列表到 DeviceManager
-                            apps = self.device_manager.get_device_apps(device_id, force_refresh=True)
-                            logger.info(f"设备 {device_id} 上有 {len(apps)} 个应用")
-                        else:
-                            logger.warning(f"无法获取设备信息: {device_id}")
-                    else:
-                        logger.warning(f"无法连接到设备: {device_id}")
+                    # 预加载应用列表
+                    apps = self.device_manager.get_device_apps(device_info.device_id, force_refresh=True)
+                    logger.info(f"设备 {device_info.device_id} 上有 {len(apps)} 个应用")
 
                 except Exception as e:
-                    logger.error(f"处理设备 {device_str} 时出错: {e}", exc_info=True)
+                    logger.error(f"处理设备 {device_info.device_id} 时出错: {e}", exc_info=True)
 
             # 设置设备列表到面板
-            if devices_info:
-                self.device_panel.set_devices(devices_info)
+            self.device_panel.set_devices(devices_info)
 
             device_count = len(devices_info)
             self.statusBar().showMessage(f"已刷新: {device_count} 个设备", 3000)

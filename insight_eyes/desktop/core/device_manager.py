@@ -784,13 +784,16 @@ class DeviceManager(QObject):
         try:
             # 获取监控线程
             monitor = self._device_monitors.get(device_id)
+
             if not monitor:
                 # 如果没有监控线程，创建一个临时的
                 device = self.get_device(device_id)
+
                 if not device:
                     return False
 
                 enumerator = AppEnumeratorFactory.create_enumerator(device_id, device.platform)
+                
                 if not enumerator:
                     return False
 
@@ -826,7 +829,7 @@ class DeviceManager(QObject):
             return True
 
         except Exception as e:
-            logger.error(f"刷新设备应用列表失败: {e}")
+            logger.error(f"刷新设备应用列表失败: {e}", exc_info=True)
             return False
 
     def monitor_device(self, device_id: str, auto_refresh_apps: bool = True) -> bool:

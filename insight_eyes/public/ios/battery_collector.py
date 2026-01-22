@@ -24,49 +24,83 @@ class BatteryCollector:
             adapter: IOSDeviceAdapter 实例
         """
         self.adapter = adapter
+        self._diagnostics_service = None
 
     def collect(self) -> Dict[str, Any]:
         """
         采集电池状态
 
         Returns:
-            {'level': int, 'temperature': float}
+            {'level': int, 'temperature': float, 'is_charging': bool}
         """
         try:
-            return self._collect_via_lockdown()
+            return self._collect_via_diagnostics()
 
         except Exception as e:
             logger.debug(f"电池采集失败: {e}")
             return self._get_default_value()
 
-    def _collect_via_lockdown(self) -> Dict[str, Any]:
+    def _collect_via_diagnostics(self) -> Dict[str, Any]:
         """
-        通过 Lockdown 连接获取电池信息
+        通过 DiagnosticsService 获取电池信息
 
-        iOS 设备电池信息可以通过 pymobiledevice3 的 LockdownClient 获取
+        使用 pymobiledevice3 的 DiagnosticsService.get_battery()
 
         Returns:
-            {'level': int, 'temperature': float}
+            {'level': int, 'temperature': float, 'is_charging': bool}
         """
         try:
-            if not self.adapter or not self.adapter._connection:
-                logger.warning("设备未连接，返回默认电池值")
-                return self._get_default_value()
+            from pymobiledevice3.lockdown import create_using_usbmux
+            from pymobiledevice3.services.diagnostics import DiagnosticsService
 
-            # 尝试获取电池信息
-            # 注意：iOS 电池信息需要通过特定的 lockdown 查询
-            # 这是占位实现
-            logger.info("iOS 电池采集使用估算值（尚未实现完整功能）")
+            logger.info("===== iOS 电池采集 =====")
+            logger.info("API: pymobiledevice3 DiagnosticsService.get_battery()")
 
-            return {
-                'level': 100,
-                'temperature': 25.0
+            # 创建 lockdown 连接
+            lockdown = create_using_usbmux()
+
+            # 创建 DiagnosticsService
+            diagnostics = DiagnosticsService(lockdown)
+
+            # 获取电池信息
+            battery_info = diagnostics.get_battery()
+
+            logger.info(f"API 返回原始数据: {battery_info}")
+
+            # 解析电池信息
+            level = battery_info.get('BatteryCurrentCapacity', 100)
+            level = int(level) if level else 100
+
+            # iOS 不暴露温度传感器，返回固定值
+            temperature = 25.0
+
+            # 判断充电状态
+            is_charging = battery_info.get('BatteryIsCharging', False)
+            if isinstance(is_charging, str):
+                is_charging = is_charging.lower() in ('true', '1', 'yes')
+
+            result = {
+                'level': level,
+                'temperature': temperature,
+                'is_charging': bool(is_charging)
             }
 
+            logger.info(f"解析后数据: level={level}%, temperature={temperature}°C, is_charging={result['is_charging']}")
+
+            return result
+
+        except ImportError as e:
+            logger.error(f"无法导入 pymobiledevice3 服务: {e}")
+            return self._get_default_value()
+
         except Exception as e:
-            logger.debug(f"Lockdown 电池查询失败: {e}")
+            logger.error(f"DiagnosticsService 电池查询失败: {e}", exc_info=True)
             return self._get_default_value()
 
     def _get_default_value(self) -> Dict[str, Any]:
         """返回默认值"""
-        return {'level': 100, 'temperature': 25.0}
+        return {
+            'level': 100,
+            'temperature': 25.0,
+            'is_charging': False
+        }
