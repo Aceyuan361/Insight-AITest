@@ -15,8 +15,12 @@ from enum import Enum
 
 
 class Platform(Enum):
-    """平台枚举（仅支持 Android）"""
-    Android = "Android"
+    """平台枚举"""
+    ANDROID = "Android"
+    # 向后兼容别名（保持旧代码正常运行）
+    Android = ANDROID
+    IOS = "iOS"
+    UNKNOWN = "Unknown"
 
 
 class Devices:
