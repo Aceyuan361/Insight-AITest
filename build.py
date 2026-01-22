@@ -182,19 +182,24 @@ start "" "Insight-Eye.exe"
    - 已安装 ADB (Android Debug Bridge)
    - 屏幕分辨率建议 1280x720 或更高
 
-3. 首次使用:
+3. ADB 安装:
+   如果未安装 ADB，请运行 installer 目录中的 install_adb.bat
+   或手动下载: https://developer.android.com/studio/releases/platform-tools
+
+4. 首次使用:
    - 连接 Android 设备到电脑
    - 启用 USB 调试模式
    - 允许 USB 调试
    - 在应用中点击 "刷新设备" 按钮
 
-4. 数据目录:
+5. 数据目录:
    - data/: 存储数据库文件
    - logs/: 存储日志文件
 
-5. 常见问题:
+6. 常见问题:
    - 如果无法识别设备，请检查 ADB 是否正确安装
    - 在命令行运行 `adb devices` 确认设备连接
+   - 确保 USB 数据线支持数据传输（非仅充电线）
 
 版本: 1.0.0
 项目地址: https://github.com/Aceyuan361/Insight-Eye
@@ -211,6 +216,12 @@ def create_installer_script():
     if installer_dir.exists():
         shutil.rmtree(installer_dir)
     installer_dir.mkdir()
+
+    # 复制 ADB 安装脚本
+    adb_installer = PROJECT_DIR / "install_adb.bat"
+    if adb_installer.exists():
+        shutil.copy2(adb_installer, installer_dir / "install_adb.bat")
+        log(f"复制 ADB 安装脚本")
 
     # 创建安装脚本
     install_bat = installer_dir / "install.bat"
@@ -238,9 +249,10 @@ if "!choice!"=="1" (
     xcopy /E /I /Y "Insight-Eye-Portable" "!INSTALL_DIR!"
     echo.
     echo 安装完成！
-    echo 快捷方式已创建到桌面: Insight-Eye
     echo.
-    echo 如需卸载，直接删除安装目录即可: !INSTALL_DIR!
+    echo 安装位置: !INSTALL_DIR!
+    echo.
+    echo 如需卸载，直接删除安装目录即可
 
 ) else if "!choice!"=="2" (
     echo.
@@ -249,23 +261,91 @@ if "!choice!"=="1" (
 
     REM 创建开始菜单快捷方式
     set "START_MENU=%APPDATA%\\Microsoft\\Windows\\Start Menu\\Programs"
-    mklink /D "!START_MENU!\\Insight-Eye" "!INSTALL_DIR!" 2>nul
+    powershell -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('%START_MENU%\\Insight-Eye.lnk'); $s.TargetPath = '!INSTALL_DIR!\\启动应用.bat'; $s.WorkingDirectory = '!INSTALL_DIR!'; $s.Save()"
 
     REM 创建桌面快捷方式
     set "DESKTOP=%USERPROFILE%\\Desktop"
-    mklink /D "!DESKTOP!\\Insight-Eye" "!INSTALL_DIR!" 2>nul
+    powershell -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('%DESKTOP%\\Insight-Eye.lnk'); $s.TargetPath = '!INSTALL_DIR!\\启动应用.bat'; $s.WorkingDirectory = '!INSTALL_DIR!'; $s.Save()"
 
     echo.
     echo 安装完成！
-    echo 开始菜单: !START_MENU!\\Insight-Eye
-    echo 桌面快捷方式: !DESKTOP!\\Insight-Eye
+    echo 开始菜单: Insight-Eye
+    echo 桌面快捷方式: Insight-Eye
     echo.
-    echo 如需卸载，请使用控制面板中的"程序和功能"
+    echo 如需卸载，请删除安装目录和快捷方式
 
 ) else (
     echo 无效选项，安装取消。
     goto :end
 )
+
+echo.
+echo ========================================
+echo   ADB 安装检查
+echo ========================================
+echo.
+
+REM 检查 ADB 是否已安装
+where adb >nul 2>&1
+if %errorlevel% neq 0 (
+    echo [!] 未检测到 ADB
+    echo.
+    echo Insight-Eye 需要 ADB 来连接 Android 设备
+    echo.
+    set /p install_adb="是否现在安装 ADB? (Y/N): "
+    if /i "!install_adb!"=="Y" (
+        start /wait "" "%~dp0install_adb.bat"
+    )
+) else (
+    echo [√] ADB 已安装
+)
+
+echo.
+:end
+pause
+""")
+
+    # 创建卸载脚本
+    uninstall_bat = installer_dir / "uninstall.bat"
+    uninstall_bat.write_text("""@echo off
+setlocal enabledelayedexpansion
+
+echo ========================================
+echo   Insight-Eye 卸载程序
+echo ========================================
+echo.
+
+set "INSTALL_DIR=%USERPROFILE%\\Insight-Eye"
+
+if not exist "%INSTALL_DIR%" (
+    echo Insight-Eye 未安装
+    goto :end
+)
+
+echo 卸载将删除以下内容:
+echo   - 安装目录: %INSTALL_DIR%
+echo   - 开始菜单快捷方式
+echo   - 桌面快捷方式
+echo.
+set /p confirm="确认卸载? (Y/N): "
+
+if /i not "%confirm%"=="Y" (
+    echo 卸载已取消
+    goto :end
+)
+
+echo.
+echo 正在卸载...
+
+REM 删除快捷方式
+del "%APPDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Insight-Eye.lnk" 2>nul
+del "%USERPROFILE%\\Desktop\\Insight-Eye.lnk" 2>nul
+
+REM 删除安装目录
+rmdir /s /q "%INSTALL_DIR%" 2>nul
+
+echo.
+echo [√] 卸载完成
 
 :end
 pause
