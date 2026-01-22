@@ -102,6 +102,19 @@ a = Analysis(
     noarchive=False,
 )
 
+# 过滤测试和分析模块（在 Analysis 后进行数据过滤）
+a.datas = [x for x in a.datas if not any([
+    'test_' in x[0].lower(),
+    'verify_' in x[0].lower(),
+    'fix_' in x[0].lower(),
+    'diagnose_' in x[0].lower(),
+    'simple_' in x[0].lower(),
+    'quick_test' in x[0].lower(),
+    'final_test' in x[0].lower(),
+    'crash_log' in x[0].lower(),
+    'debug_' in x[0].lower(),
+])]
+
 # 过滤测试和分析模块
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
@@ -124,7 +137,6 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
     icon=None,  # TODO: 添加图标文件
-    onefile='insight_eye.exe',
 )
 
 # 收集必要的 DLL 和数据文件
@@ -138,21 +150,3 @@ coll = COLLECT(
     upx_exclude=[],
     name='Insight-Eye',
 )
-
-# 分析排除测试文件
-a.datas = [x for x in a.datas if not any([
-    'test_' in x[0].lower(),
-    'verify_' in x[0].lower(),
-    'fix_' in x[0].lower(),
-    'diagnose_' in x[0].lower(),
-    'simple_' in x[0].lower(),
-    'quick_test' in x[0].lower(),
-    'final_test' in x[0].lower(),
-    'crash_log' in x[0].lower(),
-    'debug_' in x[0].lower(),
-])]
-
-# ==================== 构建配置 ====================
-# 安装包输出目录
-import os
-os.environ['PYINSTALLER_CONFIG_DIR'] = os.path.dirname(os.path.abspath(__file__))
