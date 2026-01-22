@@ -61,6 +61,7 @@ class IOSAPM:
     - FPS 帧率
     - 网络流量
     - 电池状态
+    - 能耗监控
     """
 
     def __init__(self, bundle_name: str, device_id: str, frequency: float = 1.0, **kwargs):
@@ -103,6 +104,7 @@ class IOSAPM:
         self.fps_monitor = None
         self.network_collector = None
         self.battery_collector = None
+        self.energy_collector = None
 
         logger.info(f"初始化 iOS APM: bundle={bundle_name}, device={device_id}, 采集频率={frequency}秒")
 
@@ -131,10 +133,12 @@ class IOSAPM:
         from insight_eyes.public.ios.cpu_collector import CPUCollector
         from insight_eyes.public.ios.memory_collector import MemoryCollector
         from insight_eyes.public.ios.battery_collector import BatteryCollector
+        from insight_eyes.public.ios.energy_collector import EnergyCollector
 
-        self.cpu_collector = CPUCollector(self.adapter)
-        self.memory_collector = MemoryCollector(self.adapter)
+        self.cpu_collector = CPUCollector(self.adapter, self.bundle_name)
+        self.memory_collector = MemoryCollector(self.adapter, self.bundle_name)
         self.battery_collector = BatteryCollector(self.adapter)
+        self.energy_collector = EnergyCollector(self.adapter, self.bundle_name)
 
         logger.info("iOS APM 启动成功")
 
@@ -149,6 +153,7 @@ class IOSAPM:
         self.fps_monitor = None
         self.network_collector = None
         self.battery_collector = None
+        self.energy_collector = None
 
         logger.info("iOS APM 已停止")
 
@@ -213,6 +218,29 @@ class IOSAPM:
         logger.warning("iOS 电池采集器未初始化，返回默认值")
         return {'level': 100, 'temperature': 25.0}
 
+    def collectEnergy(self) -> Dict[str, Any]:
+        """
+        采集能耗数据
+
+        Returns:
+            {
+                'energy': float,  # 总能耗 (mW)
+                'cpu_energy': float,  # CPU 能耗 (mW)
+                'gpu_energy': float,  # GPU 能耗 (mW)
+                'network_energy': float  # 网络能耗 (mW)
+            }
+        """
+        if self.energy_collector:
+            return self.energy_collector.collect()
+
+        logger.warning("iOS 能耗采集器未初始化，返回默认值")
+        return {
+            'energy': 0.0,
+            'cpu_energy': 0.0,
+            'gpu_energy': 0.0,
+            'network_energy': 0.0
+        }
+
     def getAllMetrics(self) -> Dict[str, Any]:
         """
         获取所有性能指标
@@ -226,4 +254,5 @@ class IOSAPM:
             'fps': self.collectFps(),
             'network': self.collectFlow(),
             'battery': self.collectBattery(),
+            'energy': self.collectEnergy(),
         }
