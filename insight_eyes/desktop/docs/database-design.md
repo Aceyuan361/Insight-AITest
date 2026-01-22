@@ -81,7 +81,7 @@ PRAGMA foreign_keys=ON;
 CREATE TABLE IF NOT EXISTS devices (
     device_id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
-    platform TEXT NOT NULL CHECK(platform IN ('android')),
+    platform TEXT NOT NULL CHECK(platform IN ('android', 'ios')),
     model TEXT,
     os_version TEXT,
     manufacturer TEXT,

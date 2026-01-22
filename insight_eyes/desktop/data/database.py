@@ -84,6 +84,11 @@ class DatabaseManager:
         self._local = threading.local()
         self._initialized = True
 
+        # 在创建表之前先执行迁移（如果需要）
+        migrated = self._migrate_add_ios_platform()
+        if migrated:
+            logger.info("数据库已迁移到支持 iOS 平台的版本")
+
         # 初始化数据库表结构
         self._init_database()
 
@@ -134,7 +139,7 @@ class DatabaseManager:
             CREATE TABLE IF NOT EXISTS devices (
                 device_id TEXT PRIMARY KEY,
                 name TEXT NOT NULL,
-                platform TEXT NOT NULL CHECK(platform IN ('android')),
+                platform TEXT NOT NULL CHECK(platform IN ('android', 'ios')),
                 model TEXT,
                 os_version TEXT,
                 first_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -261,6 +266,70 @@ class DatabaseManager:
 
         conn.commit()
 
+    def _migrate_add_ios_platform(self):
+        """迁移数据库以支持 iOS 平台
+
+        检测旧版本数据库（约束中只有 'android'），如果需要迁移：
+        1. 备份现有数据
+        2. 重建 devices 表结构（添加 'ios' 到 CHECK 约束）
+        3. 恢复现有数据
+
+        注意：此方法必须在 _init_database 之前调用
+        """
+        try:
+            conn = self.get_connection()
+
+            # 检查是否需要迁移
+            cursor = conn.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='devices'")
+            result = cursor.fetchone()
+
+            if not result:
+                return  # 表不存在，无需迁移
+
+            table_sql = result[0]
+
+            # 检查约束是否只包含 'android'
+            if "CHECK(platform IN ('android'))" in table_sql:
+                logger.info("检测到旧版本数据库，开始迁移以支持 iOS 平台...")
+
+                # 1. 获取现有数据（在删除表之前）
+                cursor = conn.execute('SELECT device_id, name, platform, model, os_version, first_seen, last_seen FROM devices')
+                existing_data = cursor.fetchall()
+
+                # 2. 删除旧表
+                conn.execute('DROP TABLE IF EXISTS devices')
+
+                # 3. 创建新表（包含 iOS 支持）
+                conn.execute('''
+                    CREATE TABLE devices (
+                        device_id TEXT PRIMARY KEY,
+                        name TEXT NOT NULL,
+                        platform TEXT NOT NULL CHECK(platform IN ('android', 'ios')),
+                        model TEXT,
+                        os_version TEXT,
+                        first_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                ''')
+
+                # 4. 恢复数据
+                if existing_data:
+                    for row in existing_data:
+                        conn.execute('''
+                            INSERT INTO devices (device_id, name, platform, model, os_version, first_seen, last_seen)
+                            VALUES (?, ?, ?, ?, ?, ?, ?)
+                        ''', row)
+
+                conn.commit()
+                logger.info(f"数据库迁移完成，恢复了 {len(existing_data)} 条设备记录")
+                return True  # 迁移已执行
+
+            return False  # 无需迁移
+
+        except Exception as e:
+            logger.error(f"数据库迁移失败: {e}")
+            return False
+
     # ==================== 设备管理 ====================
 
     def upsert_device(self, device_id: str, name: str, platform: str,
@@ -271,7 +340,7 @@ class DatabaseManager:
         Args:
             device_id: 设备ID
             name: 设备名称
-            platform: 平台类型 ('android')
+            platform: 平台类型 ('android' 或 'ios')
             model: 设备型号
             os_version: 系统版本
 
