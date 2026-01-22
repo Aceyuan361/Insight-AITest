@@ -169,6 +169,7 @@ class DatabaseManager:
                 start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 end_time TIMESTAMP,
                 sample_interval INTEGER DEFAULT 1000,
+                platform TEXT NOT NULL CHECK(platform IN ('android', 'ios')),
                 tags TEXT,
                 FOREIGN KEY (device_id) REFERENCES devices(device_id) ON DELETE CASCADE
             )
@@ -269,60 +270,121 @@ class DatabaseManager:
     def _migrate_add_ios_platform(self):
         """迁移数据库以支持 iOS 平台
 
-        检测旧版本数据库（约束中只有 'android'），如果需要迁移：
+        检测旧版本数据库，如果需要迁移：
         1. 备份现有数据
-        2. 重建 devices 表结构（添加 'ios' 到 CHECK 约束）
+        2. 重建表结构（添加 'ios' 到 CHECK 约束，添加 platform 字段）
         3. 恢复现有数据
 
         注意：此方法必须在 _init_database 之前调用
         """
         try:
             conn = self.get_connection()
+            migrated = False
 
-            # 检查是否需要迁移
+            # 检查 devices 表是否需要迁移
             cursor = conn.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='devices'")
             result = cursor.fetchone()
 
-            if not result:
-                return  # 表不存在，无需迁移
+            if result:
+                table_sql = result[0]
 
-            table_sql = result[0]
+                # 检查约束是否只包含 'android'
+                if "CHECK(platform IN ('android'))" in table_sql:
+                    logger.info("检测到旧版本数据库，开始迁移 devices 表以支持 iOS 平台...")
 
-            # 检查约束是否只包含 'android'
-            if "CHECK(platform IN ('android'))" in table_sql:
-                logger.info("检测到旧版本数据库，开始迁移以支持 iOS 平台...")
+                    # 1. 获取现有数据（在删除表之前）
+                    cursor = conn.execute('SELECT device_id, name, platform, model, os_version, first_seen, last_seen FROM devices')
+                    existing_data = cursor.fetchall()
 
-                # 1. 获取现有数据（在删除表之前）
-                cursor = conn.execute('SELECT device_id, name, platform, model, os_version, first_seen, last_seen FROM devices')
-                existing_data = cursor.fetchall()
+                    # 2. 删除旧表
+                    conn.execute('DROP TABLE IF EXISTS devices')
 
-                # 2. 删除旧表
-                conn.execute('DROP TABLE IF EXISTS devices')
+                    # 3. 创建新表（包含 iOS 支持）
+                    conn.execute('''
+                        CREATE TABLE devices (
+                            device_id TEXT PRIMARY KEY,
+                            name TEXT NOT NULL,
+                            platform TEXT NOT NULL CHECK(platform IN ('android', 'ios')),
+                            model TEXT,
+                            os_version TEXT,
+                            first_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                        )
+                    ''')
 
-                # 3. 创建新表（包含 iOS 支持）
-                conn.execute('''
-                    CREATE TABLE devices (
-                        device_id TEXT PRIMARY KEY,
-                        name TEXT NOT NULL,
-                        platform TEXT NOT NULL CHECK(platform IN ('android', 'ios')),
-                        model TEXT,
-                        os_version TEXT,
-                        first_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                    )
-                ''')
+                    # 4. 恢复数据
+                    if existing_data:
+                        for row in existing_data:
+                            conn.execute('''
+                                INSERT INTO devices (device_id, name, platform, model, os_version, first_seen, last_seen)
+                                VALUES (?, ?, ?, ?, ?, ?, ?)
+                            ''', row)
 
-                # 4. 恢复数据
-                if existing_data:
-                    for row in existing_data:
-                        conn.execute('''
-                            INSERT INTO devices (device_id, name, platform, model, os_version, first_seen, last_seen)
-                            VALUES (?, ?, ?, ?, ?, ?, ?)
-                        ''', row)
+                    logger.info(f"devices 表迁移完成，恢复了 {len(existing_data)} 条设备记录")
+                    migrated = True
 
+            # 检查 monitoring_sessions 表是否需要迁移（添加 platform 字段）
+            cursor = conn.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='monitoring_sessions'")
+            result = cursor.fetchone()
+
+            if result:
+                table_sql = result[0]
+
+                # 如果表中没有 platform 字段
+                if 'platform TEXT' not in table_sql:
+                    logger.info("检测到旧版本 monitoring_sessions 表，开始迁移以添加 platform 字段...")
+
+                    # 1. 获取现有数据
+                    cursor = conn.execute('''
+                        SELECT id, device_id, package_name, start_time, end_time, sample_interval, tags
+                        FROM monitoring_sessions
+                    ''')
+                    existing_sessions = cursor.fetchall()
+
+                    # 2. 从 devices 表获取每个设备对应的平台
+                    platform_map = {}
+                    if existing_sessions:
+                        device_ids = set(row[1] for row in existing_sessions)
+                        for device_id in device_ids:
+                            cursor = conn.execute('SELECT platform FROM devices WHERE device_id = ?', (device_id,))
+                            device_result = cursor.fetchone()
+                            platform_map[device_id] = device_result[0] if device_result else 'android'
+
+                    # 3. 删除旧表
+                    conn.execute('DROP TABLE IF EXISTS monitoring_sessions')
+
+                    # 4. 创建新表（包含 platform 字段）
+                    conn.execute('''
+                        CREATE TABLE monitoring_sessions (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            device_id TEXT NOT NULL,
+                            package_name TEXT NOT NULL,
+                            start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            end_time TIMESTAMP,
+                            sample_interval INTEGER DEFAULT 1000,
+                            platform TEXT NOT NULL CHECK(platform IN ('android', 'ios')),
+                            tags TEXT,
+                            FOREIGN KEY (device_id) REFERENCES devices(device_id) ON DELETE CASCADE
+                        )
+                    ''')
+
+                    # 5. 恢复数据
+                    if existing_sessions:
+                        for row in existing_sessions:
+                            session_id, device_id, package_name, start_time, end_time, sample_interval, tags = row
+                            platform = platform_map.get(device_id, 'android')
+                            conn.execute('''
+                                INSERT INTO monitoring_sessions (id, device_id, package_name, start_time, end_time, sample_interval, platform, tags)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                            ''', (session_id, device_id, package_name, start_time, end_time, sample_interval, platform, tags))
+
+                    logger.info(f"monitoring_sessions 表迁移完成，恢复了 {len(existing_sessions)} 条会话记录")
+                    migrated = True
+
+            if migrated:
                 conn.commit()
-                logger.info(f"数据库迁移完成，恢复了 {len(existing_data)} 条设备记录")
-                return True  # 迁移已执行
+                logger.info("数据库迁移完成")
+                return True
 
             return False  # 无需迁移
 
@@ -432,14 +494,15 @@ class DatabaseManager:
     # ==================== 监控会话管理 ====================
 
     def create_session(self, device_id: str, package_name: str,
-                       sample_interval: int = 1000, tags: Dict = None) -> int:
+                       sample_interval: int = 1000, platform: str = 'android', tags: Dict = None) -> int:
         """
         创建新的监控会话
 
         Args:
             device_id: 设备ID
-            package_name: 包名
+            package_name: 包名或 Bundle ID
             sample_interval: 采样间隔(毫秒)
+            platform: 平台类型 ('android' 或 'ios')
             tags: 测试场景标记
 
         Returns:
@@ -448,9 +511,9 @@ class DatabaseManager:
         tags_json = json.dumps(tags) if tags else None
         with self.transaction() as conn:
             cursor = conn.execute('''
-                INSERT INTO monitoring_sessions (device_id, package_name, sample_interval, tags, start_time)
-                VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
-            ''', (device_id, package_name, sample_interval, tags_json))
+                INSERT INTO monitoring_sessions (device_id, package_name, sample_interval, platform, tags, start_time)
+                VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ''', (device_id, package_name, sample_interval, platform, tags_json))
             return cursor.lastrowid
 
     def end_session(self, session_id: int):

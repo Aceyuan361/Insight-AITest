@@ -314,12 +314,32 @@ class MetricsCollectionWorker(QObject):
         time.sleep(0.05)
 
         # 采集各指标
+        cpu_data = apm.collectCpu() or {}
+        memory_data = apm.collectMemory() or {}
+        fps_data = apm.collectFps() or {}
+        network_data = apm.collectFlow() or {}
+        battery_data = apm.collectBattery() or {}
+
+        # 转换为与 Android 兼容的格式（用于数据库存储）
         raw_metrics = {
-            'cpu': apm.collectCpu() or {},
-            'memory': apm.collectMemory() or {},
-            'fps': apm.collectFps() or {},
-            'network': apm.collectFlow() or {},
-            'battery': apm.collectBattery() or {},
+            'cpu': {
+                'appCpuRate': cpu_data.get('cpu_app', 0),
+                'sysCpuRate': cpu_data.get('cpu_system', 0),
+                'cpu_app': cpu_data.get('cpu_app', 0),  # 数据库格式
+                'cpu_system': cpu_data.get('cpu_system', 0),
+            },
+            'memory': {
+                'totalPass': memory_data.get('used_mb', 0),
+                'nativePass': 0,  # iOS 暂不支持
+                'dalvikPass': 0,  # iOS 暂不支持
+                'memory_app_private': memory_data.get('used_mb', 0),  # 数据库格式
+            },
+            'fps': fps_data,
+            'network': {
+                'upFlow': network_data.get('upFlow', 0),
+                'downFlow': network_data.get('downFlow', 0),
+            },
+            'battery': battery_data,
             'app_status': {
                 'is_alive': True,
                 'status_changed': False
@@ -1000,11 +1020,16 @@ class MainWindow(QMainWindow):
             # 获取配置
             config = self.config_panel.get_current_config()
 
+            # 获取平台信息
+            device = self.device_manager.get_device(self.current_device_id)
+            platform_value = device.platform.value if device else 'android'
+
             # 创建监控会话
             self.current_session_id = self.database.create_session(
                 device_id=self.current_device_id,
                 package_name=self.current_package_name,
                 sample_interval=config.interval_ms,
+                platform=platform_value,
                 tags={"scenario": "manual_monitoring"}
             )
 
