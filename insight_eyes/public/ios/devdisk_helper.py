@@ -5,13 +5,14 @@ iOS DeveloperDiskImage 自动挂载助手
 提供 iOS 设备的 DeveloperDiskImage 自动挂载功能
 特别针对 iOS 17+ 设备优化
 
-使用 pymobiledevice3 的 mounter 服务实现自动挂载
+使用 pymobiledevice3 的 auto_mount 功能实现自动挂载
 
 Copyright (c) 2025 Aceyuan361
 GitHub: https://github.com/Aceyuan361/Insight-Eye
 License: MIT License
 """
 
+import asyncio
 from typing import Optional
 from logzero import logger
 
@@ -23,6 +24,9 @@ class DevDiskHelper:
     负责在 iOS 设备上自动挂载 DeveloperDiskImage，
     这是使用 DVT 协议进行性能监控的前提条件。
     """
+
+    # 类级别的缓存：记录已挂载的设备
+    _mounted_devices: set = set()
 
     @staticmethod
     def ensure_developer_disk_mounted(device_udid: Optional[str] = None) -> bool:
@@ -41,48 +45,46 @@ class DevDiskHelper:
             - iOS 17+ 需要启用 Developer Mode
             - 首次挂载可能需要网络连接下载镜像
             - 挂载操作可能需要几秒钟
+            - 使用缓存避免重复挂载检查（防止 UI 阻塞）
         """
+        # 使用设备 UDID 作为缓存键
+        device_key = device_udid or 'default'
+
+        # 检查缓存：如果已挂载，直接返回
+        if device_key in DevDiskHelper._mounted_devices:
+            logger.debug(f"DeveloperDiskImage 已挂载（缓存）: {device_key}")
+            return True
+
         try:
             from pymobiledevice3.lockdown import create_using_usbmux
-            from pymobiledevice3.services.mounter import MounterService
+            from pymobiledevice3.services.mobile_image_mounter import auto_mount
+            from pymobiledevice3.exceptions import AlreadyMountedError
 
-            logger.info("===== DeveloperDiskImage 挂载检查 =====")
+            logger.debug("===== DeveloperDiskImage 挂载检查 =====")
 
-            # 创建 lockdown 连接
+            # 创建 lockdown 连接（service_provider）
             if device_udid:
                 lockdown = create_using_usbmux(device_udid)
             else:
                 lockdown = create_using_usbmux()
 
-            # 创建 MounterService
-            mounter = MounterService(lockdown)
-
-            # 检查是否已挂载
-            logger.info("检查 DeveloperDiskImage 挂载状态...")
-            mounted_images = mounter.list_images()
-
-            is_mounted = False
-            for image in mounted_images:
-                if image.get('DiskImageType') == 'Developer' and image.get('IsMounted'):
-                    logger.info(f"✓ DeveloperDiskImage 已挂载: {image.get('MountPath')}")
-                    is_mounted = True
-                    break
-
-            if is_mounted:
+            # 使用 auto_mount 自动挂载（async 函数）
+            try:
+                asyncio.run(auto_mount(lockdown))
+                logger.info("✓ DeveloperDiskImage 挂载成功")
+                # 添加到缓存
+                DevDiskHelper._mounted_devices.add(device_key)
+                return True
+            except AlreadyMountedError:
+                logger.info("✓ DeveloperDiskImage 已挂载")
+                # 添加到缓存
+                DevDiskHelper._mounted_devices.add(device_key)
                 return True
 
-            # 未挂载，执行自动挂载
-            logger.info("DeveloperDiskImage 未挂载，开始自动挂载...")
-
-            # 使用 auto-mount 功能（pymobiledevice3 7.x+ 支持）
-            # 这会自动检测设备型号并下载/挂载对应的 DeveloperDiskImage
-            mounter.auto_mount()
-
-            logger.info("✓ DeveloperDiskImage 挂载成功")
-            return True
-
-        except ImportError:
-            logger.error("无法导入 pymobiledevice3.mounter，请确保安装了最新版本")
+        except ImportError as e:
+            logger.error(f"无法导入 pymobiledevice3 模块: {e}")
+            logger.error("请确保安装了最新版本的 pymobiledevice3:")
+            logger.error("  pip install -U pymobiledevice3")
             return False
 
         except Exception as e:
@@ -104,14 +106,14 @@ class DevDiskHelper:
         """
         try:
             from pymobiledevice3.lockdown import create_using_usbmux
-            from pymobiledevice3.services.mounter import MounterService
+            from pymobiledevice3.services.mobile_image_mounter import MobileImageMounterService
 
             if device_udid:
                 lockdown = create_using_usbmux(device_udid)
             else:
                 lockdown = create_using_usbmux()
 
-            mounter = MounterService(lockdown)
+            mounter = MobileImageMounterService(lockdown=lockdown)
             status = mounter.query_developer_mode_status()
 
             logger.info(f"Developer Mode 状态: {status}")
@@ -147,7 +149,7 @@ class DevDiskHelper:
             else:
                 lockdown = create_using_usbmux()
 
-            amfi = AmfiService(lockdown)
+            amfi = AmfiService(lockdown=lockdown)
             amfi.enable_developer_mode()
 
             logger.info("Developer Mode 启用流程已触发")
