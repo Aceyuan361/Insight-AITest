@@ -7,6 +7,12 @@ Android 网络流量采集器
 - 集成设备配置系统（DeviceProfile）
 - 小米设备使用 sh -c 包装命令
 - 支持 UID 缓存优化
+
+Copyright (c) 2025 Aceyuan361
+GitHub: https://github.com/Aceyuan361/Insight-Eye
+License: MIT License
+
+Author: Aceyuan361
 """
 import re
 import time

@@ -3,6 +3,10 @@
 iOS APM (Application Performance Monitoring) 主类
 
 提供统一的 iOS 性能监控接口，类似 AndroidAPM
+
+Copyright (c) 2025 Aceyuan361
+GitHub: https://github.com/Aceyuan361/Insight-Eye
+License: MIT License
 """
 
 import re
@@ -176,6 +180,7 @@ class IOSAPM:
             from insight_eyes.public.ios.memory_collector import MemoryCollector
             from insight_eyes.public.ios.battery_collector import BatteryCollector
             from insight_eyes.public.ios.energy_collector import EnergyCollector
+            from insight_eyes.public.ios.network_collector import NetworkCollector
 
             # 传递 Throttle 给 CPU 和 Memory 采集器
             self.cpu_collector = CPUCollector(
@@ -186,6 +191,10 @@ class IOSAPM:
             )
             self.battery_collector = BatteryCollector(self.adapter)
             self.energy_collector = EnergyCollector(self.adapter, self.bundle_name)
+            self.network_collector = NetworkCollector(self.adapter, self.bundle_name)
+
+            # 启动网络采集器
+            self.network_collector.start()
 
             logger.info("iOS APM 启动成功")
         except Exception as e:
@@ -199,6 +208,11 @@ class IOSAPM:
 
     def stop(self):
         """停止性能监控"""
+        # 停止网络采集器
+        if self.network_collector:
+            self.network_collector.stop()
+            logger.info("网络采集器已停止")
+
         # 停止流式监听服务
         if hasattr(self, '_stream_service') and self._stream_service:
             self._stream_service.stop_monitoring()
@@ -259,11 +273,18 @@ class IOSAPM:
         """
         采集网络流量
 
+        基于 pcapd 服务实现系统级网络流量监控。
+
         Returns:
             {'upFlow': float, 'downFlow': float} 单位 KB/s
         """
-        # TODO: 实现网络流量采集
-        logger.warning("iOS 网络流量采集尚未实现")
+        logger.debug(f"[iOS APM] collectFlow() 调用, network_collector={self.network_collector}")
+        if self.network_collector:
+            result = self.network_collector.collect()
+            logger.debug(f"[iOS APM] collectFlow() 返回: {result}")
+            return result
+
+        logger.debug("iOS 网络采集器未初始化，返回默认值")
         return {'upFlow': 0.0, 'downFlow': 0.0}
 
     def collectBattery(self) -> Dict[str, Any]:

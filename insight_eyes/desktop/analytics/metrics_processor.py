@@ -258,17 +258,23 @@ class MetricsProcessor(QObject):
 
     def _process_network(self, raw_network: Dict[str, Any], timestamp: datetime) -> Optional[NetworkMetrics]:
         """处理网络数据"""
+        from logzero import logger
+        logger.debug(f"[MetricsProcessor] _process_network() raw_network = {raw_network}")
+
         if not raw_network:
+            logger.debug(f"[MetricsProcessor] raw_network 为空或 None，返回 None")
             return None
 
         try:
             up_speed = raw_network.get('upFlow', 0.0)
             down_speed = raw_network.get('downFlow', 0.0)
 
+            logger.debug(f"[MetricsProcessor] up_speed={up_speed}, down_speed={down_speed}")
+
             # 计算累计流量（从历史数据累加）
             total_sent, total_received = self._calculate_total_traffic(up_speed, down_speed)
 
-            return NetworkMetrics(
+            result = NetworkMetrics(
                 upload_speed_kb_s=up_speed,
                 download_speed_kb_s=down_speed,
                 total_sent_mb=total_sent,
@@ -276,7 +282,11 @@ class MetricsProcessor(QObject):
                 timestamp=timestamp
             )
 
-        except (KeyError, TypeError, ValueError):
+            logger.debug(f"[MetricsProcessor] NetworkMetrics created: upload_speed_kb_s={result.upload_speed_kb_s}, download_speed_kb_s={result.download_speed_kb_s}")
+            return result
+
+        except (KeyError, TypeError, ValueError) as e:
+            logger.error(f"[MetricsProcessor] 处理网络数据异常: {e}")
             return None
 
     def _process_battery(self, raw_battery: Dict[str, Any], timestamp: datetime) -> Optional[BatteryMetrics]:
