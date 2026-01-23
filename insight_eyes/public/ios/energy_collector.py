@@ -12,10 +12,6 @@ iOS 能耗监控采集器
 要求：
 - Developer Mode 已启用
 - DeveloperDiskImage 已挂载
-
-Copyright (c) 2025 Aceyuan361
-GitHub: https://github.com/Aceyuan361/Insight-Eye
-License: MIT License
 """
 
 from typing import Dict

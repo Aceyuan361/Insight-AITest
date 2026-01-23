@@ -946,17 +946,13 @@ class MainWindow(QMainWindow):
         """显示关于"""
         QMessageBox.about(
             self, "关于 Insight-Eye",
-            "<h2>Insight-Eye v1.0.0</h2>"
+            "<h2>Insight-Eye v1.0.1</h2>"
             "<p><b>移动设备性能监控工具</b></p>"
             "<p>支持平台：Android、iOS</p>"
             "<h3>监控能力</h3>"
             "<p><b>Android</b>：CPU、内存、FPS、网络(上行/下行)、GPU、电池</p>"
             "<p><b>iOS</b>：CPU、内存、FPS、网络(系统级流量)、电池</p>"
             "<p><i>注：iOS GPU 受系统 DVT 限制，网络为系统级流量</i></p>"
-            "<hr>"
-            "<p>Copyright (c) 2025 Aceyuan361</p>"
-            "<p>GitHub: <a href='https://github.com/Aceyuan361/Insight-Eye'>https://github.com/Aceyuan361/Insight-Eye</a></p>"
-            "<p>License: MIT License</p>"
         )
 
     # ==================== 监控控制 ====================

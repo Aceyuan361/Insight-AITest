@@ -250,17 +250,31 @@ class ProcessingWorker(QThread):
     # 信号：处理完成
     finished = pyqtSignal(bool, str)  # (成功, 消息)
 
-    def __init__(self, session_id: int, database, metrics_processor, parent=None):
+    def __init__(self, session_id: int, database, metrics_processor, cached_adapter=None, parent=None):
         super().__init__(parent)
         self.session_id = session_id
         self.database = database
         self.metrics_processor = metrics_processor
+        self.cached_adapter = cached_adapter
 
     def run(self):
         """执行处理任务"""
         try:
             # 步骤1：停止采集
             self.progress_updated.emit(20, "停止数据采集...")
+            self.msleep(200)
+
+            # 步骤1.5: 清理iOS适配器资源（修复iOS监控停止异常）
+            if self.cached_adapter:
+                try:
+                    from logzero import logger
+                    logger.info("[异步处理] 开始清理iOS适配器资源...")
+                    # 调用cleanup方法正确清理资源
+                    self.cached_adapter.cleanup()
+                    logger.info("[异步处理] iOS适配器资源已清理")
+                except Exception as cleanup_error:
+                    from logzero import logger
+                    logger.warning(f"[异步处理] iOS适配器清理失败（继续执行）: {cleanup_error}")
             self.msleep(200)
 
             # 步骤2：结束数据库会话（异步执行）

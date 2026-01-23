@@ -8,13 +8,9 @@ FPS (Frames Per Second) 帧率监控模块 - Android 专用
 2. 确保线程安全，使用实例变量替代全局变量
 3. 添加详细的日志输出用于调试
 4. 增强多厂商兼容性（小米、华为、OPPO、vivo、三星）
-5. 实现多策略采集回退机制（参考 SoloX）
+5. 实现多策略采集回退机制
 6. 添加设备厂商检测和适配
 7. 集成设备配置系统（DeviceProfile）- 根据设备自动选择最佳采集策略
-
-参考资料：
-- SoloX: https://github.com/smart-test-ti/SoloX
-- Android Frame Data Collection: https://codefuturesql.top/post/android_get_frame_data/
 """
 import datetime
 import queue

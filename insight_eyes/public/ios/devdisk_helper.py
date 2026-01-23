@@ -6,10 +6,6 @@ iOS DeveloperDiskImage 自动挂载助手
 特别针对 iOS 17+ 设备优化
 
 使用 pymobiledevice3 的 auto_mount 功能实现自动挂载
-
-Copyright (c) 2025 Aceyuan361
-GitHub: https://github.com/Aceyuan361/Insight-Eye
-License: MIT License
 """
 
 import asyncio

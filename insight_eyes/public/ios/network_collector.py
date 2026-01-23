@@ -17,10 +17,6 @@ iOS 网络流量监控采集器
 限制：
 - 返回的是流量速率（KB/s），非总流量
 - 需要持续采集以计算速率
-
-Copyright (c) 2025 Aceyuan361
-GitHub: https://github.com/Aceyuan361/Insight-Eye
-License: MIT License
 """
 
 import threading

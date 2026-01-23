@@ -3,10 +3,6 @@
 iOS APM (Application Performance Monitoring) 主类
 
 提供统一的 iOS 性能监控接口，类似 AndroidAPM
-
-Copyright (c) 2025 Aceyuan361
-GitHub: https://github.com/Aceyuan361/Insight-Eye
-License: MIT License
 """
 
 import re

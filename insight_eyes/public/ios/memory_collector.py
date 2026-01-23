@@ -11,10 +11,6 @@ iOS 内存使用情况采集器
 注意：
 - 需要 Developer Mode 已启用
 - 需要 DeveloperDiskImage 已挂载
-
-Copyright (c) 2025 Aceyuan361
-GitHub: https://github.com/Aceyuan361/Insight-Eye
-License: MIT License
 """
 
 from typing import Dict, Optional

@@ -686,7 +686,7 @@ macOS: `~/.insight_eye/logs/app.log`
 #### Q: 如何获取技术支持？
 
 **A**:
-- GitHub Issues: <repository-url>/issues
+暂无
 
 ---
 

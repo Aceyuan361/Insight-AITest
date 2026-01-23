@@ -1,12 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 iOS设备适配器
-
-Copyright (c) 2025 Aceyuan361
-GitHub: https://github.com/Aceyuan361/Insight-Eye
-License: MIT License
-
-Author: Aceyuan361
 """
 
 import threading
