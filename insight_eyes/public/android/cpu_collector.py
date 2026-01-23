@@ -597,24 +597,13 @@ class CPUCollector:
             - appCpuRate: 应用 CPU 使用率（百分比，0-100）
             - sysCpuRate: 系统 CPU 使用率（百分比，估算值）
             - 优先级（重新调整，使用实时值）：
-              1. top 命令（主要方法，实时采样值）
-              2. dumpsys cpuinfo（备选，累计平均值）
-              3. 精确算法（最后，因为 ADB 限制）
+              1. 精确算法（主要方法，基于 /proc/stat 的差值法，实时值）
+              2. top 命令（备选，实时采样值）
+              3. dumpsys cpuinfo（最后，累计平均值，不推荐）
         """
         try:
-            # 方法1: 使用 top 命令（主要方法，显示实时 CPU 使用率）
-            result = self._parse_cpu_from_top(package_name)
-            if result and result.get('appCpuRate', 0) >= 0:
-                logger.info(f"[✓] top 命令: CPU={result['appCpuRate']}%")
-                return result
-
-            # 方法2: 使用 dumpsys cpuinfo（备选，累计平均值）
-            result = self._parse_cpu_from_dumpsys(package_name)
-            if result and result.get('appCpuRate', 0) >= 0:
-                logger.info(f"[✓] dumpsys cpuinfo: CPU={result['appCpuRate']}%")
-                return result
-
-            # 方法3: 精确算法（最后，因为 ADB 限制导致无法遍历所有线程）
+            # 方法1: 精确算法（主要方法，基于 /proc/stat 的差值法，实时值）
+            # 首次采样返回 None 是正常的，需要两次采样计算差值
             pid = self._get_app_pid(package_name)
             if pid:
                 precise_cpu = self._parse_cpu_from_proc_stat(pid)
@@ -625,6 +614,18 @@ class CPUCollector:
                         'appCpuRate': precise_cpu,
                         'sysCpuRate': round(sys_cpu, 2)
                     }
+
+            # 方法2: 使用 top 命令（备选，实时采样值）
+            result = self._parse_cpu_from_top(package_name)
+            if result and result.get('appCpuRate', 0) >= 0:
+                logger.info(f"[✓] top 命令: CPU={result['appCpuRate']}%")
+                return result
+
+            # 方法3: 使用 dumpsys cpuinfo（最后，累计平均值，不推荐）
+            result = self._parse_cpu_from_dumpsys(package_name)
+            if result and result.get('appCpuRate', 0) >= 0:
+                logger.info(f"[✓] dumpsys cpuinfo: CPU={result['appCpuRate']}%")
+                return result
 
             # 如果都失败，返回默认值
             logger.debug(f"无法获取 {package_name} 的 CPU 使用率")
