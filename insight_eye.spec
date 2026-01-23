@@ -49,6 +49,7 @@ a = Analysis(
         'logzero.handler',
 
         # iOS 支持 (pymobiledevice3)
+        # 注意：pymobiledevice3 需要在运行时安装，不能打包
         'pymobiledevice3',
         'pymobiledevice3.lockdown',
         'pymobiledevice3.services',
@@ -60,7 +61,7 @@ a = Analysis(
         'pymobiledevice3.services.pcapd',
         'pymobiledevice3.cli',
 
-        # iOS 监控模块
+        # iOS 监控模块 (需要 pymobiledevice3 运行时支持)
         'insight_eyes.public.ios',
         'insight_eyes.public.ios.sysmon_service',
         'insight_eyes.public.ios.ios_apm',
@@ -120,7 +121,6 @@ a = Analysis(
         'pytest',
         'unittest',
         'doctest',
-        'email',
     ],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,

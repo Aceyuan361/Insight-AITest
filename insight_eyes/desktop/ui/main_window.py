@@ -906,12 +906,20 @@ class MainWindow(QMainWindow):
         """显示帮助"""
         QMessageBox.information(
             self, "使用说明",
-            "Insight-Eye 移动设备性能监控工具\n\n"
-            "1. 连接 Android 设备\n"
-            "2. 在左侧选择要监控的应用\n"
-            "3. 点击\"开始\"或按F5开始监控\n"
-            "4. 查看实时性能数据和趋势图\n"
-            "5. 可使用快捷键快速操作"
+            "Insight-Eye 移动设备性能监控工具 v1.0.1\n\n"
+            "【支持平台】\n"
+            "  • Android (无需 ROOT)\n"
+            "  • iOS (无需越狱)\n\n"
+            "【使用步骤】\n"
+            "  1. 通过 USB 连接 Android 或 iOS 设备\n"
+            "  2. iOS 设备需先信任电脑并开启开发者模式\n"
+            "  3. 在左侧选择要监控的应用\n"
+            "  4. 点击\"开始\"或按 F5 开始监控\n"
+            "  5. 查看实时性能数据和趋势图\n"
+            "  6. 使用快捷键快速操作\n\n"
+            "【监控指标】\n"
+            "  Android: CPU、内存、FPS、网络、GPU、电池\n"
+            "  iOS: CPU、内存、FPS、网络、电池、能耗"
         )
 
     def _show_shortcuts(self):
@@ -934,6 +942,7 @@ class MainWindow(QMainWindow):
             "<p>移动设备性能监控工具</p>"
             "<p>支持平台: Android、iOS</p>"
             "<hr>"
+            "<p>作者: Aceyuan361</p>"
             "<p>版权所有 (c) 2025</p>"
         )
 
