@@ -35,8 +35,10 @@ class MetricsSnapshot:
 
     def get_summary(self) -> str:
         status = "✓" if self.is_complete() else "✗"
-        cpu_val = self.cpu.get('appCpuRate', 0) if self.cpu else 0
-        mem_val = self.memory.get('totalPass', 0) if self.memory else 0
+        # 支持 iOS ('cpu_app') 和 Android ('appCpuRate') 字段名
+        cpu_val = (self.cpu.get('cpu_app') or self.cpu.get('appCpuRate', 0)) if self.cpu else 0
+        # 支持 iOS ('used_mb') 和 Android ('totalPass') 字段名
+        mem_val = (self.memory.get('used_mb') or self.memory.get('totalPass', 0)) if self.memory else 0
         fps_val = self.fps.get('fps', 0) if self.fps else 0
         return (f"[{status}] {self.snapshot_timestamp.strftime('%H:%M:%S')} | "
                 f"CPU: {cpu_val}%, Memory: {mem_val}MB, FPS: {fps_val}")
@@ -185,9 +187,19 @@ class MetricsBatchCollector:
         )
 
         if snapshot.is_complete():
-            # 提取指标值用于日志
-            cpu_val = snapshot.cpu.get('appCpuRate', 0) if snapshot.cpu else 0
-            mem_val = snapshot.memory.get('totalPass', 0) if snapshot.memory else 0
+            # 提取指标值用于日志（支持跨平台字段名）
+            # CPU: iOS 使用 'cpu_app', Android 使用 'appCpuRate'
+            if snapshot.cpu:
+                cpu_val = snapshot.cpu.get('cpu_app') or snapshot.cpu.get('appCpuRate', 0)
+            else:
+                cpu_val = 0
+
+            # Memory: iOS 使用 'used_mb', Android 使用 'totalPass'
+            if snapshot.memory:
+                mem_val = snapshot.memory.get('used_mb') or snapshot.memory.get('totalPass', 0)
+            else:
+                mem_val = 0
+
             fps_val = snapshot.fps.get('fps', 0) if snapshot.fps else 0
             battery_level = snapshot.battery.get('level', 0) if snapshot.battery else 0
             battery_temp = snapshot.battery.get('temperature', 0) if snapshot.battery else 0

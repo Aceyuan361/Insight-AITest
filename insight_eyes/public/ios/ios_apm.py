@@ -114,6 +114,8 @@ class IOSAPM:
 
         # 导入并创建设备适配器
         from insight_eyes.desktop.core.ios_device_adapter import IOSDeviceAdapter
+        from insight_eyes.public.ios.sysmon_service import SysmonService
+        from insight_eyes.public.ios.exceptions import ProcessNotFoundError
 
         # 连接设备
         self.adapter = IOSDeviceAdapter(self.device_id)
@@ -129,25 +131,88 @@ class IOSAPM:
                 # 包装为通用连接错误
                 raise ConnectionError(f"无法连接 iOS 设备: {self.device_id}, 原因: {e}")
 
-        # 初始化各采集器
-        from insight_eyes.public.ios.cpu_collector import CPUCollector
-        from insight_eyes.public.ios.memory_collector import MemoryCollector
-        from insight_eyes.public.ios.battery_collector import BatteryCollector
-        from insight_eyes.public.ios.energy_collector import EnergyCollector
+        # ===== 启动前验证进程存在性 =====
+        logger.info("正在检查目标进程...")
+        sysmon_service = SysmonService.get_instance(self.device_id)
 
-        self.cpu_collector = CPUCollector(self.adapter, self.bundle_name)
-        self.memory_collector = MemoryCollector(self.adapter, self.bundle_name)
-        self.battery_collector = BatteryCollector(self.adapter)
-        self.energy_collector = EnergyCollector(self.adapter, self.bundle_name)
+        if not sysmon_service.connect():
+            raise ConnectionError(f"无法连接到设备: {self.device_id}")
 
-        logger.info("iOS APM 启动成功")
+        target_process = sysmon_service.get_process_by_bundle_id(self.bundle_name)
+
+        if not target_process:
+            raise ProcessNotFoundError(
+                bundle_id=self.bundle_name,
+                device_id=self.device_id
+            )
+
+        logger.info(f"✓ 找到目标进程: PID={target_process.get('pid')}, Name={target_process.get('name')}")
+
+        # ===== 启动流式监听服务 =====
+        from insight_eyes.public.ios.sysmon_stream_service import SysmonStreamService
+        from insight_eyes.public.ios.metrics_throttle import MetricsThrottle
+
+        # 创建频率控制层
+        self._throttle = MetricsThrottle(target_frequency=self.frequency)
+
+        # 创建并启动监听服务
+        self._stream_service = SysmonStreamService.get_instance(self.device_id)
+
+        # 设置频率控制层
+        self._stream_service.set_throttle(self._throttle)
+
+        # 启动监听
+        self._stream_service.start_monitoring()
+
+        logger.info("✓ 流式监听服务已启动")
+
+        # 预热等待：让第一批包含 CPU 的数据到达
+        # iOS sysmontap 第一批数据通常没有 CPU 值（cpuUsage=None）
+        # 需要等待第二批数据才有有效的 CPU 数据
+        logger.debug("等待流式监听预热（让第一批 CPU 数据到达）...")
+        import time
+        time.sleep(1.5)  # 等待 1.5 秒，确保至少有一批包含 CPU 的数据
+        logger.debug("流式监听预热完成")
+
+        # 初始化各采集器（添加异常处理）
+        try:
+            from insight_eyes.public.ios.cpu_collector import CPUCollector
+            from insight_eyes.public.ios.memory_collector import MemoryCollector
+            from insight_eyes.public.ios.battery_collector import BatteryCollector
+            from insight_eyes.public.ios.energy_collector import EnergyCollector
+
+            # 传递 Throttle 给 CPU 和 Memory 采集器
+            self.cpu_collector = CPUCollector(
+                self.adapter, self.bundle_name, throttle=self._throttle
+            )
+            self.memory_collector = MemoryCollector(
+                self.adapter, self.bundle_name, throttle=self._throttle
+            )
+            self.battery_collector = BatteryCollector(self.adapter)
+            self.energy_collector = EnergyCollector(self.adapter, self.bundle_name)
+
+            logger.info("iOS APM 启动成功")
+        except Exception as e:
+            logger.error(f"初始化采集器失败: {type(e).__name__}: {e}")
+            # 确保在失败时清理资源
+            self.cpu_collector = None
+            self.memory_collector = None
+            self.battery_collector = None
+            self.energy_collector = None
+            raise
 
     def stop(self):
         """停止性能监控"""
+        # 停止流式监听服务
+        if hasattr(self, '_stream_service') and self._stream_service:
+            self._stream_service.stop_monitoring()
+            logger.info("流式监听服务已停止")
+
         if self.adapter:
             self.adapter.disconnect()
             self.adapter = None
 
+        # 清理采集器
         self.cpu_collector = None
         self.memory_collector = None
         self.fps_monitor = None

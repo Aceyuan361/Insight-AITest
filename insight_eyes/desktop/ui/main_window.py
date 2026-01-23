@@ -966,11 +966,61 @@ class MainWindow(QMainWindow):
             is_ios = device and device.platform == Platform.IOS
 
             if is_ios:
-                # iOS 平台：跳过运行状态检查，直接尝试监控
-                logger.info(f"iOS 平台检测到，跳过运行状态检查，直接监控应用: {self.current_package_name}")
+                # iOS 平台：检查进程是否存在（使用 SysmonService）
+                logger.info(f"iOS 平台检测到，检查进程是否存在: {self.current_package_name}")
                 logger.info(f"iOS 设备: {device.name if device else self.current_device_id}")
                 logger.info(f"iOS Bundle ID: {self.current_package_name}")
-                target_app = None
+
+                try:
+                    from insight_eyes.public.ios.sysmon_service import SysmonService
+                    from insight_eyes.public.ios.exceptions import ProcessNotFoundError
+
+                    sysmon_service = SysmonService.get_instance(self.current_device_id)
+
+                    if not sysmon_service.connect():
+                        QMessageBox.warning(
+                            self,
+                            "连接失败",
+                            f"无法连接到 iOS 设备: {self.current_device_id}\n\n"
+                            f"请检查设备连接状态。"
+                        )
+                        return
+
+                    target_process = sysmon_service.get_process_by_bundle_id(self.current_package_name)
+
+                    if not target_process:
+                        # 进程不存在
+                        QMessageBox.warning(
+                            self,
+                            "应用未运行",
+                            f"没有找到应用正在运行的进程\n\n"
+                            f"应用: {self.current_package_name}\n\n"
+                            f"请检查应用是否在运行中，然后重试。"
+                        )
+                        logger.warning(f"iOS 应用进程不存在，无法启动监控: {self.current_package_name}")
+                        return
+
+                    logger.info(f"✓ 找到目标进程: PID={target_process.get('pid')}, Name={target_process.get('name')}")
+                    target_app = None
+
+                except Exception as check_error:
+                    logger.error(f"检查 iOS 进程失败: {check_error}")
+                    # 如果检查失败，允许用户尝试监控（在采集时会再检查）
+                    reply = QMessageBox.question(
+                        self,
+                        "无法检查进程状态",
+                        f"无法确认应用是否在运行\n\n"
+                        f"应用: {self.current_package_name}\n"
+                        f"错误: {str(check_error)}\n\n"
+                        f"是否仍要尝试监控？",
+                        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                        QMessageBox.StandardButton.No
+                    )
+                    if reply == QMessageBox.StandardButton.No:
+                        logger.info(f"用户取消监控: {self.current_package_name}")
+                        return
+                    logger.info(f"用户确认尝试监控: {self.current_package_name}")
+                    target_app = None
             else:
                 # Android 平台：正常检查运行状态
                 # 强制刷新应用列表以获取最新的运行状态
@@ -1464,6 +1514,11 @@ class MainWindow(QMainWindow):
         if self.debug_mode:
             logger.debug("[崩溃追踪] _on_collection_thread_finished 开始执行")
 
+        # 释放采集锁（关键修复：确保无论线程如何退出都能释放锁）
+        self._is_collecting = False
+        if self.debug_mode:
+            logger.debug("[崩溃追踪] 采集锁已释放")
+
         # 清理线程对象
         if self._collection_thread:
             if self.debug_mode:
@@ -1587,8 +1642,19 @@ class MainWindow(QMainWindow):
                 logger.debug("CPU数据为空")
 
         except Exception as e:
-            logger.warning(f"CPU采集失败: {e}")
-            raw_metrics['cpu']['error'] = str(e)
+            # 特别处理 iOS 进程不存在错误
+            from insight_eyes.public.ios.exceptions import ProcessNotFoundError
+            if isinstance(e, ProcessNotFoundError):
+                logger.error(f"iOS 应用进程不存在: {package_name}")
+                raw_metrics['cpu']['error'] = 'process_not_found'
+                raw_metrics['app_status']['is_alive'] = False
+                raw_metrics['app_status']['reason'] = 'process_not_found'
+                # 触发应用停止处理
+                self._handle_app_stopped()
+                return raw_metrics
+            else:
+                logger.warning(f"CPU采集失败: {e}")
+                raw_metrics['cpu']['error'] = str(e)
 
         try:
             # 采集网络数据
@@ -1963,6 +2029,11 @@ class MainWindow(QMainWindow):
         # 清空现有列表
         self.device_panel.clear()
 
+        # 停止 DeviceManager 的自动扫描器，避免重复触发信号
+        was_scanning = self.device_manager._scanner_thread is not None
+        if was_scanning:
+            self.device_manager.stop_scan()
+
         try:
             # 使用 DeviceManager 扫描设备（支持 Android 和 iOS）
             from insight_eyes.desktop.core.models import Platform, DeviceStatus
@@ -2013,7 +2084,17 @@ class MainWindow(QMainWindow):
 
             # 合并设备列表
             devices_info = android_devices_info + ios_devices_info
-            logger.info(f"总共扫描到 {len(devices_info)} 个设备")
+
+            # 去重：使用 device_id 作为唯一标识符
+            unique_devices = {}
+            for device in devices_info:
+                if device.device_id not in unique_devices:
+                    unique_devices[device.device_id] = device
+                else:
+                    logger.debug(f"跳过重复设备: {device.device_id}")
+
+            devices_info = list(unique_devices.values())
+            logger.info(f"总共扫描到 {len(android_devices_info + ios_devices_info)} 个设备（去重后 {len(devices_info)} 个）")
 
             # 如果没有设备，提示用户
             if not devices_info:
@@ -2045,6 +2126,10 @@ class MainWindow(QMainWindow):
             device_count = len(devices_info)
             self.statusBar().showMessage(f"已刷新: {device_count} 个设备", 3000)
             logger.info(f"刷新完成: {device_count} 个设备")
+
+            # 恢复 DeviceManager 的自动扫描器
+            if was_scanning:
+                self.device_manager.start_scan()
 
         except Exception as e:
             logger.error(f"刷新设备列表时出错: {e}", exc_info=True)

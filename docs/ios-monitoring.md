@@ -11,6 +11,30 @@ iOS 监控受限于 pymobiledevice3 的 API 能力，部分指标需要使用降
 - **sysmon** - 系统监控服务（DVT）
 - **DiagnosticsService** - 诊断服务
 
+### 架构组件
+1. **SysmonStreamService** - 流式监听服务（持续接收 sysmon 数据）
+2. **MetricsThrottle** - 频率控制层（按设定频率聚合数据）
+3. **数据采集器** - CPU/Memory/Energy/Battery 采集器
+
+### 流式监听架构
+
+iOS 监控采用流式监听架构，以解决 sysmon 数据推送频率不固定的问题：
+
+```
+iOS 设备 --[持续推送]--> SysmonStreamService --[按频率聚合]--> MetricsThrottle --> 采集器
+```
+
+**特点**：
+- 持续接收：后台持续接收 sysmon 推送的数据（约 0.5-1 秒/次）
+- 频率控制：按用户设定的采集频率（1-60 秒）聚合数据
+- 数据缓存：使用环形缓冲区保留最近 120 秒的原始数据
+- 进程过滤：只累加目标进程的数据，忽略其他 1000+ 系统进程
+- 平滑处理：无数据时使用上次有效值，避免曲线跳变
+
+**文件位置**：
+- `public/ios/sysmon_stream_service.py` - 流式监听服务
+- `public/ios/metrics_throttle.py` - 频率控制层
+
 ### 设备要求
 - 需要信任电脑
 - 需要开启开发者模式

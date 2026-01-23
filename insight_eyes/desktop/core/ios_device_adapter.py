@@ -531,28 +531,42 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
 
     def collect_memory(self, package_name: str) -> Optional[Dict[str, Any]]:
         """
-        采集内存数据（需要未来实现）
+        采集内存数据
 
         Args:
             package_name: Bundle ID
 
         Returns:
             dict: 内存数据
+
+        Raises:
+            ProcessNotFoundError: 如果应用进程不存在
         """
-        logger.warning("iOS 内存采集功能尚未实现")
+        # 通过 APM 采集数据
+        # 注意：_get_apm() 会抛出 ProcessNotFoundError 如果进程不存在
+        apm = self._get_apm(package_name)
+        if apm:
+            return apm.collectMemory()
         return None
 
     def collect_cpu(self, package_name: str) -> Optional[Dict[str, Any]]:
         """
-        采集CPU数据（需要未来实现）
+        采集CPU数据
 
         Args:
             package_name: Bundle ID
 
         Returns:
             dict: CPU数据
+
+        Raises:
+            ProcessNotFoundError: 如果应用进程不存在
         """
-        logger.warning("iOS CPU 采集功能尚未实现")
+        # 通过 APM 采集数据
+        # 注意：_get_apm() 会抛出 ProcessNotFoundError 如果进程不存在
+        apm = self._get_apm(package_name)
+        if apm:
+            return apm.collectCpu()
         return None
 
     def collect_network(self, package_name: str) -> Optional[Dict[str, Any]]:
@@ -630,8 +644,15 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
             # 创建新的 APM 实例
             logger.debug(f"[APM管理] 创建新 APM 实例: bundle={bundle_name}, device={self.device_id}")
             self._apm = IOSAPM(bundle_name, self.device_id)
-            # 启动 APM
-            self._apm.start()
+            # 启动 APM（添加异常处理）
+            try:
+                self._apm.start()
+                logger.debug(f"[APM管理] APM 启动成功: {bundle_name}")
+            except Exception as start_error:
+                logger.error(f"[APM管理] APM 启动失败: {type(start_error).__name__}: {start_error}")
+                # 清理失败的 APM 实例
+                self._apm = None
+                raise
 
         return self._apm
 

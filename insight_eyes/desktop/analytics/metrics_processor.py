@@ -188,8 +188,10 @@ class MetricsProcessor(QObject):
 
         try:
             # 获取内存值（MemoryCollector 已经转换为 MB）
-            # 兼容多种键名
-            total = raw_memory.get('totalPass', 0.0) or raw_memory.get('total', 0.0)
+            # 兼容多种键名：支持 iOS ('used_mb') 和 Android ('totalPass', 'total')
+            total = (raw_memory.get('used_mb') or
+                     raw_memory.get('totalPass', 0.0) or
+                     raw_memory.get('total', 0.0))
             native = raw_memory.get('nativePass', 0.0) or raw_memory.get('native', 0.0)
             dalvik = raw_memory.get('dalvikPass', 0.0) or raw_memory.get('dalvik', 0.0)
 
@@ -232,8 +234,9 @@ class MetricsProcessor(QObject):
             return None
 
         try:
-            app_cpu = raw_cpu.get('appCpuRate', 0.0)
-            sys_cpu = raw_cpu.get('sysCpuRate', 0.0)
+            # 支持 iOS ('cpu_app') 和 Android ('appCpuRate') 字段名
+            app_cpu = raw_cpu.get('cpu_app') or raw_cpu.get('appCpuRate', 0.0)
+            sys_cpu = raw_cpu.get('cpu_system') or raw_cpu.get('sysCpuRate', 0.0)
 
             # 数据清洗：确保在合理范围内
             app_cpu = max(0.0, min(100.0, app_cpu))

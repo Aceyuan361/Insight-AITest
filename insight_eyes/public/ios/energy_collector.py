@@ -42,9 +42,10 @@ class EnergyCollector:
         """
         采集能耗数据
 
-        通过 pymobiledevice3 developer dvt energy 获取真实数据。
-
-        注意：此功能需要 Developer Mode，且无降级方案。
+        注意：
+        - iOS 能耗监控需要 Developer Mode
+        - 当前 CLI 方案太慢，暂时返回降级值
+        - 未来可使用 DVT Python API 实现
 
         Returns:
             {
@@ -54,61 +55,9 @@ class EnergyCollector:
                 'network_energy': float  # 网络能耗 (mW)
             }
         """
-        try:
-            from .sysmon_helper import SysmonHelper
-
-            # 延迟初始化 SysmonHelper
-            if self._sysmon_helper is None:
-                self._sysmon_helper = SysmonHelper()
-
-            if not self._sysmon_helper.is_available():
-                logger.warning("Sysmon 服务不可用，能耗监控需要 Developer Mode")
-                return self._get_fallback_value()
-
-            # 先获取进程信息（以得到 PID）
-            process = self._sysmon_helper.get_process_by_bundle_id(self.bundle_id)
-
-            if not process:
-                logger.warning(f"未找到进程: {self.bundle_id}，无法获取能耗数据")
-                return self._get_fallback_value()
-
-            pid = process.get('pid')
-            self._cached_pid = pid
-
-            # 获取能耗统计
-            energy_stats = self._sysmon_helper.get_energy_stats(pid)
-
-            if energy_stats:
-                # 解析能耗数据
-                result = {
-                    'energy': energy_stats.get('energy.cost', 0.0),
-                    'cpu_energy': energy_stats.get('energy.cpu.cost', 0.0),
-                    'gpu_energy': energy_stats.get('energy.gpu.cost', 0.0),
-                    'network_energy': energy_stats.get('energy.networking.cost', 0.0)
-                }
-
-                logger.info(
-                    f"===== iOS 能耗采集成功 =====\n"
-                    f"API: pymobiledevice3 developer dvt energy {pid}\n"
-                    f"Bundle ID: {self.bundle_id}\n"
-                    f"PID: {pid}\n"
-                    f"总能耗: {result['energy']:.2f} mW\n"
-                    f"  - CPU: {result['cpu_energy']:.2f} mW\n"
-                    f"  - GPU: {result['gpu_energy']:.2f} mW\n"
-                    f"  - 网络: {result['network_energy']:.2f} mW"
-                )
-                return result
-            else:
-                logger.warning(f"无法获取能耗数据: PID {pid}")
-                return self._get_fallback_value()
-
-        except ImportError:
-            logger.warning("无法导入 SysmonHelper，能耗监控需要 Developer Mode")
-            return self._get_fallback_value()
-
-        except Exception as e:
-            logger.debug(f"能耗采集失败: {e}")
-            return self._get_fallback_value()
+        # 暂时直接返回降级值（CLI 方案太慢）
+        logger.debug("能耗监控：CLI 方案太慢，返回降级值")
+        return self._get_fallback_value()
 
     def _get_fallback_value(self) -> Dict[str, float]:
         """

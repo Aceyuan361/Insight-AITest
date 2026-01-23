@@ -157,3 +157,39 @@ class InvalidBundleIdError(IOSMonitorError):
         details = f"Bundle ID: {bundle_id}"
         super().__init__(message, details)
         self.bundle_id = bundle_id
+
+
+class ProcessNotFoundError(IOSMonitorError):
+    """进程未找到异常
+
+    当启动监控时，目标应用的进程不存在时抛出。
+
+    这与 ApplicationNotFoundError 不同：
+    - ApplicationNotFoundError: 运行时发现应用未运行
+    - ProcessNotFoundError: 启动监控前检测到进程不存在
+    """
+
+    def __init__(self, bundle_id: str, device_id: str = None):
+        message = "未找到目标应用进程"
+        details = f"Bundle ID: {bundle_id}"
+        if device_id:
+            details += f"\n设备: {device_id}"
+        super().__init__(message, details)
+        self.bundle_id = bundle_id
+        self.device_id = device_id
+
+    def get_user_guide(self) -> str:
+        """获取用户操作指南"""
+        return f"""
+未找到目标应用进程！
+
+Bundle ID: {self.bundle_id}
+
+请确认：
+  ✓ 应用是否正在运行
+  ✓ Bundle ID 是否正确
+  ✓ 设备是否已信任电脑
+  ✓ 是否已启用开发者模式
+
+提示：在 iOS 设备上打开应用后，再开始监控。
+        """.strip()
