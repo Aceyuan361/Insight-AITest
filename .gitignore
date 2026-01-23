@@ -74,3 +74,24 @@ insight_eyes/data/*.db-wal
 
 # Icon temporary files (保留 .ico)
 *_icon.png
+
+# 开发工具配置
+.serena/
+.skills/
+.skills/
+agents/
+
+# AI 协作相关文件
+CLAUDE.md
+.claude/
+
+# 开发维护脚本
+scripts/
+*.sh
+
+# Claude Code 测试
+tests/claude-code/
+
+# 崩溃日志
+crash_log.txt
+*.txt.log
