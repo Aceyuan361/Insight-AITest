@@ -1,31 +1,64 @@
-from __future__ import absolute_import
+"""
+Insight-Eye - 移动设备性能监控工具
 
-# 项目描述
-__doc__ = """
-Insight-Eye - 移动端性能监控工具
+版本: v1.0.1
 
 支持平台:
     - Android (无需 ROOT)
     - iOS (无需越狱)
 
 监控指标:
-    - CPU 使用率
-    - 内存使用 (PSS)
-    - FPS 帧率 & BigJank 严重卡顿
-    - GPU 使用率
-    - 网络流量
-    - 电池状态 (电量/温度/功耗)
 
-使用示例:
-    from insight_eyes.public.apm import APM
+    Android 平台:
+        - CPU 使用率 (应用/系统)
+        - 内存使用 (PSS/Native/Dalvik)
+        - FPS 帧率 & BigJank 严重卡顿
+        - GPU 能耗
+        - 网络流量 (应用级)
+        - 电池状态 (电量/温度)
 
-    apm = APM(pkgName='com.example.app', deviceId='device_id')
+    iOS 平台:
+        - CPU 使用率 (应用/系统)
+        - 内存使用 (physFootprint)
+        - FPS (系统刷新率参考值 60fps)
+        - 网络流量 (系统级)
+        - 电池状态 (电量/温度)
+        - 能耗监控
+
+使用示例 - Android:
+
+    from insight_eyes.public.android.android_apm import AndroidAPM
+
+    apm = AndroidAPM(
+        package_name='com.example.app',
+        device_id='emulator-5554'
+    )
     apm.start()
 
     cpu = apm.collectCpu()
-    print(f"CPU: {cpu['appCpuRate']}%")
+    print(f"CPU: {cpu['cpu_app']}%")
 
     apm.stop()
+
+使用示例 - iOS:
+
+    from insight_eyes.public.ios.ios_apm import IOSAPM
+
+    apm = IOSAPM(
+        bundle_name='com.example.app',
+        device_id='iphone-udid'
+    )
+    apm.start()
+
+    cpu = apm.collectCpu()
+    print(f"CPU: {cpu['cpu_app']}%")
+
+    apm.stop()
+
+注意事项:
+    - iOS 设备需要信任电脑并启用开发者模式
+    - iOS 需要 pymobiledevice3 >= 7.0.0
+    - iOS GPU 监控受系统限制暂不支持
+    - iOS FPS 为系统刷新率参考值，非应用级数据
 """
-
-
+__version__ = '1.0.1'

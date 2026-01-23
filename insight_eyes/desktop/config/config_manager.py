@@ -286,7 +286,7 @@ class ConfigManager(QObject):
 
             # 原子化写入：使用临时文件 + 原子重命名
             # 这样可以避免写入过程中崩溃导致配置文件损坏
-            temp_file = self.config_file + '.tmp'
+            temp_file = self.config_file.parent / (self.config_file.name + '.tmp')
             try:
                 # 先写入临时文件
                 with open(temp_file, 'w', encoding='utf-8') as f:
