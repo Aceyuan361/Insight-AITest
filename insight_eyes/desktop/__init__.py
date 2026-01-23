@@ -11,7 +11,7 @@ Insight-Eye Desktop Module
 - main: 应用入口
 """
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 from .main import main
 

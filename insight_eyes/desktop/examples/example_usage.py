@@ -2,6 +2,12 @@
 性能指标处理与异常检测模块使用示例
 
 本示例演示如何使用analytics模块进行性能监控
+
+注意：本示例使用 Android 平台的数据格式
+- appCpuRate: Android 底层返回的字段名
+- 桌面层会将其转换为 cpu_app
+
+iOS 平台请参考 IOSAPM 的用法示例
 """
 
 import sys
