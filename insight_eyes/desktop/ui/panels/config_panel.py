@@ -781,6 +781,8 @@ class ConfigPanel(QWidget):
         """
         try:
             from logzero import logger
+            from PyQt6.QtCore import QSignalBlocker
+            from PyQt6.QtWidgets import QMessageBox
             import traceback
             import sys
 
@@ -799,6 +801,35 @@ class ConfigPanel(QWidget):
 
             # 计算是否启用 (Qt.Checked = 2)
             enabled = (state == 2)
+
+            # ===== iOS GPU 监控限制 =====
+            # 检查是否是 iOS 设备上的 GPU 监控
+            if enabled and metric_id == 'gpu':
+                if self._is_ios_device():
+                    logger.info("[iOS GPU 限制] 检测到 iOS 设备，阻止启用 GPU 监控")
+
+                    # 找到 GPU 复选框并取消勾选
+                    gpu_cb = self.metric_checkboxes.get("GPU")
+                    if gpu_cb:
+                        with QSignalBlocker(gpu_cb):
+                            gpu_cb.setChecked(False)
+
+                    # 显示友好提示
+                    QMessageBox.warning(
+                        self,
+                        "iOS GPU 监控限制",
+                        "抱歉，iOS 设备暂不支持 GPU 监控。\n\n"
+                        "原因：\n"
+                        "• iOS 系统 DVT 通道无法获取 GPU 能耗数据\n"
+                        "• CLI 能耗命令超时（20+ 秒），不适合实时监控\n\n"
+                        "已启用指标：\n"
+                        "• CPU 使用率 ✓\n"
+                        "• 内存使用 ✓\n"
+                        "• FPS（系统刷新率参考）✓\n"
+                        "• 网络流量（系统级）✓\n"
+                        "• 电池状态 ✓"
+                    )
+                    return  # 直接返回，不继续处理
 
             logger.info(f"[DEBUG-1] 指标 {metric_name} 状态变更: {'启用' if enabled else '禁用'}")
 
@@ -850,3 +881,74 @@ class ConfigPanel(QWidget):
             logger.error(f"[DEBUG-EXCEPTION] 指标开关切换异常: {e}")
             logger.error(f"[DEBUG-EXCEPTION] 异常类型: {type(e).__name__}")
             logger.error(f"[DEBUG-EXCEPTION] 堆栈:\n{''.join(traceback.format_exc())}")
+
+    def _is_ios_device(self) -> bool:
+        """
+        检查当前设备是否为 iOS 设备
+
+        Returns:
+            bool: 如果是 iOS 设备返回 True，否则返回 False
+        """
+        from logzero import logger
+        logger.info("[iOS GPU 检测] 开始检测设备类型...")
+
+        try:
+            # 方法1: 通过 parent 窗口获取
+            logger.info("[iOS GPU 检测] 方法1: 检查 parent 窗口")
+            parent = self.parent()
+            logger.info(f"[iOS GPU 检测]   parent = {parent}")
+            if parent is None:
+                logger.info("[iOS GPU 检测]   parent 为 None，跳过方法1")
+            else:
+                logger.info(f"[iOS GPU 检测]   parent 类型: {type(parent).__name__}")
+                logger.info(f"[iOS GPU 检测]   parent 有 current_device_id: {hasattr(parent, 'current_device_id')}")
+                logger.info(f"[iOS GPU 检测]   parent 有 device_manager: {hasattr(parent, 'device_manager')}")
+
+                if hasattr(parent, 'current_device_id') and hasattr(parent, 'device_manager'):
+                    device_id = parent.current_device_id
+                    logger.info(f"[iOS GPU 检测]   device_id = {device_id}")
+                    if device_id:
+                        device = parent.device_manager.get_device(device_id)
+                        logger.info(f"[iOS GPU 检测]   device = {device}")
+                        if device:
+                            from insight_eyes.desktop.core.models import Platform
+                            result = device.platform == Platform.IOS
+                            logger.info(f"[iOS GPU 检测]   device.platform = {device.platform}, 是 iOS: {result}")
+                            return result
+                        else:
+                            logger.info("[iOS GPU 检测]   device 为 None，跳过")
+
+            # 方法2: 通过 QApplication 获取主窗口
+            logger.info("[iOS GPU 检测] 方法2: 检查 QApplication topLevelWidgets")
+            from PyQt6.QtWidgets import QApplication
+            app = QApplication.instance()
+            logger.info(f"[iOS GPU 检测]   QApplication.instance() = {app}")
+            if app:
+                top_widgets = app.topLevelWidgets()
+                logger.info(f"[iOS GPU 检测]   topLevelWidgets 数量: {len(top_widgets)}")
+                for i, widget in enumerate(top_widgets):
+                    logger.info(f"[iOS GPU 检测]   Widget[{i}]: {type(widget).__name__}, 有 current_device_id: {hasattr(widget, 'current_device_id')}")
+                    if hasattr(widget, 'current_device_id') and hasattr(widget, 'device_manager'):
+                        device_id = widget.current_device_id
+                        logger.info(f"[iOS GPU 检测]     找到 device_id = {device_id}")
+                        if device_id:
+                            device = widget.device_manager.get_device(device_id)
+                            logger.info(f"[iOS GPU 检测]     device = {device}")
+                            if device:
+                                from insight_eyes.desktop.core.models import Platform
+                                result = device.platform == Platform.IOS
+                                logger.info(f"[iOS GPU 检测]     device.platform = {device.platform}, 是 iOS: {result}")
+                                return True
+            else:
+                logger.info("[iOS GPU 检测]   QApplication.instance() 返回 None")
+
+            # 方法1和方法2已覆盖主要场景，不再使用方法3以避免UI阻塞
+            logger.info("[iOS GPU 检测] 所有方法都失败，返回 False")
+            return False
+
+        except Exception as e:
+            from logzero import logger
+            logger.error(f"[iOS GPU 检测] 检查 iOS 设备异常: {type(e).__name__}: {e}")
+            import traceback
+            logger.error(f"[iOS GPU 检测] 堆栈: {traceback.format_exc()}")
+            return False
