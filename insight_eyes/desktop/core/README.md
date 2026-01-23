@@ -9,7 +9,7 @@
 ### 1. 设备连接
 - 支持USB数据线和Wi-Fi两种连接方式
 - Android基于ADB接口
-- iOS基于tidevice工具
+- iOS基于pymobiledevice3工具
 - 自动识别已连接设备
 - 展示设备详细信息（名称、型号、系统版本、电池电量等）
 
@@ -25,7 +25,14 @@
 - 监控电池电量、温度、网络类型
 - 支持多设备并行监控
 
-### 4. 无侵入式设计
+### 4. iOS 流式监听架构
+- 基于 pymobiledevice3 的 sysmon 流式监听
+- 实时接收 iOS 系统性能数据
+- 支持异步数据流处理
+- 通过 IOSSerialCollector 实现串行化数据收集
+- 支持长时间稳定监控（8秒超时保护）
+
+### 5. 无侵入式设计
 - 无需root/越狱
 - 不修改App代码
 - 不重启App
@@ -237,7 +244,7 @@ app_info = enumerator.get_app_info("com.example.app")
 
 ### 系统工具
 - **ADB** (Android Debug Bridge) - Android设备通信
-- **tidevice** >= 0.9.7 - iOS设备通信
+- **pymobiledevice3** >= 7.0.0 - iOS设备通信
 
 ### 安装依赖
 
@@ -245,8 +252,8 @@ app_info = enumerator.get_app_info("com.example.app")
 # 安装Python依赖
 pip install PyQt6 logzero
 
-# 安装tidevice（用于iOS设备）
-pip install tidevice
+# 安装pymobiledevice3（用于iOS设备）
+pip install pymobiledevice3
 
 # 确保ADB已安装并在PATH中
 # Android Studio会自动安装ADB
@@ -306,9 +313,9 @@ python -m insight_eyes.desktop.tests.test_device_manager
 - 尝试重启ADB服务：`adb kill-server && adb start-server`
 
 ### 问题：无法检测到iOS设备
-- 确认已安装tidevice
+- 确认已安装pymobiledevice3
 - 检查是否信任计算机
-- 重启tidevice服务：`tidevice list`
+- 检查设备连接：`pymobiledevice3 list`
 
 ### 问题：应用列表为空
 - 检查设备权限
@@ -321,13 +328,3 @@ python -m insight_eyes.desktop.tests.test_device_manager
 - [ ] 添加设备连接历史记录
 - [ ] 支持批量操作
 - [ ] 添加设备分组功能
-
-## 许可证
-
-MIT License
-
-## 作者
-
-Aceyuan361
-
-GitHub: https://github.com/Aceyuan361/Insight-Eye

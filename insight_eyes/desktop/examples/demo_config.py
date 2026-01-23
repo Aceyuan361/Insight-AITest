@@ -1,12 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 配置管理器功能演示脚本
-
-Copyright (c) 2025 Aceyuan361
-GitHub: https://github.com/Aceyuan361/Insight-Eye
-License: MIT License
-
-Author: Aceyuan361
 """
 
 import sys

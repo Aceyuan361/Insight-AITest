@@ -9,12 +9,6 @@ Android CPU 采集器
 - 小米设备：优先使用 top，需要 ANSI 过滤
 - 华为设备：优先使用 dumpsys_cpuinfo
 - 精确计算模式：基于 /proc/stat 和 /proc/[pid]/stat（与 Android Studio 一致）
-
-Copyright (c) 2025 Aceyuan361
-GitHub: https://github.com/Aceyuan361/Insight-Eye
-License: MIT License
-
-Author: Aceyuan361
 """
 import re
 import time

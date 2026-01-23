@@ -3,12 +3,6 @@
 Android 性能采集模块
 
 导出 Android 平台的所有性能采集器类
-
-Copyright (c) 2025 Aceyuan361
-GitHub: https://github.com/Aceyuan361/Insight-Eye
-License: MIT License
-
-Author: Aceyuan361
 """
 
 from insight_eyes.public.android.cpu_collector import CPUCollector

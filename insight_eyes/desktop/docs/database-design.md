@@ -5,9 +5,8 @@
 | 项目 | 内容 |
 |------|------|
 | 文档名称 | Insight-Eye 数据库设计文档 |
-| 版本 | 1.0.0 |
-| 作者 | Aceyuan361 |
-| 更新日期 | 2025-01-13 |
+| 版本 | 1.0.1 |
+| 更新日期 | 2025-01-23 |
 | 数据库 | SQLite 3 |
 
 ## 1. 数据库概述
@@ -106,7 +105,7 @@ ON devices(last_seen DESC);
 | device_id | name | platform | model | os_version |
 |-----------|------|----------|-------|------------|
 | emulator-5554 | Android Emulator | android | Pixel 5 | Android 13 |
-| abc123def456 | iPhone 13 Pro | ios | iPhone14,3 | iOS 16.0 |
+| abc123def456 | iPhone 15 Pro | ios | iPhone16,1 | iOS 17.0 |
 
 #### 查询示例
 
@@ -171,7 +170,7 @@ ON apps(last_monitored DESC);
 | device_id | package_name | app_name | version |
 |-----------|--------------|----------|---------|
 | emulator-5554 | com.example.app | Example App | 1.0.0 |
-| abc123def456 | com.apple.mobilesafari | Safari | 16.0 |
+| abc123def456 | com.apple.mobilesafari | Safari | 17.0 |
 
 #### 查询示例
 

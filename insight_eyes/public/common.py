@@ -2,12 +2,6 @@
 """
 设备检测模块
 提供 Android 设备检测和平台识别功能
-
-Copyright (c) 2025 Aceyuan361
-GitHub: https://github.com/Aceyuan361/Insight-Eye
-License: MIT License
-
-Author: Aceyuan361
 """
 import subprocess
 from logzero import logger

@@ -6,10 +6,6 @@ iOS Sysmon 辅助类
 用于获取 iOS 进程的真实性能数据。
 
 注意：需要 Developer Mode 已启用且 DeveloperDiskImage 已挂载。
-
-Copyright (c) 2025 Aceyuan361
-GitHub: https://github.com/Aceyuan361/Insight-Eye
-License: MIT License
 """
 
 import subprocess

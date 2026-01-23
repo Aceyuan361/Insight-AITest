@@ -2,12 +2,6 @@
 """
 设备重连功能使用示例
 演示如何使用设备重连机制
-
-Copyright (c) 2025 Aceyuan361
-GitHub: https://github.com/Aceyuan361/Insight-Eye
-License: MIT License
-
-Author: Aceyuan361
 """
 
 import sys

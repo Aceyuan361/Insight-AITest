@@ -9,10 +9,6 @@ iOS Sysmon 流式监听服务
 2. 后台线程持续接收 Sysmontap 数据
 3. 监控连接状态，发出连接丢失/恢复信号
 4. 自动重连机制
-
-Copyright (c) 2025 Aceyuan361
-GitHub: https://github.com/Aceyuan361/Insight-Eye
-License: MIT License
 """
 
 import socket

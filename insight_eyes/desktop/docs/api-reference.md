@@ -5,9 +5,8 @@
 | 项目 | 内容 |
 |------|------|
 | 文档名称 | Insight-Eye 模块接口文档 |
-| 版本 | 1.0.0 |
-| 作者 | Aceyuan361 |
-| 更新日期 | 2025-01-13 |
+| 版本 | 1.0.1 |
+| 更新日期 | 2025-01-23 |
 
 ## 1. 核心模块接口 (core/)
 
@@ -344,11 +343,114 @@ def get_network_type(self) -> str
 
 #### IOSDeviceAdapter
 
+**模块路径**：`insight_eyes.desktop.core.ios_device_adapter`
+
 **类名**：`IOSDeviceAdapter`
 
 **继承**：`BaseDeviceAdapter`
 
-接口与 `AndroidDeviceAdapter` 类似，但使用 `tidevice` 命令。
+**依赖**：pymobiledevice3 >= 7.0.0
+
+**特点**：
+- 使用 pymobiledevice3 与 iOS 设备通信
+- 通过 sysmon 命令采集性能数据
+- 支持自动重连（指数退避策略）
+- 需要设备信任和开发者模式
+
+##### connect()
+
+连接 iOS 设备。
+
+```python
+def connect(self) -> bool
+```
+
+**返回值**：
+- `bool`: 是否成功连接
+
+**异常**：
+- `DeviceNotTrustedError`: 设备未信任
+- `DeveloperModeNotEnabledError`: 开发者模式未启用
+- `PMD3NotInstalledError`: pymobiledevice3 未安装
+
+##### collect_fps()
+
+iOS 平台暂不支持 FPS 采集。
+
+```python
+def collect_fps(self, package_name: str) -> Optional[Dict[str, Any]]
+```
+
+**返回值**：
+- `None`: iOS 平台不支持
+
+##### collect_cpu()
+
+采集 CPU 使用率。
+
+```python
+def collect_cpu(self, package_name: str) -> Optional[Dict[str, Any]]
+```
+
+**返回值**：
+```python
+{
+    'cpu_app': float,      # 应用 CPU 使用率 (%)
+    'cpu_system': float    # 系统 CPU 使用率 (%)
+}
+```
+
+##### collect_memory()
+
+采集内存使用。
+
+```python
+def collect_memory(self, bundle_id: str) -> Optional[Dict[str, Any]]
+```
+
+**参数**：
+- `bundle_id` (str): 应用 Bundle ID
+
+**返回值**：
+```python
+{
+    'memory_app_private': float,  # 应用私有内存 (MB)
+    'memory_pss': float,          # PSS 内存 (MB)
+    'memory_vss': float           # VSS 内存 (MB)
+}
+```
+
+##### collect_network()
+
+采集网络流量。
+
+```python
+def collect_network(self, bundle_id: str) -> Optional[Dict[str, Any]]
+```
+
+**返回值**：
+```python
+{
+    'network_up_speed': float,   # 上行速度 (KB/s)
+    'network_down_speed': float  # 下行速度 (KB/s)
+}
+```
+
+##### collect_battery()
+
+采集电池信息。
+
+```python
+def collect_battery(self) -> Optional[Dict[str, Any]]
+```
+
+**返回值**：
+```python
+{
+    'battery_level': float,  # 电池电量 (%)
+    'battery_temp': float    # 电池温度 (°C)
+}
+```
 
 ### 1.3 AppEnumerator
 
@@ -1108,7 +1210,9 @@ def reset_to_defaults(self) -> None
 | `E002` | `DEVICE_UNAUTHORIZED` | 设备未授权 |
 | `E003` | `DEVICE_OFFLINE` | 设备离线 |
 | `E004` | `ADB_NOT_FOUND` | ADB 未安装 |
-| `E005` | `TIDEVICE_NOT_FOUND` | tidevice 未安装 |
+| `E005` | `PMD3_NOT_FOUND` | pymobiledevice3 未安装 |
+| `E006` | `DEVICE_NOT_TRUSTED` | iOS 设备未信任电脑 |
+| `E007` | `DEVELOPER_MODE_DISABLED` | iOS 开发者模式未启用 |
 
 ### 5.2 采集错误
 

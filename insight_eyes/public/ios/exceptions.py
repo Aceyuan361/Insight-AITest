@@ -3,10 +3,6 @@
 iOS 监控专用异常
 
 定义 iOS 设备监控过程中可能出现的各种异常类型
-
-Copyright (c) 2025 Aceyuan361
-GitHub: https://github.com/Aceyuan361/Insight-Eye
-License: MIT License
 """
 
 

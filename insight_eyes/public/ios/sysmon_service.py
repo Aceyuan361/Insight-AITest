@@ -4,10 +4,6 @@ iOS Sysmon 服务（使用 pymobiledevice3 Python API）
 
 直接使用 pymobiledevice3 的 DVT 协议，而不是通过 CLI 调用。
 这样可以建立持久连接，大幅提升性能。
-
-Copyright (c) 2025 Aceyuan361
-GitHub: https://github.com/Aceyuan361/Insight-Eye
-License: MIT License
 """
 
 import threading

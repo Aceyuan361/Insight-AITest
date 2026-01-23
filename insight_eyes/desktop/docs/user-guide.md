@@ -5,9 +5,8 @@
 | 项目 | 内容 |
 |------|------|
 | 文档名称 | Insight-Eye 用户使用手册 |
-| 版本 | 1.0.0 |
-| 作者 | Aceyuan361 |
-| 更新日期 | 2025-01-13 |
+| 版本 | 1.0.1 |
+| 更新日期 | 2025-01-23 |
 
 ## 目录
 
@@ -36,7 +35,7 @@
 - 操作系统: Windows 10/11, macOS 10.15+, Linux
 - Python: 3.9 或更高版本
 - ADB: Android SDK Platform Tools（Android 设备）
-- iTunes: macOS 上连接 iOS 设备需要
+- pymobiledevice3: >= 7.0.0（iOS 设备，需要信任设备和开发者模式）
 
 ### 1.2 五分钟上手
 
@@ -85,7 +84,7 @@
 
 ```bash
 # 克隆项目
-git clone https://github.com/Aceyuan361/Insight-Eye.git
+git clone <repository-url>
 cd Insight-Eye
 
 # 安装依赖
@@ -114,11 +113,15 @@ brew install android-platform-tools
 adb version
 ```
 
-#### 步骤 3：安装 tidevice（iOS 用户）
+#### 步骤 3：安装 pymobiledevice3（iOS 用户）
 
 ```bash
-pip install tidevice
+pip install "pymobiledevice3>=7.0.0"
 ```
+
+**前置条件**：
+- iOS 设备需要信任此电脑
+- iOS 设备需要启用开发者模式（设置 > 隐私与安全 > 开发者模式）
 
 #### 步骤 4：安装 Insight-Eye
 
@@ -192,22 +195,29 @@ python3 -m insight_eyes.desktop.main
 1. **信任电脑**：
    - 使用 USB 线连接 iPhone 和电脑
    - iPhone 弹出"信任此电脑"提示，点击"信任"
+   - 首次连接需要输入设备锁屏密码
 
-2. **验证连接**：
+2. **启用开发者模式**（首次使用）：
+   - 前往：设置 > 隐私与安全 > 开发者模式
+   - 开启"开发者模式"
+   - 重启设备后确认开启
+
+3. **验证连接**：
    ```bash
-   tidevice list
-   # 应该显示你的设备
+   # 列出已连接设备
+   python -c "from pymobiledevice3 import usbmux; print([d.serial for d in usbmux.list_devices()])"
    ```
 
-3. **在 Insight-Eye 中刷新**：
+4. **在 Insight-Eye 中刷新**：
    - 点击左侧"刷新"按钮
    - 设备会出现在列表中
 
 #### 注意事项
 
-- iOS 需要安装 iTunes（Windows）或信任电脑（macOS）
-- 首次连接需要在 iPhone 上输入锁屏密码
+- pymobiledevice3 是 Python 库，无需安装 iTunes
+- 必须启用开发者模式才能采集性能数据
 - 某些企业设备可能无法连接（MDM 限制）
+- iOS 监控功能受系统限制，FPS 暂不支持
 
 ### 3.3 设备未识别？
 
@@ -223,9 +233,10 @@ python3 -m insight_eyes.desktop.main
 
 | 问题 | 解决方案 |
 |------|----------|
-| tidevice 找不到设备 | 确保 iTunes 已安装并信任电脑 |
-| 连接不稳定 | 更换原装 USB 线 |
+| pymobiledevice3 找不到设备 | 确保设备已信任电脑并启用开发者模式 |
+| 连接不稳定 | 更换原装 USB 线或 USB 端口 |
 | 提示"请信任电脑" | 在 iPhone 上重新信任 |
+| 数据采集失败 | 确认开发者模式已启用，重启设备 |
 
 ---
 
@@ -590,7 +601,8 @@ pip install PyQt6
 **A**:
 1. 使用原装 USB 线
 2. 在 iPhone 上重新信任电脑
-3. 重启 tidevice：`tidevice list`
+3. 确认开发者模式已启用
+4. 重启设备和应用
 
 #### Q: Wi-Fi 连接后设备离线
 
@@ -613,7 +625,7 @@ pip install PyQt6
 
 **A**:
 1. **Android**：确认应用有 Activity 界面（服务类应用无 FPS）
-2. **iOS**：tidevice 对 FPS 支持有限
+2. **iOS**：iOS 平台暂不支持 FPS 监控（系统限制）
 3. **重试**：停止监控后重新开始
 
 #### Q: 内存数据不准确
@@ -674,7 +686,7 @@ macOS: `~/.insight_eye/logs/app.log`
 #### Q: 如何获取技术支持？
 
 **A**:
-- GitHub Issues: https://github.com/Aceyuan361/Insight-Eye/issues
+- GitHub Issues: <repository-url>/issues
 
 ---
 
@@ -718,12 +730,6 @@ macOS: `~/.insight_eye/logs/app.log`
 | 内存 | > 300 MB | > 500 MB |
 | CPU | > 60% | > 80% |
 | 电池温度 | > 40°C | > 45°C |
-
-### D. 联系方式
-
-- **项目地址**：https://github.com/Aceyuan361/Insight-Eye
-- **问题反馈**：GitHub Issues
-- **邮箱**：aceyuan361@gmail.com
 
 ---
 

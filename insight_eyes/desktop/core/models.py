@@ -2,12 +2,6 @@
 """
 设备管理数据模型
 定义设备、应用等核心数据结构
-
-Copyright (c) 2025 Aceyuan361
-GitHub: https://github.com/Aceyuan361/Insight-Eye
-License: MIT License
-
-Author: Aceyuan361
 """
 
 from dataclasses import dataclass, field

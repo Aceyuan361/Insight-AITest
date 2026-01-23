@@ -7,10 +7,6 @@ iOS CPU 使用率采集器
 数据采集优先级：
 1. pymobiledevice3 Python API - DVT 协议（首选，高性能）
 2. py-ios-device instruments（降级方案）
-
-Copyright (c) 2025 Aceyuan361
-GitHub: https://github.com/Aceyuan361/Insight-Eye
-License: MIT License
 """
 
 from typing import Dict, Optional

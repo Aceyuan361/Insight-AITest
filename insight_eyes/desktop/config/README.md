@@ -196,11 +196,3 @@ python -m unittest desktop.tests.test_config_manager
 2. 更新 `to_dict()` 和 `from_dict()` 方法
 3. 在 `get_default_config()` 中设置默认值
 4. 添加相应的单元测试
-
-## 维护者
-
-- Aceyuan361
-
-## 许可证
-
-MIT License

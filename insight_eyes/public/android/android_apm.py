@@ -8,12 +8,6 @@ Android APM (Application Performance Monitor) 性能监控主类
 - 根据设备厂商/ROM 自动选择最佳采集策略
 - 支持 CPU/Memory/Network/FPS/Battery 各指标的智能采集
 - 添加输入验证（P3-21）
-
-Copyright (c) 2025 Aceyuan361
-GitHub: https://github.com/Aceyuan361/Insight-Eye
-License: MIT License
-
-Author: Aceyuan361
 """
 import re
 import time

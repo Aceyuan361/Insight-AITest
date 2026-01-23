@@ -2,12 +2,6 @@
 """
 设备管理器使用示例
 演示如何使用设备连接与App枚举筛选模块
-
-Copyright (c) 2025 Aceyuan361
-GitHub: https://github.com/Aceyuan361/Insight-Eye
-License: MIT License
-
-Author: Aceyuan361
 """
 
 import sys

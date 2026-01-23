@@ -2,12 +2,6 @@
 """
 应用枚举器（仅支持 Android）
 负责枚举 Android 设备上安装的应用
-
-Copyright (c) 2025 Aceyuan361
-GitHub: https://github.com/Aceyuan361/Insight-Eye
-License: MIT License
-
-Author: Aceyuan361
 """
 
 import re

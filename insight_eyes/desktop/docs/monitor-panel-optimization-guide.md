@@ -247,6 +247,12 @@ from insight_eyes.desktop.ui.widgets.tooltip_widget import ChartTooltip
 
 ## 📝 更新日志
 
+### v2.0.1 (2025-01-23)
+- ✨ 新增 iOS 设备支持
+- ✨ 使用 pymobiledevice3 替代 tidevice
+- ✨ iOS sysmon 数据采集（CPU/内存/网络/电池）
+- 📝 更新文档反映 iOS 支持情况
+
 ### v2.0.0 (2025-01-19)
 - ✨ 新增曲线抗锯齿和样条插值
 - ✨ 新增数据悬停提示功能
@@ -272,13 +278,9 @@ from insight_eyes.desktop.ui.widgets.tooltip_widget import ChartTooltip
 
 ## 💬 反馈与支持
 
-如有问题或建议，请通过以下方式联系：
-
-- GitHub Issues: [https://github.com/Aceyuan361/Insight-Eye/issues](https://github.com/Aceyuan361/Insight-Eye/issues)
-- 项目文档: [docs/](./)
+如有问题或建议，请参考项目文档。
 
 ---
 
-**最后更新**: 2025-01-19
-**文档版本**: 2.0.0
-**作者**: Aceyuan361
+**最后更新**: 2025-01-23
+**文档版本**: 2.0.1

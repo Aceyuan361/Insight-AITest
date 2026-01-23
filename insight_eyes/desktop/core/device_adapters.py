@@ -1,12 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 设备连接适配器（支持 Android 和 iOS）
-
-Copyright (c) 2025 Aceyuan361
-GitHub: https://github.com/Aceyuan361/Insight-Eye
-License: MIT License
-
-Author: Aceyuan361
 """
 
 import subprocess

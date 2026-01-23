@@ -8,10 +8,6 @@ iOS 内存使用情况采集器
 1. pymobiledevice3 Python API - DVT 协议（首选，高性能）
 2. pymobiledevice3 CLI - developer dvt sysmon（降级方案，Developer Mode）
 3. py-ios-device instruments（进一步降级）
-
-Copyright (c) 2025 Aceyuan361
-GitHub: https://github.com/Aceyuan361/Insight-Eye
-License: MIT License
 """
 
 from typing import Dict, Optional

@@ -193,8 +193,7 @@ python build.py
 
 ### 4. 分发
 
-- 创建 GitHub Release
-- 上传安装包到 Release 页面
+- 上传安装包到分发平台
 - 更新下载链接
 
 ## 已知限制

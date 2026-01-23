@@ -12,7 +12,6 @@ Insight-Eye Desktop UI Module
 """
 
 __version__ = "1.0.0"
-__author__ = "Aceyuan361"
 
 from .main_window import MainWindow
 

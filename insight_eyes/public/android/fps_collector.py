@@ -12,12 +12,6 @@ FPS (Frames Per Second) 帧率监控模块 - Android 专用
 6. 添加设备厂商检测和适配
 7. 集成设备配置系统（DeviceProfile）- 根据设备自动选择最佳采集策略
 
-Copyright (c) 2025 Aceyuan361
-GitHub: https://github.com/Aceyuan361/Insight-Eye
-License: MIT License
-
-Author: Aceyuan361
-
 参考资料：
 - SoloX: https://github.com/smart-test-ti/SoloX
 - Android Frame Data Collection: https://codefuturesql.top/post/android_get_frame_data/

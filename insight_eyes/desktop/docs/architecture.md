@@ -5,10 +5,8 @@
 | 项目 | 内容 |
 |------|------|
 | 文档名称 | Insight-Eye 架构设计文档 |
-| 版本 | 1.0.0 |
-| 作者 | Aceyuan361 |
-| 更新日期 | 2025-01-13 |
-| 项目地址 | https://github.com/Aceyuan361/Insight-Eye |
+| 版本 | 1.0.1 |
+| 更新日期 | 2025-01-23 |
 
 ## 1. 概述
 
@@ -32,7 +30,7 @@ Insight-Eye 是一个移动设备性能监控工具，支持 Android 和 iOS 平
 | 图表库 | pyqtgraph |
 | 数据库 | SQLite3 |
 | Android 通信 | ADB (Android Debug Bridge) |
-| iOS 通信 | tidevice |
+| iOS 通信 | pymobiledevice3 |
 | 日志 | logzero |
 | 数据处理 | NumPy |
 
@@ -79,8 +77,8 @@ Insight-Eye 是一个移动设备性能监控工具，支持 Android 和 iOS 平
 ┌─────────────────────────────────────────────────────────────────┐
 │                     Device Layer (设备层)                        │
 │  ┌──────────────┐                    ┌──────────────┐         │
-│  │  ADB         │                    │  tidevice    │         │
-│  │  (Android)   │                    │  (iOS)       │         │
+│  │  ADB         │                    │pymobiledevice│         │
+│  │  (Android)   │                    │    3 (iOS)   │         │
 │  └──────────────┘                    └──────────────┘         │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -141,31 +139,37 @@ core/
 
 **文件结构**：
 ```
-public/
-├── adb/                   # ADB 封装
-│   ├── __init__.py
-│   └── adb_helper.py
-├── android/               # Android 采集器
-│   ├── android_apm.py
-│   ├── cpu_collector.py
-│   ├── memory_collector.py
-│   ├── fps_collector.py
-│   ├── network_collector.py
-│   ├── battery_collector.py
-│   └── gpu_collector.py
-└── common.py              # 设备检测
+analytics/
+├── ios_session_monitor.py  # iOS 会话监控
+├── ios_serial_collector.py # iOS 串口数据采集
+└── metrics_batch_collector.py # 批量指标采集器
 ```
 
 **采集指标**：
 
-| 指标 | Android 实现 |
-|------|-------------|
-| CPU | `dumpsys cpuinfo` |
-| 内存 | `dumpsys meminfo` |
-| FPS | `SurfaceFlinger` |
-| 网络 | `/proc/uid_stat` |
-| 电池 | `dumpsys battery` |
-| GPU | 未实现 |
+| 指标 | Android 实现 | iOS 实现 |
+|------|-------------|----------|
+| CPU | `dumpsys cpuinfo` | `sysmon` 命令 |
+| 内存 | `dumpsys meminfo` | `sysmon` 命令 |
+| FPS | `SurfaceFlinger` | 暂不支持 |
+| 网络 | `/proc/uid_stat` | `sysmon` 命令 |
+| 电池 | `dumpsys battery` | `sysmon` 命令 |
+| GPU | 未实现 | 暂不支持 |
+
+**iOS 数据采集说明**：
+
+iOS 使用 `pymobiledevice3` 库通过 `sysmon` 命令采集性能数据：
+
+1. **CPU 采集**：通过 sysmon 获取应用和系统 CPU 使用率
+2. **内存采集**：获取应用的内存占用（物理内存、虚拟内存）
+3. **网络采集**：获取网络流量统计（上行/下行）
+4. **电池采集**：获取电池电量和温度
+
+**限制说明**：
+
+- iOS 平台暂不支持 FPS 监控（系统限制）
+- iOS 平台暂不支持 GPU 监控
+- 数据采集超时时间设置为 8 秒（iOS 响应较慢）
 
 ### 3.3 分析模块 (analytics/)
 
@@ -382,17 +386,18 @@ DataExporter.export_to_*()
 - 10 个设备同时监控，1 天约 173 MB
 - 结论：SQLite 完全够用
 
-### 5.4 ADB 与 tidevice
+### 5.4 ADB 与 pymobiledevice3
 
 **ADB（Android）**：
 - Google 官方工具
 - 功能完整、稳定可靠
 - 支持无线调试
 
-**tidevice（iOS）**：
-- 无需 Mac 电脑
-- Python 实现，易于集成
-- 功能受限（Apple 限制）
+**pymobiledevice3（iOS）**：
+- Python 实现，无需 Mac 电脑
+- 通过 sysmon 采集性能数据
+- 需要信任设备和启用开发者模式
+- 功能受 Apple 系统限制
 
 ## 6. 性能设计
 
@@ -581,10 +586,19 @@ Windows/macOS/Linux
 
 ## 11. 版本规划
 
-### v1.0.0（当前版本）
+### v1.0.1（当前版本）
+
+- ✅ 支持 iOS 设备连接和监控
+- ✅ 使用 pymobiledevice3 替代 tidevice
+- ✅ iOS sysmon 数据采集（CPU/内存/网络/电池）
+- ✅ iOS 应用枚举支持
+- ✅ 改进数据处理和错误处理
+- ✅ 所有 v1.0.0 功能
+
+### v1.0.0
 
 - ✅ 基础设备连接
-- ✅ 性能指标采集
+- ✅ Android 性能指标采集
 - ✅ 实时监控 UI
 - ✅ 异常检测
 - ✅ 数据导出

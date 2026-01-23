@@ -11,10 +11,6 @@
 - 策略模式：不同设备使用不同采集策略
 - 工厂模式：根据设备信息创建对应的配置
 - 单例模式：每个设备只检测一次，缓存配置
-
-Copyright (c) 2025 Aceyuan361
-GitHub: https://github.com/Aceyuan361/Insight-Eye
-License: MIT License
 """
 from dataclasses import dataclass, field
 from enum import Enum

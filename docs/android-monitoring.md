@@ -1,5 +1,7 @@
 # Android 监控专题
 
+**版本**: v1.0.1
+
 ## 概述
 
 Android 监控通过 ADB (Android Debug Bridge) 与设备通信，提供精确的性能数据采集能力。
@@ -17,13 +19,14 @@ Android 监控通过 ADB (Android Debug Bridge) 与设备通信，提供精确�
 
 ## 支持的指标
 
-| 指标 | 主要方法 | 降级方案 | 精度 |
-|-----|---------|---------|------|
-| CPU | /proc/stat + /proc/[pid]/stat | top -n 1 | 高 |
-| Memory | dumpsys meminfo | - | 高 |
-| FPS | gfxinfo | - | 高 |
-| Network | /proc/net/dev | - | 高 |
-| Battery | dumpsys battery | - | 高 |
+| 指标 | 主要方法 | 降级方案 | 精度 | 状态 |
+|-----|---------|---------|------|------|
+| CPU | /proc/stat + /proc/[pid]/stat | top -n 1 | 高 | ✅ 完整支持 |
+| Memory | dumpsys meminfo | - | 高 | ✅ 完整支持 |
+| FPS | gfxinfo | - | 高 | ✅ 完整支持 |
+| Network | /proc/net/dev | - | 高 | ✅ 完整支持 |
+| Battery | dumpsys battery | - | 高 | ✅ 完整支持 |
+| GPU | dumpsys gfxinfo | - | 中 | ⚠️ 需要 root 或特定设备支持 |
 
 ## 核心类
 

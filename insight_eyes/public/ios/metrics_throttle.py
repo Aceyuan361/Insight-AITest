@@ -8,10 +8,6 @@ iOS 性能指标频率控制层
 1. 异常数据过滤（只过滤明显非法值）
 2. 时间窗口累加（环形缓冲区）
 3. 按设定频率聚合数据
-
-Copyright (c) 2025 Aceyuan361
-GitHub: https://github.com/Aceyuan361/Insight-Eye
-License: MIT License
 """
 
 import math

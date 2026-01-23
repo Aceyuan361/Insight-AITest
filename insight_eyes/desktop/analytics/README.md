@@ -438,6 +438,12 @@ python -m insight_eyes.desktop.analytics.test_analytics
 
 ## 版本历史
 
+- v1.0.1 (2025-01-23)
+  - 添加 iOS 数据处理支持
+  - 实现 IOSSessionMonitor 和 IOSSerialCollector
+  - 添加 iOS 流式监听架构支持
+  - 扩展数据处理以支持 iOS 特定指标（能耗、私有内存等）
+
 - v1.0.0 (2025-01-13)
   - 初始版本
   - 实现基础指标处理

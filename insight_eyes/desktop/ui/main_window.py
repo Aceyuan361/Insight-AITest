@@ -930,13 +930,11 @@ class MainWindow(QMainWindow):
         """显示关于"""
         QMessageBox.about(
             self, "关于 Insight-Eye",
-            "<h2>Insight-Eye v1.0.0</h2>"
+            "<h2>Insight-Eye v1.0.1</h2>"
             "<p>移动设备性能监控工具</p>"
-            "<p>支持 Android 平台</p>"
+            "<p>支持平台: Android、iOS</p>"
             "<hr>"
-            "<p>Copyright (c) 2025 Aceyuan361</p>"
-            "<p>GitHub: https://github.com/Aceyuan361/Insight-Eye</p>"
-            "<p>License: MIT License</p>"
+            "<p>版权所有 (c) 2025</p>"
         )
 
     # ==================== 监控控制 ====================

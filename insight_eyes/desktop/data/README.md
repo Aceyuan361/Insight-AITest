@@ -326,9 +326,16 @@ CREATE TABLE performance_metrics (
     battery_level REAL,               -- 电池电量(%)
     battery_temp REAL,                -- 电池温度(°C)
     device_temp REAL,                 -- 设备温度(°C)
-    network_type TEXT                 -- 网络类型
+    network_type TEXT,                -- 网络类型
+    -- iOS 特定指标
+    energy REAL                       -- 能耗数据（iOS专用）
 );
 ```
+
+**iOS 特定字段说明：**
+- `energy REAL` - 能耗数据，仅 iOS 设备提供，通过 sysmon 流式监听获取
+- `cpu_app REAL` - 在 iOS 上表示应用 CPU 使用率，通过 sysmon 流式监听获取
+- `memory_app_private REAL` - 在 iOS 上表示应用私有内存（Private Memory），通过 sysmon 流式监听获取
 
 ### alerts - 告警表
 

@@ -179,30 +179,59 @@ start "" "Insight-Eye.exe"
 
 2. 系统要求:
    - Windows 10/11 64位
-   - 已安装 ADB (Android Debug Bridge)
    - 屏幕分辨率建议 1280x720 或更高
 
-3. ADB 安装:
-   如果未安装 ADB，请运行 installer 目录中的 install_adb.bat
-   或手动下载: https://developer.android.com/studio/releases/platform-tools
+3. 设备支持:
+   [Android 设备]
+   - 需要安装 ADB (Android Debug Bridge)
+   - 如未安装 ADB，请运行 installer 目录中的 install_adb.bat
+   - 或手动下载: https://developer.android.com/studio/releases/platform-tools
+
+   [iOS 设备]
+   - 需要安装 pymobiledevice3 库
+   - 需要信任电脑并启用开发者模式
+   - 支持系统: iOS 16.3.1 及以上版本
 
 4. 首次使用:
+   [Android]
    - 连接 Android 设备到电脑
    - 启用 USB 调试模式
    - 允许 USB 调试
    - 在应用中点击 "刷新设备" 按钮
 
-5. 数据目录:
+   [iOS]
+   - 连接 iOS 设备到电脑
+   - 在设备上信任此电脑
+   - 启用开发者模式（iOS 16+）
+   - 在应用中点击 "刷新设备" 按钮
+
+5. 监控能力:
+   [Android 平台]
+   - CPU 使用率、内存使用、FPS 帧率
+   - 网络流量（应用级）、GPU 能耗
+   - 电池状态、温度监控
+
+   [iOS 平台]
+   - CPU 使用率、内存使用、FPS（系统刷新率参考）
+   - 网络流量（系统级）、电池状态
+   - 注意：iOS GPU 监控受系统限制暂不支持
+
+6. 数据目录:
    - data/: 存储数据库文件
    - logs/: 存储日志文件
 
-6. 常见问题:
+7. 常见问题:
+   [Android]
    - 如果无法识别设备，请检查 ADB 是否正确安装
    - 在命令行运行 `adb devices` 确认设备连接
    - 确保 USB 数据线支持数据传输（非仅充电线）
 
-版本: 1.0.0
-项目地址: https://github.com/Aceyuan361/Insight-Eye
+   [iOS]
+   - 确保已安装 pymobiledevice3: pip install pymobiledevice3
+   - 首次连接需要在设备上信任电脑
+   - iOS 16+ 需要在设置中启用开发者模式
+
+版本: 1.0.1
 """)
 
     log(f"便携版包创建完成: {portable_dir}")
@@ -229,8 +258,10 @@ def create_installer_script():
 setlocal enabledelayedexpansion
 
 echo ========================================
-echo   Insight-Eye 安装程序
+echo   Insight-Eye 安装程序 v1.0.1
 echo ========================================
+echo.
+echo 支持平台: Android、iOS
 echo.
 
 set "INSTALL_DIR=%USERPROFILE%\\Insight-Eye"
@@ -362,18 +393,20 @@ def build_installer():
     create_installer_script()
 
     log("=" * 60)
-    log("构建完成！")
+    log("Insight-Eye v1.0.1 构建完成！")
     log("=" * 60)
-    log(f"可执行文件: {DIST_DIR / 'Insight-Eye' / 'insight_eye.exe'}")
+    log(f"可执行文件: {DIST_DIR / 'Insight-Eye' / 'Insight-Eye.exe'}")
     log(f"便携版包: {DIST_DIR / 'Insight-Eye-Portable'}")
     log(f"安装程序: {DIST_DIR / 'installer'}")
+    log("=" * 60)
+    log("支持平台: Android、iOS")
     log("=" * 60)
 
 # ==================== 主程序 ====================
 if __name__ == "__main__":
     try:
         print("=" * 60)
-        print("Insight-Eye Windows 打包工具")
+        print("Insight-Eye v1.0.1 Windows 打包工具")
         print("=" * 60)
 
         # 检查 PyInstaller

@@ -29,7 +29,7 @@ reportlab>=4.0.0   # PDF导出
 py-ios-device>=0.7.0
 
 # pymobiledevice3 - iOS 设备通信和隧道（iOS 17-26）
-pymobiledevice3>=1.0.0
+pymobiledevice3>=7.0.0
 
 # tidevice - 已弃用，仅用于向后兼容
 # 将在 v3.0 版本完全移除

@@ -48,6 +48,39 @@ a = Analysis(
         'logzero',
         'logzero.handler',
 
+        # iOS 支持 (pymobiledevice3)
+        'pymobiledevice3',
+        'pymobiledevice3.lockdown',
+        'pymobiledevice3.services',
+        'pymobiledevice3.services.dvt',
+        'pymobiledevice3.services.dvt.dvt_secure_socket_proxy',
+        'pymobiledevice3.services.dvt.instruments',
+        'pymobiledevice3.services.dvt.instruments.sysmontap',
+        'pymobiledevice3.services.companion_sync',
+        'pymobiledevice3.services.pcapd',
+        'pymobiledevice3.cli',
+
+        # iOS 监控模块
+        'insight_eyes.public.ios',
+        'insight_eyes.public.ios.sysmon_service',
+        'insight_eyes.public.ios.ios_apm',
+        'insight_eyes.public.ios.cpu_collector',
+        'insight_eyes.public.ios.memory_collector',
+        'insight_eyes.public.ios.network_collector',
+        'insight_eyes.public.ios.battery_collector',
+        'insight_eyes.public.ios.energy_collector',
+        'insight_eyes.public.ios.sysmon_stream_service',
+        'insight_eyes.public.ios.metrics_throttle',
+        'insight_eyes.public.ios.exceptions',
+        'insight_eyes.public.ios.devdisk_helper',
+
+        # Android 监控模块
+        'insight_eyes.public.android',
+
+        # 设备适配器
+        'insight_eyes.desktop.core.ios_device_adapter',
+        'insight_eyes.desktop.core.android_device_adapter',
+
         # 其他依赖
         'numpy',
         'PIL',

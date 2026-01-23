@@ -237,6 +237,59 @@ for sid, data in comparison.items():
     print(f"  CPU: {stats['cpu_app']['avg']:.2f}%")
 ```
 
+### 场景 5: iOS 设备监控场景
+
+```python
+from insight_eyes.desktop.data.database import DatabaseManager
+from insight_eyes.desktop.data.repository import MetricsRepository
+
+db = DatabaseManager()
+metrics_repo = MetricsRepository(db)
+
+# 1. 注册 iOS 设备（首次使用）
+db.upsert_device(
+    'iphone-001',
+    'Test iPhone',
+    'ios',
+    'iPhone 14',
+    'iOS 17.0'
+)
+
+# 2. 创建 iOS 监控会话
+session_id = db.create_session(
+    'iphone-001',
+    'com.example.app',
+    sample_interval=1000,
+    tags={
+        'scenario': 'iOS 性能测试',
+        'monitoring_type': 'sysmon_stream',
+        'version': '1.0.0'
+    }
+)
+
+# 3. 保存 iOS 特定性能数据
+# 注意：iOS 数据通过 pymobiledevice3 的 sysmon 流式监听获取
+while monitoring:
+    metrics = collect_ios_performance_data()  # iOS 数据采集逻辑
+    db.save_metrics(session_id, {
+        'cpu_app': metrics.get('cpu_app'),           # iOS CPU 使用率
+        'memory_app_private': metrics.get('memory_app_private'),  # iOS 私有内存
+        'energy': metrics.get('energy'),             # iOS 能耗数据
+        'fps': metrics.get('fps'),                   # 帧率（如果有）
+    })
+
+# 4. 结束监控
+db.end_session(session_id)
+
+# 5. 分析 iOS 监控数据
+stats = metrics_repo.get_statistics(session_id)
+print(f"iOS 监控结果:")
+print(f"  平均 CPU: {stats['cpu_app']['avg']:.2f}%")
+print(f"  平均内存: {stats['memory_app_private']['avg']:.2f} MB")
+if 'energy' in stats:
+    print(f"  平均能耗: {stats['energy']['avg']:.2f}")
+```
+
 ## 数据库文件位置
 
 默认数据库文件存储在:

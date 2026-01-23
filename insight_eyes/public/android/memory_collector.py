@@ -6,12 +6,6 @@ Android 内存采集器
 改进：
 - 集成设备配置系统（DeviceProfile）
 - 根据设备配置选择内存单位（MB/KB）
-
-Copyright (c) 2025 Aceyuan361
-GitHub: https://github.com/Aceyuan361/Insight-Eye
-License: MIT License
-
-Author: Aceyuan361
 """
 import re
 from typing import Optional, Dict

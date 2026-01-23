@@ -145,8 +145,7 @@
 
 ## 技术支持
 
-- **项目地址**: https://github.com/Aceyuan361/Insight-Eye
-- **问题反馈**: 请在 GitHub 提交 Issue
+如有问题请联系技术支持。
 
 ## 更新日志
 

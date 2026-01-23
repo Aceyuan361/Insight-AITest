@@ -2,12 +2,6 @@
 """
 配置管理器
 负责应用程序配置的加载、保存和管理
-
-Copyright (c) 2025 Aceyuan361
-GitHub: https://github.com/Aceyuan361/Insight-Eye
-License: MIT License
-
-Author: Aceyuan361
 """
 
 import json

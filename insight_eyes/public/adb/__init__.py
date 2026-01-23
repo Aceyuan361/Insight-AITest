@@ -2,12 +2,6 @@
 """
 ADB 工具模块
 提供 Android Debug Bridge (ADB) 命令的封装
-
-Copyright (c) 2025 Aceyuan361
-GitHub: https://github.com/Aceyuan361/Insight-Eye
-License: MIT License
-
-Author: Aceyuan361
 """
 import os
 import platform
