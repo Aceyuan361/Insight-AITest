@@ -4,6 +4,10 @@ iOS Sysmon 服务（使用 pymobiledevice3 Python API）
 
 直接使用 pymobiledevice3 的 DVT 协议，而不是通过 CLI 调用。
 这样可以建立持久连接，大幅提升性能。
+
+Copyright (c) 2025 Aceyuan361
+GitHub: https://github.com/Aceyuan361/Insight-Eye
+License: MIT License
 """
 
 import threading
@@ -249,10 +253,10 @@ class SysmonService:
             comm = process.get('comm', '')
             name = process.get('name', '')
 
-            # 使用应用名进行匹配
-            if (app_name in exec_name or
-                app_name in comm or
-                app_name in name):
+            # 使用应用名进行匹配（大小写不敏感）
+            if (app_name.lower() in exec_name.lower() or
+                app_name.lower() in comm.lower() or
+                app_name.lower() in name.lower()):
 
                 logger.info(f"✓ 找到进程!")
                 logger.info(f"  PID: {process.get('pid')}")

@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QGroupBox, QComboBox, QSpinBox, QDoubleSpinBox,
     QCheckBox, QPushButton, QListWidget, QListWidgetItem,
-    QScrollArea, QFrame, QFormLayout, QLineEdit, QGridLayout
+    QScrollArea, QFrame, QFormLayout, QLineEdit, QGridLayout, QMessageBox
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QDateTime, QTimer, QSignalBlocker
 from PyQt6.QtGui import QColor
@@ -781,8 +781,6 @@ class ConfigPanel(QWidget):
         """
         try:
             from logzero import logger
-            from PyQt6.QtCore import QSignalBlocker
-            from PyQt6.QtWidgets import QMessageBox
             import traceback
             import sys
 

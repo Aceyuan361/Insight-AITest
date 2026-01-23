@@ -318,6 +318,7 @@ class MetricsCollectionWorker(QObject):
         memory_data = apm.collectMemory() or {}
         fps_data = apm.collectFps() or {}
         network_data = apm.collectFlow() or {}
+        logger.debug(f"[iOS 数据采集] network_data = {network_data}")
         battery_data = apm.collectBattery() or {}
 
         # 转换为与 Android 兼容的格式（用于数据库存储）
@@ -349,6 +350,7 @@ class MetricsCollectionWorker(QObject):
             'collection_success': True
         }
 
+        logger.debug(f"[iOS 数据采集] raw_metrics['network'] = {raw_metrics['network']}")
         return raw_metrics
 
 
@@ -906,20 +908,26 @@ class MainWindow(QMainWindow):
         """显示帮助"""
         QMessageBox.information(
             self, "使用说明",
-            "Insight-Eye 移动设备性能监控工具 v1.0.1\n\n"
-            "【支持平台】\n"
-            "  • Android (无需 ROOT)\n"
-            "  • iOS (无需越狱)\n\n"
-            "【使用步骤】\n"
-            "  1. 通过 USB 连接 Android 或 iOS 设备\n"
-            "  2. iOS 设备需先信任电脑并开启开发者模式\n"
-            "  3. 在左侧选择要监控的应用\n"
-            "  4. 点击\"开始\"或按 F5 开始监控\n"
-            "  5. 查看实时性能数据和趋势图\n"
-            "  6. 使用快捷键快速操作\n\n"
-            "【监控指标】\n"
-            "  Android: CPU、内存、FPS、网络、GPU、电池\n"
-            "  iOS: CPU、内存、FPS、网络、电池、能耗"
+            "<h2>Insight-Eye 移动设备性能监控工具</h2>"
+            "<h3>快速开始</h3>"
+            "<ol>"
+            "<li>连接 Android 或 iOS 设备</li>"
+            "<li>在左侧选择要监控的应用</li>"
+            "<li>点击\"开始\"或按 <b>F5</b> 开始监控</li>"
+            "<li>查看实时性能数据和趋势图</li>"
+            "</ol>"
+            "<h3>监控指标</h3>"
+            "<p><b>Android 平台</b>：CPU、内存、FPS、网络(上行/下行)、GPU、电池</p>"
+            "<p><b>iOS 平台</b>：CPU、内存、FPS、网络(系统级)、电池</p>"
+            "<p><i>注意：iOS GPU 监控受系统限制，暂不支持</i></p>"
+            "<h3>快捷键</h3>"
+            "<ul>"
+            "<li><b>F5</b> - 开始监控</li>"
+            "<li><b>Shift+F5</b> - 停止监控</li>"
+            "<li><b>Ctrl+M</b> - 标记场景</li>"
+            "<li><b>Ctrl+E</b> - 导出数据</li>"
+            "<li><b>F4</b> - 刷新设备列表</li>"
+            "</ul>"
         )
 
     def _show_shortcuts(self):
@@ -938,12 +946,17 @@ class MainWindow(QMainWindow):
         """显示关于"""
         QMessageBox.about(
             self, "关于 Insight-Eye",
-            "<h2>Insight-Eye v1.0.1</h2>"
-            "<p>移动设备性能监控工具</p>"
-            "<p>支持平台: Android、iOS</p>"
+            "<h2>Insight-Eye v1.0.0</h2>"
+            "<p><b>移动设备性能监控工具</b></p>"
+            "<p>支持平台：Android、iOS</p>"
+            "<h3>监控能力</h3>"
+            "<p><b>Android</b>：CPU、内存、FPS、网络(上行/下行)、GPU、电池</p>"
+            "<p><b>iOS</b>：CPU、内存、FPS、网络(系统级流量)、电池</p>"
+            "<p><i>注：iOS GPU 受系统 DVT 限制，网络为系统级流量</i></p>"
             "<hr>"
-            "<p>作者: Aceyuan361</p>"
-            "<p>版权所有 (c) 2025</p>"
+            "<p>Copyright (c) 2025 Aceyuan361</p>"
+            "<p>GitHub: <a href='https://github.com/Aceyuan361/Insight-Eye'>https://github.com/Aceyuan361/Insight-Eye</a></p>"
+            "<p>License: MIT License</p>"
         )
 
     # ==================== 监控控制 ====================
@@ -1176,13 +1189,17 @@ class MainWindow(QMainWindow):
             self.processing_dialog.finished.connect(self._on_processing_complete)
             self.processing_dialog.show()
 
+            # 保存适配器引用，传递给后台线程处理
+            cached_adapter = self._cached_adapter
+
             # 创建后台工作线程处理数据
             from insight_eyes.desktop.ui.widgets.processing_dialog import ProcessingWorker
             self.processing_worker = ProcessingWorker(
                 session_id,
                 self.database,
                 self.metrics_processor,
-                self
+                cached_adapter=cached_adapter,  # 传递适配器到后台线程
+                parent=self
             )
             self.processing_worker.progress_updated.connect(
                 lambda progress, status: self.processing_dialog.set_progress(progress)
@@ -1219,18 +1236,10 @@ class MainWindow(QMainWindow):
             self._collection_thread = None
             self._collection_worker = None
 
-            # 清理设备适配器缓存
-            if self._cached_adapter:
-                has_apm = hasattr(self._cached_adapter, '_apm') and self._cached_adapter._apm is not None
-                if has_apm:
-                    try:
-                        self._cached_adapter._apm.stop()
-                        self._cached_adapter.cleanup()
-                        logger.debug("设备适配器已清理")
-                    except Exception as e:
-                        logger.warning(f"清理设备适配器失败: {e}")
-                self._cached_adapter = None
-                self._cached_device_id = None
+            # 清理设备适配器缓存引用（实际清理由后台线程执行）
+            # 注意：不在这里执行 apm.stop() 和 cleanup()，避免阻塞主线程
+            self._cached_adapter = None
+            self._cached_device_id = None
 
             # 立即清除监控面板数据（不等待后台处理）
             self.monitor_panel.reset_monitoring()

@@ -12,6 +12,10 @@ py-ios-device 辅助类
 
 依赖：
 - pip install py-ios-device
+
+Copyright (c) 2025 Aceyuan361
+GitHub: https://github.com/Aceyuan361/Insight-Eye
+License: MIT License
 """
 
 import threading

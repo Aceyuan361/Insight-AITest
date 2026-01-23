@@ -2,6 +2,12 @@
 """
 iOS应用枚举器
 负责枚举 iOS 设备上安装的应用
+
+Copyright (c) 2025 Aceyuan361
+GitHub: https://github.com/Aceyuan361/Insight-Eye
+License: MIT License
+
+Author: Aceyuan361
 """
 
 from typing import List, Optional

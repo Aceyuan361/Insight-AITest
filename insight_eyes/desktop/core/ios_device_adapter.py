@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
 """
 iOS设备适配器
+
+Copyright (c) 2025 Aceyuan361
+GitHub: https://github.com/Aceyuan361/Insight-Eye
+License: MIT License
+
+Author: Aceyuan361
 """
 
 import threading
@@ -253,6 +259,16 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
             error = DeviceNotFoundError(self.device_id)
             logger.error(str(error))
             raise error
+
+        # 确保 DeveloperDiskImage 已挂载（iOS 17+ 兼容）
+        try:
+            from insight_eyes.public.ios.devdisk_helper import DevDiskHelper
+
+            if not DevDiskHelper.ensure_developer_disk_mounted(self.device_id):
+                logger.warning("DeveloperDiskImage 挂载失败，部分功能可能不可用")
+                # 不阻塞连接，继续执行
+        except Exception as e:
+            logger.warning(f"DeveloperDiskImage 挂载检查失败: {e}，继续连接")
 
         # 临时方案：暂时不创建实际的 Lockdown 连接
         # TODO: 实现 pymobiledevice3 的正确连接方式

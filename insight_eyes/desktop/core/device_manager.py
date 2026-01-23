@@ -2,6 +2,12 @@
 """
 设备管理器
 负责设备检测、连接、App枚举、状态监控
+
+Copyright (c) 2025 Aceyuan361
+GitHub: https://github.com/Aceyuan361/Insight-Eye
+License: MIT License
+
+Author: Aceyuan361
 """
 
 import time

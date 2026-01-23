@@ -3,6 +3,10 @@
 iOS 电池状态采集器
 
 提供 iOS 设备的电池状态数据采集功能
+
+Copyright (c) 2025 Aceyuan361
+GitHub: https://github.com/Aceyuan361/Insight-Eye
+License: MIT License
 """
 
 from typing import Dict, Any

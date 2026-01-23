@@ -4,9 +4,17 @@ iOS CPU 使用率采集器
 
 提供 iOS 设备的 CPU 使用率数据采集功能
 
-数据采集优先级：
-1. pymobiledevice3 Python API - DVT 协议（首选，高性能）
-2. py-ios-device instruments（降级方案）
+数据采集方式：
+- pymobiledevice3 Python API - DVT 协议（流式监听）
+- pymobiledevice3 Python API - DVT 协议（按需采集）
+
+注意：
+- 需要 Developer Mode 已启用
+- 需要 DeveloperDiskImage 已挂载
+
+Copyright (c) 2025 Aceyuan361
+GitHub: https://github.com/Aceyuan361/Insight-Eye
+License: MIT License
 """
 
 from typing import Dict, Optional
@@ -33,7 +41,6 @@ class CPUCollector:
         self.bundle_id = bundle_id
         self._throttle = throttle  # 频率控制层
         self._sysmon_service = None
-        self._py_ios_device_helper = None
         self._last_cpu_data = None  # 上次成功采集的 CPU 数据（用于回退）
         self._last_valid_cpu: Optional[float] = None  # 上一个有效的 CPU 值
 
@@ -41,10 +48,9 @@ class CPUCollector:
         """
         采集 CPU 使用率
 
-        数据采集优先级：
+        数据采集方式：
         1. MetricsThrottle（流式监听，如果可用）- 首选
-        2. pymobiledevice3 Python API - DVT 协议（降级方案）
-        3. 估算值（最终降级）
+        2. pymobiledevice3 Python API - DVT 协议（按需采集）
 
         Returns:
             {'cpu_app': float, 'cpu_system': float}
@@ -68,9 +74,9 @@ class CPUCollector:
                 return cpu_data
 
             except Exception as e:
-                logger.debug(f"流式监听采集失败: {e}，尝试降级方案")
+                logger.debug(f"流式监听采集失败: {e}，尝试按需采集")
 
-        # 方案 2: 尝试 pymobiledevice3 Python API（降级方案）
+        # 方案 2: 尝试 pymobiledevice3 Python API（按需采集）
         try:
             from .sysmon_service import SysmonService
 
@@ -153,7 +159,7 @@ class CPUCollector:
             "状态: 所有真实数据源均不可用\n"
             "说明:\n"
             "  - pymobiledevice3 Python API: DVT 协议连接失败\n"
-            "  - py-ios-device: 请运行 pip install py-ios-device\n"
+            "  - 建议：检查设备连接、Developer Mode 状态\n"
             f"返回数据: cpu_app=0.0 (无法获取), cpu_system={self.ESTIMATED_IDLE_CPU}% (估算值)"
         )
 
