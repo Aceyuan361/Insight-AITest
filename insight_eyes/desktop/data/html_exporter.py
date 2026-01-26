@@ -43,7 +43,7 @@ class HtmlExporter:
 
             device = self.database.get_device(session['device_id'])
             statistics = self.repository.get_statistics(session_id)
-            alerts = self.repository.get_alerts(session_id)
+            alerts = self.database.get_alerts(session_id)  # 修复：使用 database 而不是 repository
 
             # 构建图表配置
             charts = self._build_charts(session_id)

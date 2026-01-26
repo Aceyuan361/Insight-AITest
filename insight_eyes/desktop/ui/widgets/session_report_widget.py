@@ -252,7 +252,7 @@ class SessionReportWidget(QWidget):
             QMessageBox.critical(self, "错误", f"加载会话数据失败: {e}")
 
     def _calculate_duration(self, start_time, end_time):
-        """计算持续时间（修复时区问题）"""
+        """计算持续时间（精确到秒）"""
         from datetime import timezone
 
         if not end_time:
@@ -266,12 +266,22 @@ class SessionReportWidget(QWidget):
             end_time = end_time.replace(tzinfo=timezone.utc)
 
         delta = end_time - start_time
-        minutes = int(delta.total_seconds() / 60)
+        total_seconds = int(delta.total_seconds())
+
+        # 小于60秒显示秒
+        if total_seconds < 60:
+            return f"{total_seconds}秒"
+
+        # 小于60分钟显示分钟和秒
+        minutes = total_seconds // 60
+        seconds = total_seconds % 60
         if minutes < 60:
-            return f"{minutes}分钟"
+            return f"{minutes}分{seconds}秒"
+
+        # 大于60分钟显示小时、分钟和秒
         hours = minutes // 60
         mins = minutes % 60
-        return f"{hours}小时{mins}分钟"
+        return f"{hours}小时{mins}分{seconds}秒"
 
     def _load_charts(self):
         """加载图表"""

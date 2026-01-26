@@ -11,10 +11,10 @@ from logzero import logger
 class StatsPanelWidget(QFrame):
     """右侧统计面板 - 显示性能统计数据和告警"""
 
-    # 布局常量
-    _MARGIN = 16
-    _SPACING = 16
-    _CARD_SPACING = 12
+    # 布局常量（优化紧凑布局）
+    _MARGIN = 12
+    _SPACING = 12
+    _CARD_SPACING = 8
     _MAX_ALERTS = 20
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
@@ -93,59 +93,61 @@ class StatsPanelWidget(QFrame):
         logger.info(f"[StatsPanelWidget] _add_stat_cards 完成，count = {self.content_layout.count()}")
 
     def _create_card_frame(self) -> QFrame:
-        """创建统一样式的卡片框架"""
+        """创建统一样式的卡片框架（紧凑版）"""
         card = QFrame()
         card.setStyleSheet("""
             QFrame {
                 background-color: #121824;
-                border-radius: 8px;
-                padding: 12px;
+                border-radius: 6px;
+                padding: 8px;
             }
         """)
         return card
 
     def _add_stat_card(self, title: str, stats: dict, unit: str) -> None:
-        """添加统计卡片"""
+        """添加统计卡片（紧凑版）"""
         card = self._create_card_frame()
         layout = QVBoxLayout(card)
-        layout.setSpacing(4)
+        layout.setSpacing(2)
+        layout.setContentsMargins(0, 0, 0, 0)
 
         title_label = QLabel(title)
-        title_label.setStyleSheet("color: #94a3b8; font-size: 10pt;")
+        title_label.setStyleSheet("color: #94a3b8; font-size: 9pt;")
         layout.addWidget(title_label)
 
         avg = stats.get('avg', 0)
         avg_label = QLabel(f"avg: {avg}{unit}")
-        avg_label.setStyleSheet(f"color: #e0e6ed; font-size: 16pt; font-weight: bold;")
+        avg_label.setStyleSheet(f"color: #e0e6ed; font-size: 13pt; font-weight: bold;")
         layout.addWidget(avg_label)
 
         range_label = f"max: {stats.get('max', 0)}{unit}  min: {stats.get('min', 0)}{unit}"
         range_text = QLabel(range_label)
-        range_text.setStyleSheet("color: #64748b; font-size: 9pt;")
+        range_text.setStyleSheet("color: #64748b; font-size: 8pt;")
         layout.addWidget(range_text)
 
         self.content_layout.insertWidget(self.content_layout.count() - 1, card)
 
     def _add_network_card(self, stats: dict) -> None:
-        """添加网络统计卡片"""
+        """添加网络统计卡片（紧凑版）"""
         card = self._create_card_frame()
         layout = QVBoxLayout(card)
-        layout.setSpacing(4)
+        layout.setSpacing(2)
+        layout.setContentsMargins(0, 0, 0, 0)
 
         title_label = QLabel("网络")
-        title_label.setStyleSheet("color: #94a3b8; font-size: 10pt;")
+        title_label.setStyleSheet("color: #94a3b8; font-size: 9pt;")
         layout.addWidget(title_label)
 
         up_stats = stats.get('up', {})
         up_label = f"  avg: {up_stats.get('avg', 0)}KB/s  max: {up_stats.get('max', 0)}KB/s"
         up_text = QLabel(up_label)
-        up_text.setStyleSheet("color: #00ff87; font-size: 11pt;")
+        up_text.setStyleSheet("color: #00ff87; font-size: 9pt;")
         layout.addWidget(up_text)
 
         down_stats = stats.get('down', {})
         down_label = f"  avg: {down_stats.get('avg', 0)}KB/s  max: {down_stats.get('max', 0)}KB/s"
         down_text = QLabel(down_label)
-        down_text.setStyleSheet("color: #0062ff; font-size: 11pt;")
+        down_text.setStyleSheet("color: #0062ff; font-size: 9pt;")
         layout.addWidget(down_text)
 
         self.content_layout.insertWidget(self.content_layout.count() - 1, card)
