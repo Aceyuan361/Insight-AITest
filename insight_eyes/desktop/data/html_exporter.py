@@ -56,16 +56,33 @@ class HtmlExporter:
                 try:
                     start_dt = datetime.fromisoformat(formatted_session['start_time'])
                     formatted_session['start_time'] = start_dt.strftime('%Y-%m-%d %H:%M:%S')
+                    formatted_session['start_time_obj'] = start_dt  # 保留对象供模板使用
                 except:
                     pass
             if formatted_session.get('end_time'):
                 try:
                     end_dt = datetime.fromisoformat(formatted_session['end_time'])
                     formatted_session['end_time'] = end_dt.strftime('%H:%M:%S')
+                    formatted_session['end_time_obj'] = end_dt  # 保留对象供模板使用
                 except:
                     pass
             else:
                 formatted_session['end_time'] = '进行中'
+
+            # 格式化告警时间
+            formatted_alerts = []
+            for alert in alerts:
+                formatted_alert = alert.copy()
+                if 'timestamp' in alert:
+                    try:
+                        if isinstance(alert['timestamp'], str):
+                            ts = datetime.fromisoformat(alert['timestamp'])
+                        else:
+                            ts = alert['timestamp']
+                        formatted_alert['timestamp'] = ts.strftime('%H:%M:%S')
+                    except:
+                        pass
+                formatted_alerts.append(formatted_alert)
 
             # 准备模板上下文
             context = {
@@ -73,7 +90,7 @@ class HtmlExporter:
                 'session': formatted_session,
                 'device': device,
                 'statistics': statistics,
-                'alerts': alerts,
+                'alerts': formatted_alerts,
                 'charts': charts,
                 'export_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             }
