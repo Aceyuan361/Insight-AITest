@@ -5,7 +5,7 @@ HTML 报告导出器
 """
 import os
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Any, Optional
 from jinja2 import Template
 from logzero import logger
@@ -13,6 +13,14 @@ from logzero import logger
 from ..ui.charts.chart_data_builder import ChartDataBuilder
 from .database import DatabaseManager
 from .repository import MetricsRepository
+
+
+def utc_to_local(utc_dt: datetime) -> datetime:
+    """将UTC时间转换为本地时间"""
+    if utc_dt.tzinfo is None:
+        # 假设是UTC时间
+        utc_dt = utc_dt.replace(tzinfo=timezone.utc)
+    return utc_dt.astimezone(tz=None).replace(tzinfo=None)
 
 
 class HtmlExporter:
@@ -50,26 +58,27 @@ class HtmlExporter:
             # 构建图表配置
             charts = self._build_charts(session_id)
 
-            # 格式化 session 中的时间（数据库返回ISO字符串）
+            # 格式化 session 中的时间（数据库返回ISO字符串，需要转换为本地时间）
             formatted_session = session.copy()
             if formatted_session.get('start_time'):
                 try:
                     start_dt = datetime.fromisoformat(formatted_session['start_time'])
-                    formatted_session['start_time'] = start_dt.strftime('%Y-%m-%d %H:%M:%S')
-                    formatted_session['start_time_obj'] = start_dt  # 保留对象供模板使用
+                    # 转换为本地时间
+                    start_local = utc_to_local(start_dt)
+                    formatted_session['start_time'] = start_local.strftime('%Y-%m-%d %H:%M:%S')
                 except:
                     pass
             if formatted_session.get('end_time'):
                 try:
                     end_dt = datetime.fromisoformat(formatted_session['end_time'])
-                    formatted_session['end_time'] = end_dt.strftime('%H:%M:%S')
-                    formatted_session['end_time_obj'] = end_dt  # 保留对象供模板使用
+                    # 转换为本地时间
+                    end_local = utc_to_local(end_dt)
+                    formatted_session['end_time'] = end_local.strftime('%H:%M:%S')
                 except:
                     pass
-            else:
-                formatted_session['end_time'] = '进行中'
+            # 不显示"进行中"状态，如果会话未结束则只显示开始时间
 
-            # 格式化告警时间
+            # 格式化告警时间（转换为本地时间）
             formatted_alerts = []
             for alert in alerts:
                 formatted_alert = alert.copy()
@@ -79,7 +88,9 @@ class HtmlExporter:
                             ts = datetime.fromisoformat(alert['timestamp'])
                         else:
                             ts = alert['timestamp']
-                        formatted_alert['timestamp'] = ts.strftime('%H:%M:%S')
+                        # 转换为本地时间
+                        ts_local = utc_to_local(ts)
+                        formatted_alert['timestamp'] = ts_local.strftime('%H:%M:%S')
                     except:
                         pass
                 formatted_alerts.append(formatted_alert)
@@ -111,26 +122,43 @@ class HtmlExporter:
             return False
 
     def _build_charts(self, session_id: int) -> Dict[str, Dict]:
-        """构建所有图表配置"""
+        """构建所有图表配置（时间戳转换为本地时间）"""
         charts = {}
 
         try:
             # 获取趋势数据
             fps_data = self.repository.get_fps_trend(session_id)
             if fps_data:
-                timestamps = [t.strftime('%H:%M') for t, _ in fps_data]
+                # 转换为本地时间
+                timestamps = [utc_to_local(t).strftime('%H:%M') for t, _ in fps_data]
                 values = [v for _, v in fps_data]
                 charts['fps'] = ChartDataBuilder.build_chart_config('fps', timestamps, values)
 
             cpu_data = self.repository.get_cpu_trend(session_id)
             if cpu_data:
-                timestamps = [t.strftime('%H:%M') for t, _, _ in cpu_data]
+                # 转换为本地时间
+                timestamps = [utc_to_local(t).strftime('%H:%M') for t, _, _ in cpu_data]
                 app_values = [a for _, a, _ in cpu_data]
                 sys_values = [s for _, _, s in cpu_data]
                 charts['cpu'] = ChartDataBuilder.build_chart_config('cpu', timestamps, app_values, sys_values)
 
-            # 其他图表（内存、网络）
-            # TODO: 在下一阶段添加
+            # 内存图表
+            memory_data = self.repository.get_memory_trend(session_id)
+            if memory_data:
+                # 转换为本地时间
+                timestamps = [utc_to_local(t).strftime('%H:%M') for t, _ in memory_data]
+                values = [v for _, v in memory_data]
+                charts['memory'] = ChartDataBuilder.build_chart_config('memory', timestamps, values)
+
+            # 网络图表
+            network_data = self.repository.get_network_trend(session_id)
+            if network_data:
+                # 转换为本地时间
+                timestamps = [utc_to_local(t).strftime('%H:%M') for t, _, _ in network_data]
+                up_values = [u for _, u, _ in network_data]
+                down_values = [d for _, _, d in network_data]
+                charts['network_up'] = ChartDataBuilder.build_chart_config('network_up', timestamps, up_values)
+                charts['network_down'] = ChartDataBuilder.build_chart_config('network_down', timestamps, down_values)
 
         except Exception as e:
             logger.error(f"构建图表配置失败: {e}")
@@ -146,7 +174,7 @@ class HtmlExporter:
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title }}</title>
-    <script src="insight_eyes/desktop/resources/export/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -191,6 +219,43 @@ class HtmlExporter:
             border-radius: 6px;
             border-left: 3px solid #ef4444;
         }
+        .stats-section {
+            background-color: #121824;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #1a1f2e;
+        }
+        .stats-section h2 {
+            color: #00d4ff;
+            margin-bottom: 16px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        .stat-card {
+            background-color: #0a0e17;
+            border-radius: 8px;
+            padding: 16px;
+            border: 1px solid #1a1f2e;
+        }
+        .stat-card .title {
+            color: #94a3b8;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+        .stat-card .value {
+            color: #e0e6ed;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .stat-card .detail {
+            color: #64748b;
+            font-size: 11px;
+            margin-top: 4px;
+        }
         .footer {
             text-align: center;
             color: #64748b;
@@ -208,11 +273,54 @@ class HtmlExporter:
                 📱 设备: {{ device.name }}<br>
                 {% endif %}
                 📱 应用: {{ session.package_name }}<br>
-                ⏰ 时间: {{ session.start_time.strftime("%Y-%m-%d %H:%M") }}
-                - {{ session.end_time.strftime("%H:%M") if session.end_time else "进行中" }}<br>
+                ⏰ 时间: {{ session.start_time }}
+                {% if session.end_time %}- {{ session.end_time }}{% endif %}<br>
                 📊 采样间隔: {{ session.sample_interval }}ms
             </div>
         </div>
+
+        {% if statistics %}
+        <div class="stats-section">
+            <h2>📊 性能统计</h2>
+            <div class="stats-grid">
+                {% if statistics.fps %}
+                <div class="stat-card">
+                    <div class="title">FPS</div>
+                    <div class="value">{{ statistics.fps.avg|round(1) }}</div>
+                    <div class="detail">max: {{ statistics.fps.max }} min: {{ statistics.fps.min }}</div>
+                </div>
+                {% endif %}
+                {% if statistics.cpu_app %}
+                <div class="stat-card">
+                    <div class="title">CPU (应用)</div>
+                    <div class="value">{{ statistics.cpu_app.avg|round(2) }}%</div>
+                    <div class="detail">max: {{ statistics.cpu_app.max }}% min: {{ statistics.cpu_app.min }}%</div>
+                </div>
+                {% endif %}
+                {% if statistics.memory_pss %}
+                <div class="stat-card">
+                    <div class="title">内存</div>
+                    <div class="value">{{ statistics.memory_pss.avg|round(1) }} MB</div>
+                    <div class="detail">max: {{ statistics.memory_pss.max }} MB min: {{ statistics.memory_pss.min }} MB</div>
+                </div>
+                {% endif %}
+                {% if statistics.network_up %}
+                <div class="stat-card">
+                    <div class="title">网络上行</div>
+                    <div class="value">{{ statistics.network_up.avg|round(2) }} KB/s</div>
+                    <div class="detail">max: {{ statistics.network_up.max }} KB/s</div>
+                </div>
+                {% endif %}
+                {% if statistics.network_down %}
+                <div class="stat-card">
+                    <div class="title">网络下行</div>
+                    <div class="value">{{ statistics.network_down.avg|round(2) }} KB/s</div>
+                    <div class="detail">max: {{ statistics.network_down.max }} KB/s</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
 
         <div class="chart-grid">
             {% for chart_id, chart_config in charts.items() %}
@@ -227,8 +335,8 @@ class HtmlExporter:
             <h2>⚠️ 告警记录 ({{ alerts|length }})</h2>
             {% for alert in alerts %}
             <div class="alert-item">
-                <strong>{{ alert.timestamp.strftime("%H:%M:%S") }}</strong>
-                {{ alert.message }}
+                <strong>{{ alert.timestamp }}</strong>
+                {{ alert.description }}
             </div>
             {% endfor %}
         </div>
