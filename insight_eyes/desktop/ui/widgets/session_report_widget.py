@@ -64,25 +64,17 @@ class SessionReportWidget(QWidget):
         from PyQt6.QtWidgets import QSplitter
         self.splitter = QSplitter(Qt.Orientation.Horizontal)
         self.splitter.setChildrenCollapsible(False)
-        self.splitter.setMinimumSize(800, 400)  # 设置最小尺寸
         layout.addWidget(self.splitter)
 
-        # 左侧：图表区域
-        from PyQt6.QtWidgets import QScrollArea
-        self.charts_scroll = QScrollArea()
-        self.charts_scroll.setWidgetResizable(True)
-        self.charts_scroll.setFrameShape(QFrame.Shape.NoFrame)
-        self.charts_scroll.setMinimumSize(400, 300)  # 设置最小尺寸
-
+        # 左侧：图表区域（不使用滚动组件）
         self.charts_container = QWidget()
         self.charts_layout = QGridLayout(self.charts_container)
         self.charts_layout.setSpacing(16)
-        self.charts_scroll.setWidget(self.charts_container)
-        self.splitter.addWidget(self.charts_scroll)
+        self.charts_layout.setContentsMargins(16, 16, 16, 16)
+        self.splitter.addWidget(self.charts_container)
 
         # 右侧：统计面板
         self.stats_panel = StatsPanelWidget()
-        self.stats_panel.setMinimumWidth(280)  # 设置最小宽度
         self.splitter.addWidget(self.stats_panel)
 
         # 设置初始比例 (70:30)
@@ -212,17 +204,64 @@ class SessionReportWidget(QWidget):
 
             # 更新会话信息栏（紧凑格式）
             device = self.database.get_device(session['device_id'])
-            device_name = device['name'] if device else '未知设备'
+            device_name = device['name'] if device else f"设备({session['device_id'][:8]})"  # 显示设备ID前8位
 
-            # 解析时间字符串（数据库返回 ISO 格式字符串）
+            # 解析时间字符串（数据库返回 ISO 格式字符串，需要转换为本地时间）
+            from datetime import timezone
+
             start_dt = datetime.fromisoformat(session['start_time'])
             end_dt = datetime.fromisoformat(session['end_time']) if session['end_time'] else None
 
-            start_time = start_dt.strftime('%Y-%m-%d %H:%M')
-            end_time = end_dt.strftime('%H:%M') if end_dt else '进行中'
-            duration = self._calculate_duration(start_dt, end_dt)
+            # 转换为本地时间用于显示
+            def to_local(dt):
+                if dt is None:
+                    return None
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+                return dt.astimezone(tz=None).replace(tzinfo=None)
 
-            info_text = f"设备: {device_name} | 应用: {session['package_name']} | 时间: {start_time}-{end_time} | 时长: {duration}"
+            start_local = to_local(start_dt)
+            end_local = to_local(end_dt) if end_dt else None
+
+            start_time = start_local.strftime('%Y-%m-%d %H:%M')
+            end_time = end_local.strftime('%H:%M') if end_local else None
+
+            # 计算监控时长（基于实际指标数据的时间范围）
+            metrics = self.database.get_metrics(self.session_id)
+            if metrics and len(metrics) >= 2:
+                first_ts = metrics[0].get('timestamp')
+                last_ts = metrics[-1].get('timestamp')
+
+                if first_ts and last_ts:
+                    if isinstance(first_ts, str):
+                        first_dt = datetime.fromisoformat(first_ts)
+                    else:
+                        first_dt = first_ts
+
+                    if isinstance(last_ts, str):
+                        last_dt = datetime.fromisoformat(last_ts)
+                    else:
+                        last_dt = last_ts
+
+                    # 确保有时区信息
+                    if first_dt.tzinfo is None:
+                        first_dt = first_dt.replace(tzinfo=timezone.utc)
+                    if last_dt.tzinfo is None:
+                        last_dt = last_dt.replace(tzinfo=timezone.utc)
+
+                    duration_seconds = (last_dt - first_dt).total_seconds()
+                    duration = self._format_duration_from_seconds(int(duration_seconds))
+                else:
+                    duration = self._calculate_duration(start_dt, end_dt)
+            else:
+                duration = self._calculate_duration(start_dt, end_dt)
+
+            # 构建显示文本，如果未结束则不显示结束时间
+            if end_time:
+                info_text = f"设备: {device_name} | 应用: {session['package_name']} | 时间: {start_time}-{end_time} | 时长: {duration}"
+            else:
+                info_text = f"设备: {device_name} | 应用: {session['package_name']} | 时间: {start_time} | 时长: {duration}"
+
             self.session_info_label.setText(info_text)
 
             # 获取统计数据
@@ -259,17 +298,52 @@ class SessionReportWidget(QWidget):
             logger.error(f"加载会话数据失败: {e}", exc_info=True)
             QMessageBox.critical(self, "错误", f"加载会话数据失败: {e}")
 
-    def _calculate_duration(self, start_time, end_time):
-        """计算持续时间"""
-        if not end_time:
-            end_time = datetime.now()
-        delta = end_time - start_time
-        minutes = int(delta.total_seconds() / 60)
+    def _format_duration_from_seconds(self, total_seconds: int) -> str:
+        """将秒数格式化为时长字符串"""
+        # 小于60秒显示秒
+        if total_seconds < 60:
+            return f"{total_seconds}秒"
+        # 小于60分钟显示分钟和秒
+        minutes = total_seconds // 60
+        seconds = total_seconds % 60
         if minutes < 60:
-            return f"{minutes}分钟"
+            return f"{minutes}分{seconds}秒"
+        # 大于60分钟显示小时、分钟和秒
         hours = minutes // 60
         mins = minutes % 60
-        return f"{hours}小时{mins}分钟"
+        return f"{hours}小时{mins}分{seconds}秒"
+
+    def _calculate_duration(self, start_time, end_time):
+        """计算持续时间（精确到秒）"""
+        from datetime import timezone
+
+        if not end_time:
+            # 使用 UTC 当前时间，而不是本地时间
+            end_time = datetime.now(timezone.utc)
+
+        # 确保两个时间都有时区信息
+        if start_time.tzinfo is None:
+            start_time = start_time.replace(tzinfo=timezone.utc)
+        if end_time.tzinfo is None:
+            end_time = end_time.replace(tzinfo=timezone.utc)
+
+        delta = end_time - start_time
+        total_seconds = int(delta.total_seconds())
+
+        # 小于60秒显示秒
+        if total_seconds < 60:
+            return f"{total_seconds}秒"
+
+        # 小于60分钟显示分钟和秒
+        minutes = total_seconds // 60
+        seconds = total_seconds % 60
+        if minutes < 60:
+            return f"{minutes}分{seconds}秒"
+
+        # 大于60分钟显示小时、分钟和秒
+        hours = minutes // 60
+        mins = minutes % 60
+        return f"{hours}小时{mins}分{seconds}秒"
 
     def _load_charts(self):
         """加载图表"""
@@ -414,7 +488,7 @@ class SessionReportWidget(QWidget):
         """导出 HTML 报告"""
         try:
             from PyQt6.QtWidgets import QFileDialog, QApplication
-            from ..data.html_exporter import HtmlExporter
+            from insight_eyes.desktop.data.html_exporter import HtmlExporter
             import webbrowser
             import os
 
