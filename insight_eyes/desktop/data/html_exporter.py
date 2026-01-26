@@ -50,10 +50,27 @@ class HtmlExporter:
             # 构建图表配置
             charts = self._build_charts(session_id)
 
+            # 格式化 session 中的时间（数据库返回ISO字符串）
+            formatted_session = session.copy()
+            if formatted_session.get('start_time'):
+                try:
+                    start_dt = datetime.fromisoformat(formatted_session['start_time'])
+                    formatted_session['start_time'] = start_dt.strftime('%Y-%m-%d %H:%M:%S')
+                except:
+                    pass
+            if formatted_session.get('end_time'):
+                try:
+                    end_dt = datetime.fromisoformat(formatted_session['end_time'])
+                    formatted_session['end_time'] = end_dt.strftime('%H:%M:%S')
+                except:
+                    pass
+            else:
+                formatted_session['end_time'] = '进行中'
+
             # 准备模板上下文
             context = {
                 'title': f'性能测试报告 - {session["package_name"]}',
-                'session': session,
+                'session': formatted_session,
                 'device': device,
                 'statistics': statistics,
                 'alerts': alerts,
