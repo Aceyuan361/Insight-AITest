@@ -21,7 +21,9 @@ class HtmlExporter:
     def __init__(self, database: DatabaseManager):
         self.database = database
         self.repository = MetricsRepository(database)
-        self._template = self._get_default_template()
+        # 将模板字符串转换为 Jinja2 Template 对象
+        template_str = self._get_default_template()
+        self._template = Template(template_str)
 
     def export(self, session_id: int, filepath: str) -> bool:
         """
