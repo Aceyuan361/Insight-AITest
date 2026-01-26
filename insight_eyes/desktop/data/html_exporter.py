@@ -130,14 +130,14 @@ class HtmlExporter:
             fps_data = self.repository.get_fps_trend(session_id)
             if fps_data:
                 # 转换为本地时间
-                timestamps = [utc_to_local(t).strftime('%H:%M') for t, _ in fps_data]
+                timestamps = [utc_to_local(t).strftime('%H:%M:%S') for t, _ in fps_data]
                 values = [v for _, v in fps_data]
                 charts['fps'] = ChartDataBuilder.build_chart_config('fps', timestamps, values)
 
             cpu_data = self.repository.get_cpu_trend(session_id)
             if cpu_data:
                 # 转换为本地时间
-                timestamps = [utc_to_local(t).strftime('%H:%M') for t, _, _ in cpu_data]
+                timestamps = [utc_to_local(t).strftime('%H:%M:%S') for t, _, _ in cpu_data]
                 app_values = [a for _, a, _ in cpu_data]
                 sys_values = [s for _, _, s in cpu_data]
                 charts['cpu'] = ChartDataBuilder.build_chart_config('cpu', timestamps, app_values, sys_values)
@@ -145,16 +145,16 @@ class HtmlExporter:
             # 内存图表
             memory_data = self.repository.get_memory_trend(session_id)
             if memory_data:
-                # 转换为本地时间
-                timestamps = [utc_to_local(t).strftime('%H:%M') for t, _ in memory_data]
+                # 转换为本地时间（精确到秒）
+                timestamps = [utc_to_local(t).strftime('%H:%M:%S') for t, _ in memory_data]
                 values = [v for _, v in memory_data]
                 charts['memory'] = ChartDataBuilder.build_chart_config('memory', timestamps, values)
 
             # 网络图表
             network_data = self.repository.get_network_trend(session_id)
             if network_data:
-                # 转换为本地时间
-                timestamps = [utc_to_local(t).strftime('%H:%M') for t, _, _ in network_data]
+                # 转换为本地时间（精确到秒）
+                timestamps = [utc_to_local(t).strftime('%H:%M:%S') for t, _, _ in network_data]
                 up_values = [u for _, u, _ in network_data]
                 down_values = [d for _, _, d in network_data]
                 charts['network_up'] = ChartDataBuilder.build_chart_config('network_up', timestamps, up_values)
