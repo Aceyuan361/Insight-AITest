@@ -174,5 +174,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='Insight-Eye',
+    name='Insight-Eye-1.0.2',
 )

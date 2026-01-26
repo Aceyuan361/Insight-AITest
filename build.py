@@ -16,6 +16,12 @@ import subprocess
 import shutil
 from pathlib import Path
 
+# 设置标准输出编码为 UTF-8
+if sys.platform == 'win32':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+
 # ==================== 配置 ====================
 PROJECT_DIR = Path(__file__).parent.absolute()
 BUILD_DIR = PROJECT_DIR / "build"
@@ -83,7 +89,7 @@ def log(message: str):
 def run_command(cmd: list, cwd=None):
     """运行命令"""
     log(f"执行: {' '.join(cmd)}")
-    result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
+    result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, encoding='utf-8', errors='ignore')
     if result.returncode != 0:
         log(f"错误: {result.stderr}")
         raise RuntimeError(f"命令执行失败: {' '.join(cmd)}")
@@ -157,7 +163,7 @@ def create_portable_package():
     portable_dir.mkdir()
 
     # 复制可执行文件（PyInstaller 生成的文件名是 Insight-Eye.exe）
-    exe_src = DIST_DIR / "Insight-Eye" / "Insight-Eye.exe"
+    exe_src = DIST_DIR / "Insight-Eye-1.0.2" / "Insight-Eye.exe"
     if exe_src.exists():
         shutil.copy2(exe_src, portable_dir / "Insight-Eye.exe")
         log(f"复制可执行文件到: {portable_dir}")
@@ -401,7 +407,7 @@ def build_installer():
     log("=" * 60)
     log("Insight-Eye v1.0.2 构建完成！")
     log("=" * 60)
-    log(f"可执行文件: {DIST_DIR / 'Insight-Eye' / 'Insight-Eye.exe'}")
+    log(f"可执行文件: {DIST_DIR / 'Insight-Eye-1.0.2' / 'Insight-Eye.exe'}")
     log(f"便携版包: {DIST_DIR / 'Insight-Eye-Portable'}")
     log(f"安装程序: {DIST_DIR / 'installer'}")
     log("=" * 60)
