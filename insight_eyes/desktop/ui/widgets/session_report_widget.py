@@ -17,14 +17,14 @@ from PyQt6.QtWidgets import (
     QPushButton, QMessageBox
 )
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QColor
 import pyqtgraph as pg
 from logzero import logger
 
 from insight_eyes.desktop.data.database import DatabaseManager
 from insight_eyes.desktop.data.repository import MetricsRepository
 from insight_eyes.desktop.ui.widgets.stats_panel_widget import StatsPanelWidget
-from insight_eyes.desktop.ui.charts.trend_chart import TrendChartWidget
+import os
+import json
 
 
 class SessionReportWidget(QWidget):
@@ -173,10 +173,10 @@ class SessionReportWidget(QWidget):
             settings = {
                 'splitter_sizes': self.splitter.sizes()
             }
-            import os
-            import json
-            config_path = 'config/report_layout.json'
-            os.makedirs(os.path.dirname(config_path), exist_ok=True)
+            # 使用用户配置目录
+            config_dir = os.path.join(os.path.expanduser('~'), '.config', 'insight_eye')
+            os.makedirs(config_dir, exist_ok=True)
+            config_path = os.path.join(config_dir, 'report_layout.json')
             with open(config_path, 'w') as f:
                 json.dump(settings, f)
         except Exception as e:
@@ -185,9 +185,9 @@ class SessionReportWidget(QWidget):
     def _restore_splitter_state(self):
         """恢复分隔线位置"""
         try:
-            import os
-            import json
-            config_path = 'config/report_layout.json'
+            # 使用用户配置目录
+            config_dir = os.path.join(os.path.expanduser('~'), '.config', 'insight_eye')
+            config_path = os.path.join(config_dir, 'report_layout.json')
             if os.path.exists(config_path):
                 with open(config_path, 'r') as f:
                     settings = json.load(f)
