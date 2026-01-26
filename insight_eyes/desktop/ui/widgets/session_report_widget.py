@@ -416,7 +416,7 @@ class SessionReportWidget(QWidget):
         """导出 HTML 报告"""
         try:
             from PyQt6.QtWidgets import QFileDialog, QApplication
-            from ..data.html_exporter import HtmlExporter
+            from insight_eyes.desktop.data.html_exporter import HtmlExporter
             import webbrowser
             import os
 
