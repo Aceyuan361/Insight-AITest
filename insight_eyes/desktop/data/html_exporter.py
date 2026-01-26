@@ -5,9 +5,11 @@ HTML 报告导出器
 """
 import os
 import json
+import shutil
+from pathlib import Path
 from datetime import datetime, timezone
 from typing import Dict, List, Any, Optional
-from jinja2 import Template
+from jinja2 import Environment, select_autoescape
 from logzero import logger
 
 from ..ui.charts.chart_data_builder import ChartDataBuilder
@@ -46,9 +48,57 @@ class HtmlExporter:
     def __init__(self, database: DatabaseManager):
         self.database = database
         self.repository = MetricsRepository(database)
-        # 将模板字符串转换为 Jinja2 Template 对象
+        # 创建安全的 Jinja2 环境，启用自动转义防止 XSS
         template_str = self._get_default_template()
-        self._template = Template(template_str)
+        self._env = Environment(autoescape=select_autoescape(['html', 'xml']))
+        self._template = self._env.from_string(template_str)
+
+    def _validate_filepath(self, filepath: str) -> bool:
+        """验证文件路径安全性"""
+        try:
+            # 规范化路径
+            filepath = os.path.normpath(filepath)
+
+            # 检查文件扩展名
+            if not filepath.lower().endswith('.html'):
+                logger.error(f"无效的文件扩展名: {filepath}")
+                return False
+
+            # 检查路径是否在允许的目录内（用户主目录或其子目录）
+            allowed_dir = os.path.expanduser('~')
+            if not os.path.abspath(filepath).startswith(allowed_dir):
+                logger.error(f"文件路径不在允许的目录内: {filepath}")
+                return False
+
+            return True
+        except Exception as e:
+            logger.error(f"文件路径验证失败: {e}")
+            return False
+
+    def _copy_echarts_to_report_dir(self, html_filepath: str) -> None:
+        """复制 ECharts 库到 HTML 报告所在目录"""
+        try:
+            # 获取 HTML 文件所在目录
+            report_dir = os.path.dirname(html_filepath)
+
+            # 源文件路径
+            import inspect
+            current_dir = os.path.dirname(os.path.abspath(inspect.getfile(self.__class__)))
+            source_echarts = os.path.join(
+                current_dir, '..', 'resources', 'export', 'echarts.min.js'
+            )
+
+            # 目标文件路径
+            target_echarts = os.path.join(report_dir, 'echarts.min.js')
+
+            # 复制文件
+            if os.path.exists(source_echarts):
+                shutil.copy2(source_echarts, target_echarts)
+                logger.debug(f"ECharts 库已复制到: {target_echarts}")
+            else:
+                logger.warning(f"ECharts 源文件不存在: {source_echarts}")
+        except Exception as e:
+            logger.warning(f"复制 ECharts 库失败: {e}")
 
     def export(self, session_id: int, filepath: str) -> bool:
         """
@@ -75,13 +125,11 @@ class HtmlExporter:
             # 构建图表配置
             charts = self._build_charts(session_id)
 
-            # 计算监控时长（基于实际指标数据的时间范围）
+            # 计算监控时长（使用优化的聚合查询）
             duration_str = ""
-            metrics = self.database.get_metrics(session_id)
-            if metrics and len(metrics) >= 2:
-                # 获取第一条和最后一条指标的时间戳
-                first_ts = metrics[0].get('timestamp')
-                last_ts = metrics[-1].get('timestamp')
+            time_range = self.database.get_session_time_range(session_id)
+            if time_range:
+                first_ts, last_ts = time_range
 
                 if first_ts and last_ts:
                     # 如果是字符串，转换为datetime
@@ -113,16 +161,16 @@ class HtmlExporter:
                     # 转换为本地时间
                     start_local = utc_to_local(start_dt)
                     formatted_session['start_time'] = start_local.strftime('%Y-%m-%d %H:%M:%S')
-                except:
-                    pass
+                except (ValueError, AttributeError) as e:
+                    logger.debug(f"开始时间格式转换失败: {e}")
             if formatted_session.get('end_time'):
                 try:
                     end_dt = datetime.fromisoformat(formatted_session['end_time'])
                     # 转换为本地时间
                     end_local = utc_to_local(end_dt)
                     formatted_session['end_time'] = end_local.strftime('%H:%M:%S')
-                except:
-                    pass
+                except (ValueError, AttributeError) as e:
+                    logger.debug(f"结束时间格式转换失败: {e}")
             # 不显示"进行中"状态，如果会话未结束则只显示开始时间
 
             # 格式化告警时间（转换为本地时间）
@@ -138,8 +186,8 @@ class HtmlExporter:
                         # 转换为本地时间
                         ts_local = utc_to_local(ts)
                         formatted_alert['timestamp'] = ts_local.strftime('%H:%M:%S')
-                    except:
-                        pass
+                    except (ValueError, AttributeError, OSError) as e:
+                        logger.debug(f"告警时间格式转换失败: {e}")
                 formatted_alerts.append(formatted_alert)
 
             # 准备模板上下文
@@ -157,10 +205,17 @@ class HtmlExporter:
             # 渲染 HTML
             html_content = self._template.render(**context)
 
+            # 验证文件路径安全性
+            if not self._validate_filepath(filepath):
+                return False
+
             # 写入文件
             os.makedirs(os.path.dirname(filepath), exist_ok=True)
             with open(filepath, 'w', encoding='utf-8') as f:
                 f.write(html_content)
+
+            # 复制 ECharts 库到 HTML 文件所在目录（避免 CDN 依赖）
+            self._copy_echarts_to_report_dir(filepath)
 
             logger.info(f"HTML 报告已导出: {filepath}")
             return True
@@ -222,7 +277,7 @@ class HtmlExporter:
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title }}</title>
-    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="./echarts.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {

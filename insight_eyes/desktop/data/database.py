@@ -678,6 +678,31 @@ class DatabaseManager:
         cursor = conn.execute(query, params)
         return [dict(row) for row in cursor.fetchall()]
 
+    def get_session_time_range(self, session_id: int) -> Optional[tuple]:
+        """
+        高效获取会话的时间范围（使用聚合查询）
+
+        Args:
+            session_id: 会话ID
+
+        Returns:
+            (first_timestamp, last_timestamp) 元组，如果没有数据返回 None
+        """
+        conn = self.get_connection()
+        query = '''
+            SELECT
+                MIN(timestamp) as first_ts,
+                MAX(timestamp) as last_ts
+            FROM performance_metrics
+            WHERE session_id = ?
+        '''
+        cursor = conn.execute(query, (session_id,))
+        row = cursor.fetchone()
+
+        if row and row[0] and row[1]:
+            return (row[0], row[1])
+        return None
+
     def get_metrics_by_timerange(self, start_time: datetime, end_time: datetime,
                                   device_id: str = None,
                                   package_name: str = None) -> List[Dict]:
