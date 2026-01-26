@@ -948,6 +948,8 @@ class MainWindow(QMainWindow):
             self, "关于 Insight-Eye",
             "<h2>Insight-Eye v1.0.1</h2>"
             "<p><b>移动设备性能监控工具</b></p>"
+            "<p>作者：<b>Aceyuan361</b></p>"
+            "<p>欢迎在 GitHub 上交流学习与讨论</p>"
             "<p>支持平台：Android、iOS</p>"
             "<h3>监控能力</h3>"
             "<p><b>Android</b>：CPU、内存、FPS、网络(上行/下行)、GPU、电池</p>"
