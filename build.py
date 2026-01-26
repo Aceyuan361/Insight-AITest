@@ -97,9 +97,15 @@ def clean_build_dirs():
         shutil.rmtree(BUILD_DIR)
         log(f"删除: {BUILD_DIR}")
 
-    if DIST_DIR.exists():
-        shutil.rmtree(DIST_DIR)
-        log(f"删除: {DIST_DIR}")
+    # 只清理当前版本的便携版目录，避免影响其他版本
+    portable_dir = DIST_DIR / "Insight-Eye-Portable-1.0.2"
+    if portable_dir.exists():
+        try:
+            shutil.rmtree(portable_dir)
+            log(f"删除: {portable_dir}")
+        except PermissionError:
+            log(f"警告: 无法删除 {portable_dir}，可能正在被使用")
+            log("将继续使用现有目录")
 
 def install_dependencies():
     """安装打包依赖"""
@@ -145,7 +151,7 @@ def create_portable_package():
     """创建便携版包"""
     log("创建便携版包...")
 
-    portable_dir = DIST_DIR / "Insight-Eye-Portable"
+    portable_dir = DIST_DIR / "Insight-Eye-Portable-1.0.2"
     if portable_dir.exists():
         shutil.rmtree(portable_dir)
     portable_dir.mkdir()
@@ -231,7 +237,7 @@ start "" "Insight-Eye.exe"
    - 首次连接需要在设备上信任电脑
    - iOS 16+ 需要在设置中启用开发者模式
 
-版本: 1.0.1
+版本: 1.0.2
 """)
 
     log(f"便携版包创建完成: {portable_dir}")
@@ -258,7 +264,7 @@ def create_installer_script():
 setlocal enabledelayedexpansion
 
 echo ========================================
-echo   Insight-Eye 安装程序 v1.0.1
+echo   Insight-Eye 安装程序 v1.0.2
 echo ========================================
 echo.
 echo 支持平台: Android、iOS
@@ -393,7 +399,7 @@ def build_installer():
     create_installer_script()
 
     log("=" * 60)
-    log("Insight-Eye v1.0.1 构建完成！")
+    log("Insight-Eye v1.0.2 构建完成！")
     log("=" * 60)
     log(f"可执行文件: {DIST_DIR / 'Insight-Eye' / 'Insight-Eye.exe'}")
     log(f"便携版包: {DIST_DIR / 'Insight-Eye-Portable'}")
@@ -406,7 +412,7 @@ def build_installer():
 if __name__ == "__main__":
     try:
         print("=" * 60)
-        print("Insight-Eye v1.0.1 Windows 打包工具")
+        print("Insight-Eye v1.0.2 Windows 打包工具")
         print("=" * 60)
 
         # 检查 PyInstaller

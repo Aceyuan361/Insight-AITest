@@ -946,7 +946,7 @@ class MainWindow(QMainWindow):
         """显示关于"""
         QMessageBox.about(
             self, "关于 Insight-Eye",
-            "<h2>Insight-Eye v1.0.1</h2>"
+            "<h2>Insight-Eye v1.0.2</h2>"
             "<p><b>移动设备性能监控工具</b></p>"
             "<p>作者：<b>Aceyuan361</b></p>"
             "<p>欢迎在 GitHub 上交流学习与讨论</p>"
