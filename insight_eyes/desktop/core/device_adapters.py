@@ -769,12 +769,13 @@ class AndroidDeviceAdapter(BaseDeviceAdapter):
 
     def cleanup(self):
         """
-        清理设备适配器资源 - 修复版（正确等待APM线程停止）
+        清理设备适配器资源 - 增强修复版（确保线程安全停止）
 
         关键修复：
         1. 停止APM实例（包括FPS监控线程）
-        2. 等待所有线程完全停止
-        3. 清空APM实例
+        2. 等待所有线程完全停止（增加超时时间）
+        3. 验证线程状态后再清空APM实例
+        4. 如果线程未能停止，提前返回避免崩溃
         """
         logger.info(f"开始清理Android设备适配器: {self.device_id}")
 
@@ -785,39 +786,42 @@ class AndroidDeviceAdapter(BaseDeviceAdapter):
                     logger.debug("停止APM实例")
                     self._apm.stop()
 
-                    # 步骤 2: 等待FPS线程完全停止（关键修复）
+                    # 步骤 2: 等待FPS线程完全停止（增强修复 - 增加超时和验证）
                     if hasattr(self._apm, 'fps_monitor') and self._apm.fps_monitor:
                         fps_monitor = self._apm.fps_monitor
                         if hasattr(fps_monitor, 'fpscollector'):
                             collector = fps_monitor.fpscollector
 
-                            # 等待采集线程停止
+                            # 等待采集线程停止（超时从5秒增加到10秒）
                             if hasattr(collector, 'collector_thread') and collector.collector_thread:
                                 if collector.collector_thread.is_alive():
                                     logger.debug("等待FPS采集线程停止...")
-                                    collector.collector_thread.join(timeout=5.0)
+                                    collector.collector_thread.join(timeout=10.0)
                                     if collector.collector_thread.is_alive():
-                                        logger.warning("FPS采集线程未能在5秒内停止")
+                                        # 关键修复：如果线程仍未停止，提前返回避免崩溃
+                                        logger.error("FPS采集线程未能在10秒内停止，中止清理以避免崩溃")
+                                        return
 
-                            # 等待计算线程停止
+                            # 等待计算线程停止（超时从5秒增加到10秒）
                             if hasattr(collector, 'calculator_thread') and collector.calculator_thread:
                                 if collector.calculator_thread.is_alive():
                                     logger.debug("等待FPS计算线程停止...")
-                                    collector.calculator_thread.join(timeout=5.0)
+                                    collector.calculator_thread.join(timeout=10.0)
                                     if collector.calculator_thread.is_alive():
-                                        logger.warning("FPS计算线程未能在5秒内停止")
+                                        logger.error("FPS计算线程未能在10秒内停止，中止清理以避免崩溃")
+                                        return
 
-                    logger.info("APM实例已停止")
+                    logger.info("APM实例已停止，所有线程已停止")
                 except Exception as e:
                     logger.warning(f"停止APM实例时出错: {e}")
 
-            # 步骤 3: 清空APM实例
+            # 步骤 3: 只有在所有线程停止后才清空APM实例
             self._apm = None
 
             logger.info(f"Android设备适配器已清理: {self.device_id}")
 
         except Exception as e:
-            logger.error(f"清理Android设备适配器时出错: {e}")
+            logger.error(f"清理Android设备适配器时出错: {e}", exc_info=True)
 
 
 class DeviceAdapterFactory:

@@ -1269,7 +1269,20 @@ class MainWindow(QMainWindow):
             if hasattr(self, 'processing_dialog'):
                 self.processing_dialog.complete(False, message)
 
+        # 断开处理工作线程的信号连接（防止内存泄漏）
+        self._disconnect_processing_signals()
+
         self._update_monitoring_ui_state()
+
+    def _disconnect_processing_signals(self):
+        """断开处理工作线程的所有信号连接"""
+        if hasattr(self, 'processing_worker') and self.processing_worker:
+            try:
+                self.processing_worker.progress_updated.disconnect()
+                self.processing_worker.finished.disconnect()
+                logger.debug("处理工作线程信号连接已断开")
+            except Exception as e:
+                logger.warning(f"断开信号连接失败: {e}")
 
     def _update_monitoring_ui_state(self):
         """更新监控UI状态"""
@@ -2523,6 +2536,20 @@ class MainWindow(QMainWindow):
                 logger.info("[窗口关闭] 信号连接已断开")
             except Exception as e:
                 logger.warning(f"断开信号连接失败: {e}")
+
+            # 2.5. 强制停止后台处理工作线程（崩溃恢复机制）
+            try:
+                if hasattr(self, 'processing_worker') and self.processing_worker:
+                    if self.processing_worker.isRunning():
+                        logger.warning("[窗口关闭] 检测到正在运行的处理工作线程，强制终止...")
+                        self.processing_worker.terminate()
+                        # 等待最多2秒让线程终止
+                        if not self.processing_worker.wait(2000):
+                            logger.error("[窗口关闭] 处理工作线程未能在2秒内终止")
+                        else:
+                            logger.info("[窗口关闭] 处理工作线程已强制终止")
+            except Exception as e:
+                logger.warning(f"[窗口关闭] 强制终止处理工作线程失败: {e}")
 
             # 3. 清理资源（有超时保护）
             try:

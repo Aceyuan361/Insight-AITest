@@ -103,7 +103,8 @@ class DatabaseManager:
             self._local.conn = sqlite3.connect(
                 self.db_path,
                 check_same_thread=False,
-                timeout=30.0
+                timeout=60.0,  # 从30秒增加到60秒，避免大数据量时超时
+                isolation_level=None  # 自动提交模式，减少锁等待时间
             )
             # 优化SQLite性能
             self._local.conn.execute('PRAGMA journal_mode=WAL')  # 写前日志模式

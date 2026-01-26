@@ -258,36 +258,59 @@ class ProcessingWorker(QThread):
         self.cached_adapter = cached_adapter
 
     def run(self):
-        """执行处理任务"""
+        """执行处理任务 - 增强修复版（线程安全清理）"""
         try:
             # 步骤1：停止采集
             self.progress_updated.emit(20, "停止数据采集...")
             self.msleep(200)
 
-            # 步骤1.5: 清理iOS适配器资源（修复iOS监控停止异常）
+            # 步骤1.5: 清理适配器资源（增强修复 - 支持Android和iOS）
             if self.cached_adapter:
                 try:
                     from logzero import logger
-                    logger.info("[异步处理] 开始清理iOS适配器资源...")
+                    logger.info("[异步处理] 开始清理适配器资源...")
+
+                    # 等待一小段时间确保主线程已完成停止操作
+                    import time
+                    time.sleep(0.5)
+
                     # 调用cleanup方法正确清理资源
+                    # 注意：cleanup()内部已包含线程停止等待逻辑
                     self.cached_adapter.cleanup()
-                    logger.info("[异步处理] iOS适配器资源已清理")
+                    logger.info("[异步处理] 适配器资源已清理")
                 except Exception as cleanup_error:
                     from logzero import logger
-                    logger.warning(f"[异步处理] iOS适配器清理失败（继续执行）: {cleanup_error}")
-            self.msleep(200)
+                    logger.error(f"[异步处理] 适配器清理失败（继续执行）: {cleanup_error}", exc_info=True)
+                    # 即使清理失败也继续执行后续步骤
+            self.msleep(300)
 
-            # 步骤2：结束数据库会话（异步执行）
+            # 步骤2：结束数据库会话（异步执行）- 增加重试机制
             self.progress_updated.emit(40, "保存监控数据...")
             if self.session_id and self.database:
-                self.database.end_session(self.session_id)
-                logger.info(f"[异步处理] 结束监控会话: {self.session_id}")
+                retry_count = 0
+                max_retries = 3
+                while retry_count < max_retries:
+                    try:
+                        self.database.end_session(self.session_id)
+                        logger.info(f"[异步处理] 结束监控会话: {self.session_id}")
+                        break
+                    except Exception as db_error:
+                        retry_count += 1
+                        if retry_count >= max_retries:
+                            logger.error(f"[异步处理] 数据库操作失败（已重试{max_retries}次）: {db_error}")
+                        else:
+                            logger.warning(f"[异步处理] 数据库操作失败，重试 {retry_count}/{max_retries}...")
+                            self.msleep(500)
             self.msleep(300)
 
             # 步骤3：清理指标处理器缓冲区
             self.progress_updated.emit(60, "清理数据缓冲...")
             if self.metrics_processor:
-                self.metrics_processor.clear_buffers()
+                try:
+                    self.metrics_processor.clear_buffers()
+                    logger.debug("[异步处理] 指标缓冲区已清空")
+                except Exception as buffer_error:
+                    logger.warning(f"[异步处理] 清空缓冲区失败: {buffer_error}")
             self.msleep(200)
 
             # 步骤4：生成报告
@@ -299,5 +322,5 @@ class ProcessingWorker(QThread):
             self.finished.emit(True, "监控数据已保存")
 
         except Exception as e:
-            logger.error(f"处理数据失败: {e}")
+            logger.error(f"处理数据失败: {e}", exc_info=True)
             self.finished.emit(False, f"处理失败: {e}")

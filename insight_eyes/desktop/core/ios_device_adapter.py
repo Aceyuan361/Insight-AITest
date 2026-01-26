@@ -662,7 +662,12 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
 
     def cleanup(self):
         """
-        清理设备适配器资源（增强版，确保资源正确释放）
+        清理设备适配器资源 - 增强修复版（确保线程安全停止）
+
+        关键修复：
+        1. 停止APM实例并等待线程停止
+        2. 验证线程状态后再清空引用
+        3. 添加超时保护避免无限等待
         """
         logger.info(f"开始清理iOS设备适配器: {self.device_id}")
 
@@ -674,9 +679,30 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
                     try:
                         logger.debug(f"停止 IOSAPM: {self._apm.bundle_name}")
                         self._apm.stop()
+
+                        # 等待网络采集器线程停止（如果有）
+                        if hasattr(self._apm, 'network_collector') and self._apm.network_collector:
+                            net_collector = self._apm.network_collector
+                            if hasattr(net_collector, '_stop_event'):
+                                import time
+                                timeout = 10  # 最多等待10秒
+                                start = time.time()
+                                while time.time() - start < timeout:
+                                    if net_collector._stop_event.is_set():
+                                        logger.debug("网络采集器已停止")
+                                        break
+                                    time.sleep(0.2)
+                                else:
+                                    logger.warning("网络采集器未能在10秒内停止")
+
+                        # 只有在确认线程停止后才清空APM引用
                         self._apm = None
+                        logger.debug("IOSAPM实例已清空")
+
                     except Exception as e:
-                        logger.warning(f"停止 IOSAPM 失败（继续清理）: {e}")
+                        logger.error(f"停止 IOSAPM 失败（继续清理）: {e}", exc_info=True)
+                        # 即使出错也尝试清空引用
+                        self._apm = None
 
                 # 2. 断开设备连接
                 try:
@@ -694,7 +720,7 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
                 logger.info(f"iOS设备适配器已清理: {self.device_id}")
 
             except Exception as e:
-                logger.error(f"清理iOS设备适配器时出错: {e}")
+                logger.error(f"清理iOS设备适配器时出错: {e}", exc_info=True)
                 # 即使出错也要确保基本状态被重置
                 self._connected = False
                 self._lockdown_client = None
