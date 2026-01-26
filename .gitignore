@@ -92,6 +92,9 @@ scripts/
 # Claude Code 测试
 tests/claude-code/
 
+# Git Worktrees (工作树隔离目录)
+.worktrees/
+
 # 崩溃日志
 crash_log.txt
 *.txt.log
