@@ -403,7 +403,57 @@ class SessionReportWidget(QWidget):
 
     def _export_html_report(self):
         """导出 HTML 报告"""
-        QMessageBox.information(self, "开发中", "HTML 报告导出功能将在下一阶段实现")
+        try:
+            from PyQt6.QtWidgets import QFileDialog, QApplication
+            from ..data.html_exporter import HtmlExporter
+            import webbrowser
+            import os
+
+            # 选择保存路径
+            default_filename = f"session_{self.session_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+            filepath, _ = QFileDialog.getSaveFileName(
+                self,
+                "导出 HTML 报告",
+                default_filename,
+                "HTML 文件 (*.html)"
+            )
+
+            if not filepath:
+                return
+
+            # 显示进度
+            self.export_btn.setEnabled(False)
+            self.export_btn.setText("导出中...")
+            QApplication.processEvents()
+
+            # 导出
+            exporter = HtmlExporter(self.database)
+            success = exporter.export(self.session_id, filepath)
+
+            if success:
+                # 询问是否打开
+                reply = QMessageBox.question(
+                    self,
+                    "打开报告",
+                    f"HTML 报告已导出到:\n{filepath}\n\n是否立即打开？",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.No
+                )
+                if reply == QMessageBox.StandardButton.Yes:
+                    # 转换路径格式为浏览器可接受的格式
+                    browser_path = filepath.replace(os.sep, '/')
+                    if not browser_path.startswith('/'):
+                        browser_path = f"file:///{browser_path}"
+                    webbrowser.open(browser_path)
+            else:
+                QMessageBox.critical(self, "导出失败", "导出 HTML 报告时发生错误")
+
+        except Exception as e:
+            logger.error(f"导出 HTML 报告失败: {e}", exc_info=True)
+            QMessageBox.critical(self, "导出失败", f"导出时发生错误:\n{e}")
+        finally:
+            self.export_btn.setEnabled(True)
+            self.export_btn.setText("导出 HTML 报告")
 
     def _delete_session(self):
         """删除会话"""
