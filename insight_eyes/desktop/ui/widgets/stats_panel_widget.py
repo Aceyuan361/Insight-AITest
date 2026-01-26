@@ -55,29 +55,41 @@ class StatsPanelWidget(QFrame):
     def update_stats(self, statistics: dict) -> None:
         """更新统计数据"""
         try:
+            logger.info(f"[StatsPanelWidget] update_stats 被调用，数据: {statistics}")
+            logger.info(f"[StatsPanelWidget] 有 fps? {'fps' in statistics}, 有 cpu? {'cpu' in statistics}, 有 memory? {'memory' in statistics}")
             self._clear_content()
             self._add_stat_cards(statistics)
+            logger.info(f"[StatsPanelWidget] 统计卡片已添加，content_layout.count() = {self.content_layout.count()}")
         except Exception as e:
             logger.error(f"更新统计数据失败: {e}", exc_info=True)
 
     def _clear_content(self) -> None:
-        """清空现有内容（正确处理内存）"""
-        for i in reversed(range(self.content_layout.count() - 1)):
-            widget = self.content_layout.itemAt(i).widget()
+        """清空现有内容（修复内存泄漏和清理逻辑）"""
+        # 从末尾开始，移除所有 widget（除了最后的 stretch）
+        while self.content_layout.count() > 1:
+            item = self.content_layout.takeAt(self.content_layout.count() - 2)  # 倒数第二个
+            widget = item.widget()
             if widget:
                 widget.setParent(None)
                 widget.deleteLater()
+            del item
 
     def _add_stat_cards(self, statistics: dict) -> None:
-        """添加统计卡片"""
+        """添加统计卡片（修复插入位置问题）"""
+        logger.info(f"[StatsPanelWidget] _add_stat_cards 开始，statistics keys: {list(statistics.keys())}")
         if 'fps' in statistics:
+            logger.info(f"[StatsPanelWidget] 添加 FPS 卡片，数据: {statistics['fps']}")
             self._add_stat_card('FPS', statistics['fps'], 'fps')
         if 'cpu' in statistics:
+            logger.info(f"[StatsPanelWidget] 添加 CPU 卡片，数据: {statistics['cpu']}")
             self._add_stat_card('CPU', statistics['cpu'], '%')
         if 'memory' in statistics:
+            logger.info(f"[StatsPanelWidget] 添加内存卡片，数据: {statistics['memory']}")
             self._add_stat_card('内存', statistics['memory'], 'MB')
         if 'network' in statistics:
+            logger.info(f"[StatsPanelWidget] 添加网络卡片，数据: {statistics['network']}")
             self._add_network_card(statistics['network'])
+        logger.info(f"[StatsPanelWidget] _add_stat_cards 完成，count = {self.content_layout.count()}")
 
     def _create_card_frame(self) -> QFrame:
         """创建统一样式的卡片框架"""

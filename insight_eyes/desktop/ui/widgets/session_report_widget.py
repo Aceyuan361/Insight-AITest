@@ -209,9 +209,14 @@ class SessionReportWidget(QWidget):
             # 更新会话信息栏（紧凑格式）
             device = self.database.get_device(session['device_id'])
             device_name = device['name'] if device else '未知设备'
-            start_time = session['start_time'].strftime('%Y-%m-%d %H:%M')
-            end_time = session['end_time'].strftime('%H:%M') if session['end_time'] else '进行中'
-            duration = self._calculate_duration(session['start_time'], session['end_time'])
+
+            # 解析时间字符串（数据库返回 ISO 格式字符串）
+            start_dt = datetime.fromisoformat(session['start_time'])
+            end_dt = datetime.fromisoformat(session['end_time']) if session['end_time'] else None
+
+            start_time = start_dt.strftime('%Y-%m-%d %H:%M')
+            end_time = end_dt.strftime('%H:%M') if end_dt else '进行中'
+            duration = self._calculate_duration(start_dt, end_dt)
 
             info_text = f"设备: {device_name} | 应用: {session['package_name']} | 时间: {start_time}-{end_time} | 时长: {duration}"
             self.session_info_label.setText(info_text)
@@ -251,9 +256,19 @@ class SessionReportWidget(QWidget):
             QMessageBox.critical(self, "错误", f"加载会话数据失败: {e}")
 
     def _calculate_duration(self, start_time, end_time):
-        """计算持续时间"""
+        """计算持续时间（修复时区问题）"""
+        from datetime import timezone
+
         if not end_time:
-            end_time = datetime.now()
+            # 使用 UTC 当前时间，而不是本地时间
+            end_time = datetime.now(timezone.utc)
+
+        # 确保两个时间都有时区信息
+        if start_time.tzinfo is None:
+            start_time = start_time.replace(tzinfo=timezone.utc)
+        if end_time.tzinfo is None:
+            end_time = end_time.replace(tzinfo=timezone.utc)
+
         delta = end_time - start_time
         minutes = int(delta.total_seconds() / 60)
         if minutes < 60:
