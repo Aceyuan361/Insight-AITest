@@ -172,9 +172,18 @@ class ReportPanel(QWidget):
         # 添加到分割器
         splitter.addWidget(left_widget)
 
-        # 右侧：报告详情
-        self.report_widget = SessionReportWidget()
-        splitter.addWidget(self.report_widget)
+        # 右侧：报告详情（初始为空，选择会话后创建）
+        self.report_widget = None
+        self.report_placeholder = QLabel("请从左侧选择一个会话查看详情")
+        self.report_placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.report_placeholder.setStyleSheet("""
+            QLabel {
+                color: #64748b;
+                font-size: 14pt;
+                padding: 40px;
+            }
+        """)
+        splitter.addWidget(self.report_placeholder)
 
         # 设置分割器比例（30:70）
         splitter.setStretchFactor(0, 3)
@@ -192,9 +201,7 @@ class ReportPanel(QWidget):
         if refresh_btn:
             refresh_btn.clicked.connect(self.load_sessions)
 
-        # 连接报告组件的信号
-        self.report_widget.export_requested.connect(self._on_export_requested)
-        self.report_widget.delete_requested.connect(self._on_delete_requested)
+        # 注意：报告组件的信号将在创建 report_widget 时连接
 
         # 连接会话管理器的信号
         self.session_manager.session_deleted.connect(self._on_session_deleted)
@@ -298,8 +305,12 @@ class ReportPanel(QWidget):
                 session_id = session_id_item.data(Qt.ItemDataRole.UserRole)
                 self.current_session_id = session_id
 
-                # 加载会话详情
-                self.report_widget.load_session(session_id)
+                # 如果还没有创建 report_widget，现在创建它
+                if self.report_widget is None:
+                    self._create_report_widget(session_id)
+                else:
+                    # 加载会话详情
+                    self.report_widget.load_session(session_id)
 
                 # 发送信号
                 self.session_selected.emit(session_id)
@@ -307,9 +318,40 @@ class ReportPanel(QWidget):
         except Exception as e:
             logger.error(f"处理选择事件失败: {e}")
 
+    def _create_report_widget(self, session_id: int):
+        """创建报告组件并替换占位符"""
+        try:
+            # 获取 splitter
+            splitter = self.findChild(QSplitter)
+            if not splitter:
+                logger.error("找不到 splitter")
+                return
+
+            # 创建新的报告组件
+            self.report_widget = SessionReportWidget(session_id)
+
+            # 连接信号
+            self.report_widget.export_requested.connect(self._on_export_requested)
+            self.report_widget.delete_requested.connect(self._on_delete_requested)
+
+            # 替换占位符
+            if splitter.count() > 1:
+                splitter.replaceWidget(1, self.report_widget)
+
+            # 删除占位符
+            if self.report_placeholder:
+                self.report_placeholder.setParent(None)
+                self.report_placeholder.deleteLater()
+                self.report_placeholder = None
+
+            logger.info(f"已创建 SessionReportWidget for session {session_id}")
+
+        except Exception as e:
+            logger.error(f"创建报告组件失败: {e}", exc_info=True)
+
     def refresh_current_session(self):
         """刷新当前会话的详情"""
-        if self.current_session_id:
+        if self.current_session_id and self.report_widget:
             self.report_widget.load_session(self.current_session_id)
 
     def get_current_session_id(self) -> Optional[int]:
@@ -392,7 +434,8 @@ class ReportPanel(QWidget):
 
         # 清空报告显示
         if self.current_session_id == session_id:
-            self.report_widget.clear()
+            if self.report_widget:
+                self.report_widget.clear()
             self.current_session_id = None
 
         # 重新加载会话列表
@@ -409,7 +452,8 @@ class ReportPanel(QWidget):
 
         # 如果当前显示的会话被删除了，清空报告
         if self.current_session_id in session_ids:
-            self.report_widget.clear()
+            if self.report_widget:
+                self.report_widget.clear()
             self.current_session_id = None
 
         # 重新加载会话列表（不显示消息，避免重复）
