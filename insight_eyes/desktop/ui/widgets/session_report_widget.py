@@ -206,15 +206,35 @@ class SessionReportWidget(QWidget):
             device = self.database.get_device(session['device_id'])
             device_name = device['name'] if device else f"设备({session['device_id'][:8]})"  # 显示设备ID前8位
 
-            # 解析时间字符串（数据库返回 ISO 格式字符串）
+            # 解析时间字符串（数据库返回 ISO 格式字符串，需要转换为本地时间）
+            from datetime import timezone
+
             start_dt = datetime.fromisoformat(session['start_time'])
             end_dt = datetime.fromisoformat(session['end_time']) if session['end_time'] else None
 
-            start_time = start_dt.strftime('%Y-%m-%d %H:%M')
-            end_time = end_dt.strftime('%H:%M') if end_dt else '进行中'
+            # 转换为本地时间用于显示
+            def to_local(dt):
+                if dt is None:
+                    return None
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+                return dt.astimezone(tz=None).replace(tzinfo=None)
+
+            start_local = to_local(start_dt)
+            end_local = to_local(end_dt) if end_dt else None
+
+            start_time = start_local.strftime('%Y-%m-%d %H:%M')
+            end_time = end_local.strftime('%H:%M') if end_local else None
+
+            # 计算时长（使用UTC时间）
             duration = self._calculate_duration(start_dt, end_dt)
 
-            info_text = f"设备: {device_name} | 应用: {session['package_name']} | 时间: {start_time}-{end_time} | 时长: {duration}"
+            # 构建显示文本，如果未结束则不显示结束时间
+            if end_time:
+                info_text = f"设备: {device_name} | 应用: {session['package_name']} | 时间: {start_time}-{end_time} | 时长: {duration}"
+            else:
+                info_text = f"设备: {device_name} | 应用: {session['package_name']} | 时间: {start_time} | 时长: {duration}"
+
             self.session_info_label.setText(info_text)
 
             # 获取统计数据

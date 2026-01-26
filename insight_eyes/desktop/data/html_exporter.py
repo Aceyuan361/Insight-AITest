@@ -23,6 +23,23 @@ def utc_to_local(utc_dt: datetime) -> datetime:
     return utc_dt.astimezone(tz=None).replace(tzinfo=None)
 
 
+def format_duration(seconds: float) -> str:
+    """格式化时长为可读字符串"""
+    total_seconds = int(seconds)
+    # 小于60秒显示秒
+    if total_seconds < 60:
+        return f"{total_seconds}秒"
+    # 小于60分钟显示分钟和秒
+    minutes = total_seconds // 60
+    secs = total_seconds % 60
+    if minutes < 60:
+        return f"{minutes}分{secs}秒"
+    # 大于60分钟显示小时、分钟和秒
+    hours = minutes // 60
+    mins = minutes % 60
+    return f"{hours}小时{mins}分{secs}秒"
+
+
 class HtmlExporter:
     """HTML 报告导出器"""
 
@@ -57,6 +74,24 @@ class HtmlExporter:
 
             # 构建图表配置
             charts = self._build_charts(session_id)
+
+            # 计算监控时长（使用UTC时间计算）
+            duration_str = ""
+            if session.get('start_time'):
+                start_dt = datetime.fromisoformat(session['start_time'])
+                if session.get('end_time'):
+                    end_dt = datetime.fromisoformat(session['end_time'])
+                else:
+                    # 会话未结束，使用当前UTC时间
+                    end_dt = datetime.now(timezone.utc)
+                # 确保两个时间都有时区信息
+                if start_dt.tzinfo is None:
+                    start_dt = start_dt.replace(tzinfo=timezone.utc)
+                if end_dt.tzinfo is None:
+                    end_dt = end_dt.replace(tzinfo=timezone.utc)
+                # 计算时长（秒）
+                duration_seconds = (end_dt - start_dt).total_seconds()
+                duration_str = format_duration(duration_seconds)
 
             # 格式化 session 中的时间（数据库返回ISO字符串，需要转换为本地时间）
             formatted_session = session.copy()
@@ -103,6 +138,7 @@ class HtmlExporter:
                 'statistics': statistics,
                 'alerts': formatted_alerts,
                 'charts': charts,
+                'duration': duration_str,
                 'export_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             }
 
@@ -275,6 +311,7 @@ class HtmlExporter:
                 📱 应用: {{ session.package_name }}<br>
                 ⏰ 时间: {{ session.start_time }}
                 {% if session.end_time %}- {{ session.end_time }}{% endif %}<br>
+                ⏱️ 监控时长: {{ duration }}<br>
                 📊 采样间隔: {{ session.sample_interval }}ms
             </div>
         </div>
