@@ -75,23 +75,35 @@ class HtmlExporter:
             # 构建图表配置
             charts = self._build_charts(session_id)
 
-            # 计算监控时长（使用UTC时间计算）
+            # 计算监控时长（基于实际指标数据的时间范围）
             duration_str = ""
-            if session.get('start_time'):
-                start_dt = datetime.fromisoformat(session['start_time'])
-                if session.get('end_time'):
-                    end_dt = datetime.fromisoformat(session['end_time'])
-                else:
-                    # 会话未结束，使用当前UTC时间
-                    end_dt = datetime.now(timezone.utc)
-                # 确保两个时间都有时区信息
-                if start_dt.tzinfo is None:
-                    start_dt = start_dt.replace(tzinfo=timezone.utc)
-                if end_dt.tzinfo is None:
-                    end_dt = end_dt.replace(tzinfo=timezone.utc)
-                # 计算时长（秒）
-                duration_seconds = (end_dt - start_dt).total_seconds()
-                duration_str = format_duration(duration_seconds)
+            metrics = self.database.get_metrics(session_id)
+            if metrics and len(metrics) >= 2:
+                # 获取第一条和最后一条指标的时间戳
+                first_ts = metrics[0].get('timestamp')
+                last_ts = metrics[-1].get('timestamp')
+
+                if first_ts and last_ts:
+                    # 如果是字符串，转换为datetime
+                    if isinstance(first_ts, str):
+                        first_dt = datetime.fromisoformat(first_ts)
+                    else:
+                        first_dt = first_ts
+
+                    if isinstance(last_ts, str):
+                        last_dt = datetime.fromisoformat(last_ts)
+                    else:
+                        last_dt = last_ts
+
+                    # 确保有时区信息
+                    if first_dt.tzinfo is None:
+                        first_dt = first_dt.replace(tzinfo=timezone.utc)
+                    if last_dt.tzinfo is None:
+                        last_dt = last_dt.replace(tzinfo=timezone.utc)
+
+                    # 计算实际监控时长（秒）
+                    duration_seconds = (last_dt - first_dt).total_seconds()
+                    duration_str = format_duration(duration_seconds)
 
             # 格式化 session 中的时间（数据库返回ISO字符串，需要转换为本地时间）
             formatted_session = session.copy()

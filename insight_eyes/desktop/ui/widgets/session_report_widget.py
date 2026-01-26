@@ -226,8 +226,35 @@ class SessionReportWidget(QWidget):
             start_time = start_local.strftime('%Y-%m-%d %H:%M')
             end_time = end_local.strftime('%H:%M') if end_local else None
 
-            # 计算时长（使用UTC时间）
-            duration = self._calculate_duration(start_dt, end_dt)
+            # 计算监控时长（基于实际指标数据的时间范围）
+            metrics = self.database.get_metrics(self.session_id)
+            if metrics and len(metrics) >= 2:
+                first_ts = metrics[0].get('timestamp')
+                last_ts = metrics[-1].get('timestamp')
+
+                if first_ts and last_ts:
+                    if isinstance(first_ts, str):
+                        first_dt = datetime.fromisoformat(first_ts)
+                    else:
+                        first_dt = first_ts
+
+                    if isinstance(last_ts, str):
+                        last_dt = datetime.fromisoformat(last_ts)
+                    else:
+                        last_dt = last_ts
+
+                    # 确保有时区信息
+                    if first_dt.tzinfo is None:
+                        first_dt = first_dt.replace(tzinfo=timezone.utc)
+                    if last_dt.tzinfo is None:
+                        last_dt = last_dt.replace(tzinfo=timezone.utc)
+
+                    duration_seconds = (last_dt - first_dt).total_seconds()
+                    duration = self._format_duration_from_seconds(int(duration_seconds))
+                else:
+                    duration = self._calculate_duration(start_dt, end_dt)
+            else:
+                duration = self._calculate_duration(start_dt, end_dt)
 
             # 构建显示文本，如果未结束则不显示结束时间
             if end_time:
@@ -270,6 +297,21 @@ class SessionReportWidget(QWidget):
         except Exception as e:
             logger.error(f"加载会话数据失败: {e}", exc_info=True)
             QMessageBox.critical(self, "错误", f"加载会话数据失败: {e}")
+
+    def _format_duration_from_seconds(self, total_seconds: int) -> str:
+        """将秒数格式化为时长字符串"""
+        # 小于60秒显示秒
+        if total_seconds < 60:
+            return f"{total_seconds}秒"
+        # 小于60分钟显示分钟和秒
+        minutes = total_seconds // 60
+        seconds = total_seconds % 60
+        if minutes < 60:
+            return f"{minutes}分{seconds}秒"
+        # 大于60分钟显示小时、分钟和秒
+        hours = minutes // 60
+        mins = minutes % 60
+        return f"{hours}小时{mins}分{seconds}秒"
 
     def _calculate_duration(self, start_time, end_time):
         """计算持续时间（精确到秒）"""
