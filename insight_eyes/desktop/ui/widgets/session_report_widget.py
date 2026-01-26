@@ -66,16 +66,12 @@ class SessionReportWidget(QWidget):
         self.splitter.setChildrenCollapsible(False)
         layout.addWidget(self.splitter)
 
-        # 左侧：图表区域
-        from PyQt6.QtWidgets import QScrollArea
-        self.charts_scroll = QScrollArea()
-        self.charts_scroll.setWidgetResizable(True)
-        self.charts_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        # 左侧：图表区域（不使用滚动组件）
         self.charts_container = QWidget()
         self.charts_layout = QGridLayout(self.charts_container)
         self.charts_layout.setSpacing(16)
-        self.charts_scroll.setWidget(self.charts_container)
-        self.splitter.addWidget(self.charts_scroll)
+        self.charts_layout.setContentsMargins(16, 16, 16, 16)
+        self.splitter.addWidget(self.charts_container)
 
         # 右侧：统计面板
         self.stats_panel = StatsPanelWidget()
@@ -208,7 +204,7 @@ class SessionReportWidget(QWidget):
 
             # 更新会话信息栏（紧凑格式）
             device = self.database.get_device(session['device_id'])
-            device_name = device['name'] if device else '未知设备'
+            device_name = device['name'] if device else f"设备({session['device_id'][:8]})"  # 显示设备ID前8位
 
             # 解析时间字符串（数据库返回 ISO 格式字符串）
             start_dt = datetime.fromisoformat(session['start_time'])

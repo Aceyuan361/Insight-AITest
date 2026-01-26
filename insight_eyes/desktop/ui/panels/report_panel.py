@@ -115,13 +115,14 @@ class ReportPanel(QWidget):
 
         # 左侧：会话列表
         left_widget = QWidget()
+        left_widget.setMaximumWidth(300)  # 限制最大宽度，防止挤压右侧
         left_layout = QVBoxLayout(left_widget)
         left_layout.setContentsMargins(0, 0, 0, 0)
 
-        # 会话列表表格
+        # 会话列表表格（简化为2列）
         self.sessions_table = QTableWidget()
-        self.sessions_table.setColumnCount(5)
-        self.sessions_table.setHorizontalHeaderLabels(["时间", "设备", "应用", "时长", "状态"])
+        self.sessions_table.setColumnCount(2)
+        self.sessions_table.setHorizontalHeaderLabels(["时间", "会话ID"])
 
         # 设置表格样式
         self.sessions_table.setStyleSheet("""
@@ -157,9 +158,6 @@ class ReportPanel(QWidget):
         header = self.sessions_table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
-        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
-        header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
-        header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
 
         # 设置选择行为（支持多选）
         self.sessions_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
@@ -261,32 +259,9 @@ class ReportPanel(QWidget):
                 time_item.setData(Qt.ItemDataRole.UserRole, session['id'])
                 self.sessions_table.setItem(row, 0, time_item)
 
-                # 设备
-                device = self.db.get_device(session['device_id'])
-                device_name = device['name'] if device else session['device_id']
-                self.sessions_table.setItem(row, 1, QTableWidgetItem(device_name))
-
-                # 应用
-                self.sessions_table.setItem(row, 2, QTableWidgetItem(session['package_name']))
-
-                # 时长
-                if session['end_time']:
-                    end_time_utc = datetime.fromisoformat(session['end_time'])
-                    end_time_utc = end_time_utc.replace(tzinfo=timezone.utc)
-                    end_time = end_time_utc.astimezone().replace(tzinfo=None)
-                    duration = (end_time - start_time).total_seconds()
-                    duration_str = f"{int(duration // 60)}:{int(duration % 60):02d}"
-                else:
-                    duration_str = "进行中"
-                self.sessions_table.setItem(row, 3, QTableWidgetItem(duration_str))
-
-                # 状态
-                status_item = QTableWidgetItem("已完成" if session['end_time'] else "进行中")
-                if session['end_time']:
-                    status_item.setForeground(QColor("#22c55e"))
-                else:
-                    status_item.setForeground(QColor("#f59e0b"))
-                self.sessions_table.setItem(row, 4, status_item)
+                # 会话ID
+                session_id_item = QTableWidgetItem(str(session['id']))
+                self.sessions_table.setItem(row, 1, session_id_item)
 
         except Exception as e:
             logger.error(f"刷新会话列表失败: {e}")

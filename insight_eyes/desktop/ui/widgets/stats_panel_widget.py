@@ -23,6 +23,7 @@ class StatsPanelWidget(QFrame):
 
     def _setup_ui(self) -> None:
         """初始化UI"""
+        self.setMinimumWidth(280)  # 设置最小宽度，防止被压缩
         self.setStyleSheet("""
             QFrame {
                 background-color: #0a0e17;
