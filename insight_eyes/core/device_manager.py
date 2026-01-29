@@ -52,7 +52,9 @@ class DeviceManager:
         Returns:
             创建的会话对象
         """
-        db = DatabaseManager()
+        import os
+        db_path = os.path.join(os.path.expanduser("~"), ".insight_eye", "monitoring.db")
+        db = DatabaseManager(db_path)
         session = db.create_session(device_id, app_package, platform=platform)
 
         logger.info(f"开始监控会话: {session.id}")
@@ -65,7 +67,9 @@ class DeviceManager:
         Args:
             session_id: 会话ID
         """
-        db = DatabaseManager()
+        import os
+        db_path = os.path.join(os.path.expanduser("~"), ".insight_eye", "monitoring.db")
+        db = DatabaseManager(db_path)
         db.update_session(
             session_id,
             status="stopped",
