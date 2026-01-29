@@ -22,3 +22,27 @@ body {
   min-width: 320px;
   min-height: 100vh;
 }
+
+/* 霓虹发光效果 */
+.neon-glow {
+  text-shadow: 0 0 10px currentColor;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #141414;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #444;
+}

@@ -1,0 +1,49 @@
+import React from 'react';
+import { useMonitoringStore } from '@/store/monitoringStore';
+
+export default function StatusBar() {
+  const { isMonitoring, currentSession } = useMonitoringStore();
+
+  return (
+    <footer className="fixed bottom-0 left-0 right-0 bg-dark-card border-t border-gray-800">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-8">
+          {/* 监控状态 */}
+          <div className="flex items-center text-sm">
+            {isMonitoring ? (
+              <>
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                <span className="ml-2 text-text-secondary">
+                  监控中 - Session #{currentSession?.id}
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="w-2 h-2 bg-gray-500 rounded-full"></span>
+                <span className="ml-2 text-text-secondary">未监控</span>
+              </>
+            )}
+          </div>
+
+          {/* 设备信息 */}
+          <div className="text-sm text-text-secondary">
+            {currentSession ? (
+              <>
+                <span>{currentSession.device_id}</span>
+                <span className="mx-2">|</span>
+                <span>{currentSession.app_package}</span>
+              </>
+            ) : (
+              <span>未选择设备</span>
+            )}
+          </div>
+
+          {/* 时间 */}
+          <div className="text-sm text-text-secondary font-mono">
+            {new Date().toLocaleTimeString()}
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}
