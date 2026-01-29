@@ -10,9 +10,9 @@ from insight_eyes.core.models.session import Session, SessionStatus
 from insight_eyes.core.models.device import Device, DeviceType, DeviceStatus
 from insight_eyes.core.models.metrics import MetricsData, MetricType
 
+from insight_eyes.core.device_manager import DeviceManager
+from insight_eyes.core.database import DatabaseManager
 # TODO: 后续任务中实现
-# from insight_eyes.core.device_manager import DeviceManager
-# from insight_eyes.core.database import DatabaseManager
 # from insight_eyes.core.report_generator import ReportGenerator
 
 __all__ = [
@@ -24,7 +24,7 @@ __all__ = [
     "DeviceStatus",
     "MetricsData",
     "MetricType",
-    # "DeviceManager",
-    # "DatabaseManager",
+    "DeviceManager",
+    "DatabaseManager",
     # "ReportGenerator",
 ]
