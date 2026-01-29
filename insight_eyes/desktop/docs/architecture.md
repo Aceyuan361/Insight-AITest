@@ -21,9 +21,11 @@ Insight-Eye 是一个移动设备性能监控工具，支持 Android 和 iOS 平
 - **可扩展性**：模块化设计，易于添加新功能
 - **用户友好**：直观的 UI，简洁的操作流程
 - **高性能**：支持多设备并行监控
+- **跨平台访问**：支持桌面端和 Web 浏览器访问
 
 ### 1.3 技术栈
 
+#### 桌面端
 | 类别 | 技术 |
 |------|------|
 | GUI 框架 | PyQt6 |
@@ -33,6 +35,18 @@ Insight-Eye 是一个移动设备性能监控工具，支持 Android 和 iOS 平
 | iOS 通信 | pymobiledevice3 |
 | 日志 | logzero |
 | 数据处理 | NumPy |
+
+#### Web 端
+| 类别 | 技术 |
+|------|------|
+| 前端框架 | React 19 + TypeScript |
+| 构建工具 | Vite 7 |
+| 图表库 | ECharts 6 |
+| 状态管理 | Zustand |
+| 样式框架 | TailwindCSS 4 |
+| HTTP 客户端 | Axios |
+| 后端框架 | FastAPI |
+| 实时通信 | WebSocket |
 
 ## 2. 整体架构
 
@@ -586,13 +600,35 @@ Windows/macOS/Linux
 
 ## 11. 版本规划
 
-### v1.0.1（当前版本）
+### v1.0.3（当前版本）
 
+#### 桌面端
 - ✅ 支持 iOS 设备连接和监控
 - ✅ 使用 pymobiledevice3 替代 tidevice
 - ✅ iOS sysmon 数据采集（CPU/内存/网络/电池）
 - ✅ iOS 应用枚举支持
 - ✅ 改进数据处理和错误处理
+
+#### Web 端
+- ✅ React 19 + TypeScript 前端
+- ✅ 与桌面版 1:1 对等的霓虹主题 UI
+- ✅ 实时监控面板（2x2 图表网格）
+- ✅ 设备选择和监控控制
+- ✅ 会话历史查看
+- ✅ FastAPI 后端集成
+- ✅ WebSocket 实时数据推送
+- ✅ 响应式设计（支持移动端）
+
+### v1.0.2
+
+- ✅ FastAPI Web 后端
+- ✅ RESTful API 端点
+- ✅ WebSocket 实时数据推送
+- ✅ API 文档（Swagger UI）
+
+### v1.0.1
+
+- ✅ 支持 iOS 设备连接和监控
 - ✅ 所有 v1.0.0 功能
 
 ### v1.0.0
@@ -609,13 +645,15 @@ Windows/macOS/Linux
 - [ ] Wi-Fi 无线调试
 - [ ] 多设备对比视图
 - [ ] 自定义仪表盘
+- [ ] Web 端数据导出功能
+- [ ] Web 端报告生成和下载
 
 ### v2.0.0（远期规划）
 
-- [ ] Web 版本
 - [ ] 云端数据存储
 - [ ] AI 性能优化建议
 - [ ] 自动化测试集成
+- [ ] 移动端原生应用
 
 ---
 
