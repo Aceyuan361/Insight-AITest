@@ -40,15 +40,15 @@ installer/
 *.log
 app.log
 
-# Test files (临时测试文件)
-test_*.py
-verify_*.py
-fix_*.py
-diagnose_*.py
-simple_test.py
-final_test.py
-quick_test*.py
-nul
+# Test files (临时测试文件，排除 tests/ 目录)
+/test_*.py
+/verify_*.py
+/fix_*.py
+/diagnose_*.py
+/simple_test.py
+/final_test.py
+/quick_test*.py
+/nul
 
 # Claude
 .claude/
