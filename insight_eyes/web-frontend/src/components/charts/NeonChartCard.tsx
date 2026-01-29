@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { MetricCardConfig } from '@/types';
 import RealTimeChart from './RealTimeChart';
 
@@ -9,11 +9,16 @@ interface NeonChartCardProps {
 }
 
 export default function NeonChartCard({ config, data, timestamps }: NeonChartCardProps) {
-  const currentValue = data.length > 0 ? data[data.length - 1] : 0;
-  const avgValue = data.length > 0
-    ? data.reduce((sum, val) => sum + val, 0) / data.length
-    : 0;
-  const maxValue = data.length > 0 ? Math.max(...data) : 0;
+  // 使用 useMemo 优化统计计算，避免不必要的重渲染
+  const { currentValue, avgValue, maxValue } = useMemo(() => {
+    const currentValue = data.length > 0 ? data[data.length - 1] : 0;
+    const avgValue = data.length > 0
+      ? data.reduce((sum, val) => sum + val, 0) / data.length
+      : 0;
+    const maxValue = data.length > 0 ? Math.max(...data) : 0;
+
+    return { currentValue, avgValue, maxValue };
+  }, [data]);
 
   return (
     <div

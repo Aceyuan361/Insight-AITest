@@ -18,13 +18,27 @@ export default function RealTimeChart({ data, timestamps, config }: RealTimeChar
     // 初始化图表
     chartInstance.current = echarts.init(chartRef.current);
 
+    // 添加窗口resize监听器
+    const handleResize = () => {
+      chartInstance.current?.resize();
+    };
+
+    window.addEventListener('resize', handleResize);
+
     return () => {
+      window.removeEventListener('resize', handleResize);
       chartInstance.current?.dispose();
     };
   }, []);
 
   useEffect(() => {
     if (!chartInstance.current) return;
+
+    // 预处理时间戳数据
+    const formattedTimestamps = timestamps.map(t => {
+      const date = new Date(t);
+      return `${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`;
+    });
 
     const option: echarts.EChartsOption = {
       grid: {
@@ -35,10 +49,7 @@ export default function RealTimeChart({ data, timestamps, config }: RealTimeChar
       },
       xAxis: {
         type: 'category',
-        data: timestamps.map(t => {
-          const date = new Date(t);
-          return `${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`;
-        }),
+        data: formattedTimestamps,
         show: false,
       },
       yAxis: {
@@ -78,7 +89,7 @@ export default function RealTimeChart({ data, timestamps, config }: RealTimeChar
     };
 
     chartInstance.current.setOption(option);
-  }, [data, timestamps, config]);
+  }, [data, timestamps, config.yMin, config.yMax, config.color]);
 
   return <div ref={chartRef} className="w-full h-full" />;
 }
