@@ -13,13 +13,13 @@ export default function MenuBar() {
 
           {/* 菜单项 */}
           <div className="flex items-center space-x-6">
-            <a href="#" className="text-text-secondary hover:text-white transition-colors">
+            <a href="#" onClick={(e) => e.preventDefault()} className="text-text-secondary hover:text-white transition-colors">
               监控
             </a>
-            <a href="#" className="text-text-secondary hover:text-white transition-colors">
+            <a href="#" onClick={(e) => e.preventDefault()} className="text-text-secondary hover:text-white transition-colors">
               报告
             </a>
-            <a href="#" className="text-text-secondary hover:text-white transition-colors">
+            <a href="#" onClick={(e) => e.preventDefault()} className="text-text-secondary hover:text-white transition-colors">
               设置
             </a>
           </div>

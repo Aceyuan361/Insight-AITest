@@ -1,8 +1,18 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMonitoringStore } from '@/store/monitoringStore';
 
 export default function StatusBar() {
   const { isMonitoring, currentSession } = useMonitoringStore();
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    // 每秒更新时间
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   return (
     <footer className="fixed bottom-0 left-0 right-0 bg-dark-card border-t border-gray-800">
@@ -40,7 +50,7 @@ export default function StatusBar() {
 
           {/* 时间 */}
           <div className="text-sm text-text-secondary font-mono">
-            {new Date().toLocaleTimeString()}
+            {currentTime.toLocaleTimeString()}
           </div>
         </div>
       </div>
