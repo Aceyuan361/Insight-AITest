@@ -15,9 +15,10 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-# TODO: 将在后续路由中使用
-# from insight_eyes.core.device_manager import DeviceManager
-# from insight_eyes.core.database import DatabaseManager
+# API 路由
+from insight_eyes.web.api.devices import router as devices_router
+from insight_eyes.web.api.monitoring import router as monitoring_router
+from insight_eyes.web.websocket.handler import monitoring_websocket
 
 # 版本管理
 __version__ = "1.0.3"
@@ -53,6 +54,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 注册路由
+app.include_router(devices_router)
+app.include_router(monitoring_router)
+app.websocket("/ws/monitoring/{session_id}")(monitoring_websocket)
 
 
 @app.get("/")
