@@ -1,6 +1,14 @@
+# -*- coding: utf-8 -*-
 """
 Insight-Eye 核心层
-提供桌面版和 Web 版共享的业务逻辑
+
+提供桌面版和 Web 版共享的业务逻辑和数据模型。
+
+核心层架构：
+- models/: 数据模型定义（Session, Device, MetricsData）
+- device_manager: 设备管理（待实现）
+- database: 数据库管理（待实现）
+- report_generator: 报告生成（待实现）
 """
 
 __version__ = "1.0.3"
