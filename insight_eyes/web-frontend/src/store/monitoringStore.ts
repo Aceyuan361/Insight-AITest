@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { Device, Session, MetricsData } from '@/types';
+import { api } from '@/services/api';
 
 interface MonitoringState {
   // 状态
@@ -46,21 +47,7 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
     }
 
     try {
-      const response = await fetch('/api/monitoring/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          device_id: deviceId,
-          app_package: appPackage,
-          platform, // C3: 使用动态平台参数
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to start monitoring');
-      }
-
-      const session: Session = await response.json();
+      const session: Session = await api.startMonitoring(deviceId, appPackage, platform);
 
       // I1: 使用环境变量配置 WebSocket URL
       const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8000';
@@ -124,15 +111,7 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
     // I2: 调用 API 停止监控，只有在成功后才清除状态
     if (currentSession) {
       try {
-        const response = await fetch(`/api/monitoring/stop`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ session_id: currentSession.id }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to stop monitoring session');
-        }
+        await api.stopMonitoring(currentSession.id);
 
         // 只有在 API 调用成功后才清除状态
         set({
