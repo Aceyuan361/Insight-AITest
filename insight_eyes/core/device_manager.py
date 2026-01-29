@@ -11,11 +11,9 @@ from datetime import datetime
 from logzero import logger
 
 from insight_eyes.core.models.device import Device, DeviceType, DeviceStatus
-from insight_eyes.core.models.session import Session
+from insight_eyes.core.models.session import Session, SessionStatus
 from insight_eyes.core.models.metrics import MetricsData
-
-# TODO: 在数据库管理器实现后启用
-# from insight_eyes.core.database import DatabaseManager
+from insight_eyes.core.database import DatabaseManager
 
 
 class DeviceManager:
@@ -43,27 +41,19 @@ class DeviceManager:
         return []
 
     @staticmethod
-    async def start_session(device_id: str, app_package: str) -> Session:
+    async def start_session(device_id: str, app_package: str, platform: str = "android") -> Session:
         """开始监控会话
 
         Args:
             device_id: 设备ID
             app_package: 应用包名
+            platform: 平台类型 ('android' 或 'ios')
 
         Returns:
             创建的会话对象
         """
-        # TODO: 在数据库管理器实现后启用
-        # db = DatabaseManager()
-        # session = db.create_session(device_id, app_package)
-
-        # 临时创建模拟会话对象
-        session = Session(
-            id=1,
-            device_id=device_id,
-            app_package=app_package,
-            status="running",
-        )
+        db = DatabaseManager()
+        session = db.create_session(device_id, app_package, platform=platform)
 
         logger.info(f"开始监控会话: {session.id}")
         return session
@@ -75,13 +65,12 @@ class DeviceManager:
         Args:
             session_id: 会话ID
         """
-        # TODO: 在数据库管理器实现后启用
-        # db = DatabaseManager()
-        # db.update_session(
-        #     session_id,
-        #     status="stopped",
-        #     end_time=datetime.now().isoformat(),
-        # )
+        db = DatabaseManager()
+        db.update_session(
+            session_id,
+            status="stopped",
+            end_time=datetime.now().isoformat(),
+        )
 
         logger.info(f"停止监控会话: {session_id}")
 
