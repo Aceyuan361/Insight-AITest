@@ -2,9 +2,13 @@
 
 ## Insight-Eye
 
-**版本**: v1.0.1
+**版本**: v1.0.3
 
-**Insight-Eye** 是一个跨平台设备性能监控工具，支持 Android 和 iOS 平台，提供 Python API 和 PyQt6 桌面 GUI 应用（赛博朋克霓虹风格）。
+**Insight-Eye** 是一个跨平台设备性能监控工具，支持 Android 和 iOS 平台，提供：
+- Python API
+- PyQt6 桌面 GUI 应用（赛博朋克霓虹风格）
+- FastAPI Web 后端
+- React Web 前端（与桌面版 1:1 对等）
 
 ## 项目结构
 
@@ -31,40 +35,38 @@ insight_eyes/
 │   │   ├── metrics_throttle.py # 频率控制层
 │   │   └── exceptions.py       # iOS 专用异常
 │   └── common.py         # 设备检测、平台枚举
-└── desktop/              # PyQt6 桌面应用
-    ├── main.py           # 应用入口
-    ├── core/             # 设备管理、适配器、应用枚举
-    │   ├── device_manager.py    # 设备管理器（支持 Android/iOS）
-    │   ├── device_adapters.py   # 设备适配器工厂
-    │   ├── ios_device_adapter.py # iOS 设备适配器
-    │   ├── ios_app_enumerator.py # iOS 应用枚举
-    │   └── models.py            # 数据模型
-    ├── analytics/        # 数据分析、异常检测
-    │   ├── metrics_processor.py     # 原始数据处理
-    │   ├── anomaly_detector.py      # 异常检测
-    │   ├── ios_session_monitor.py   # iOS 会话监控
-    │   └── ios_serial_collector.py  # iOS 串口数据采集
-    ├── data/             # 数据库、导出
-    │   ├── database.py          # SQLite 数据库
-    │   ├── repository.py        # 数据仓库
-    │   ├── session_manager.py   # 会话管理
-    │   └── exporter.py          # 数据导出（CSV/JSON/Excel/MD）
-    ├── ui/               # PyQt6 UI 组件、图表
-    │   ├── main_window.py       # 主窗口
-    │   ├── panels/              # UI 面板
-    │   │   ├── device_selection_panel.py
-    │   │   ├── monitor_panel_v2.py
-    │   │   ├── config_panel.py
-    │   │   └── report_panel.py
-    │   ├── charts/              # 图表组件
-    │   │   └── trend_chart.py
-    │   └── widgets/             # 自定义控件
-    ├── config/           # 配置管理
-    │   └── config_manager.py
-    └── tools/            # 工具脚本
-        ├── init_db.py
-        ├── debug_main.py
-        └── diagnose.py
+├── desktop/              # PyQt6 桌面应用
+│   ├── main.py           # 应用入口
+│   ├── core/             # 设备管理、适配器、应用枚举
+│   ├── analytics/        # 数据分析、异常检测
+│   ├── data/             # 数据库、导出
+│   ├── ui/               # PyQt6 UI 组件、图表
+│   ├── config/           # 配置管理
+│   └── tools/            # 工具脚本
+├── web/                  # FastAPI Web 后端
+│   ├── api/              # API 端点
+│   │   ├── main.py       # FastAPI 主应用
+│   │   ├── devices.py    # 设备管理 API
+│   │   ├── monitoring.py # 监控控制 API
+│   │   └── schemas.py    # Pydantic 数据模型
+│   ├── websocket/        # WebSocket 处理
+│   │   └── handler.py    # 实时数据推送
+│   └── requirements.txt  # Web 依赖
+└── web-frontend/         # React Web 前端
+    ├── src/
+    │   ├── components/   # React 组件
+    │   │   ├── charts/   # ECharts 图表组件
+    │   │   ├── layout/   # 布局组件
+    │   │   ├── panels/   # 面板组件
+    │   │   └── widgets/  # 小部件
+    │   ├── config/       # 配置文件
+    │   ├── services/     # API 服务
+    │   ├── store/        # Zustand 状态管理
+    │   ├── theme/        # 霓虹主题
+    │   └── types/        # TypeScript 类型
+    ├── package.json
+    ├── vite.config.ts
+    └── tailwind.config.js
 ```
 
 ## 系统架构
