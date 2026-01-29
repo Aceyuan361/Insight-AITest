@@ -94,3 +94,35 @@ def test_delete_session(db_manager):
 
     retrieved = db_manager.get_session(session_id)
     assert retrieved is None
+
+
+def test_create_session_validation_empty_device_id(db_manager):
+    """测试创建会话时空设备ID验证"""
+    with pytest.raises(ValueError, match="device_id cannot be empty"):
+        db_manager.create_session("", "com.example.app")
+
+
+def test_create_session_validation_whitespace_device_id(db_manager):
+    """测试创建会话时空白设备ID验证"""
+    with pytest.raises(ValueError, match="device_id cannot be empty"):
+        db_manager.create_session("   ", "com.example.app")
+
+
+def test_create_session_validation_empty_app_package(db_manager):
+    """测试创建会话时空包名验证"""
+    with pytest.raises(ValueError, match="app_package cannot be empty"):
+        db_manager.create_session("test_device", "")
+
+
+def test_create_session_validation_invalid_platform(db_manager):
+    """测试创建会话时无效平台验证"""
+    with pytest.raises(ValueError, match="Invalid platform"):
+        db_manager.create_session("test_device", "com.example.app", platform="windows")
+
+
+def test_create_session_with_ios_platform(db_manager):
+    """测试创建iOS平台会话"""
+    session = db_manager.create_session("test_device", "com.example.app", platform="ios")
+
+    assert session.platform == "ios"
+    assert session.status == SessionStatus.RUNNING

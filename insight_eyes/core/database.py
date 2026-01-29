@@ -5,6 +5,8 @@
 核心层数据库管理，提供统一的数据库操作接口。
 使用 sqlite3 实现线程安全的单例模式。
 """
+from __future__ import annotations
+
 import sqlite3
 import threading
 from datetime import datetime
@@ -26,7 +28,7 @@ class DatabaseManager:
     _instance = None
     _lock = threading.Lock()
 
-    def __new__(cls, db_path: str = None):
+    def __new__(cls, db_path: Optional[str] = None) -> DatabaseManager:
         """实现单例模式，确保全局只有一个数据库管理器实例
 
         Args:
@@ -43,7 +45,7 @@ class DatabaseManager:
                 cls._instance = super().__new__(cls)
             return cls._instance
 
-    def __init__(self, db_path: str = None):
+    def __init__(self, db_path: Optional[str] = None):
         """初始化数据库管理器
 
         Args:
@@ -80,7 +82,7 @@ class DatabaseManager:
         return self._local.conn
 
     @contextmanager
-    def transaction(self):
+    def transaction(self) -> Any:
         """事务上下文管理器
 
         Usage:
@@ -95,7 +97,7 @@ class DatabaseManager:
             conn.rollback()
             raise e
 
-    def _init_database(self):
+    def _init_database(self) -> None:
         """初始化数据库表结构"""
         conn = self.get_connection()
 
@@ -145,8 +147,13 @@ class DatabaseManager:
 
     # ==================== 会话管理 ====================
 
-    def create_session(self, device_id: str, app_package: str,
-                       platform: str = 'android', tags: Dict = None) -> 'Session':
+    def create_session(
+        self,
+        device_id: str,
+        app_package: str,
+        platform: str = 'android',
+        tags: Optional[Dict[str, Any]] = None
+    ) -> Session:
         """创建新的监控会话
 
         Args:
@@ -157,9 +164,22 @@ class DatabaseManager:
 
         Returns:
             Session: 会话对象
+
+        Raises:
+            ValueError: 如果输入参数无效
         """
         from insight_eyes.core.models.session import Session
         from insight_eyes.core.models.session import SessionStatus
+
+        # 输入验证
+        if not device_id or not device_id.strip():
+            raise ValueError("device_id cannot be empty")
+
+        if not app_package or not app_package.strip():
+            raise ValueError("app_package cannot be empty")
+
+        if platform not in ('android', 'ios'):
+            raise ValueError(f"Invalid platform: {platform}. Must be 'android' or 'ios'")
 
         with self.transaction() as conn:
             cursor = conn.execute('''
@@ -177,7 +197,7 @@ class DatabaseManager:
             status=SessionStatus.RUNNING
         )
 
-    def update_session(self, session_id: int, **kwargs):
+    def update_session(self, session_id: int, **kwargs: Any) -> None:
         """更新会话信息
 
         Args:
@@ -198,7 +218,7 @@ class DatabaseManager:
                 query = f"UPDATE sessions SET {', '.join(fields)} WHERE id = ?"
                 conn.execute(query, values)
 
-    def get_session(self, session_id: int) -> Optional['Session']:
+    def get_session(self, session_id: int) -> Optional[Session]:
         """获取会话信息
 
         Args:
@@ -227,7 +247,11 @@ class DatabaseManager:
             )
         return None
 
-    def list_sessions(self, device_id: str = None, limit: int = None) -> List['Session']:
+    def list_sessions(
+        self,
+        device_id: Optional[str] = None,
+        limit: Optional[int] = None
+    ) -> List[Session]:
         """列出会话
 
         Args:
@@ -271,7 +295,7 @@ class DatabaseManager:
 
         return sessions
 
-    def delete_session(self, session_id: int):
+    def delete_session(self, session_id: int) -> None:
         """删除会话
 
         Args:
@@ -282,7 +306,7 @@ class DatabaseManager:
 
     # ==================== 性能指标管理 ====================
 
-    def save_metrics(self, session_id: int, metrics: 'MetricsData'):
+    def save_metrics(self, session_id: int, metrics: MetricsData) -> None:
         """保存性能指标数据
 
         Args:
@@ -306,9 +330,12 @@ class DatabaseManager:
                 metrics.battery
             ))
 
-    def get_metrics(self, session_id: int,
-                    start_time: datetime = None,
-                    end_time: datetime = None) -> List['MetricsData']:
+    def get_metrics(
+        self,
+        session_id: int,
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None
+    ) -> List[MetricsData]:
         """查询指定会话的性能指标数据
 
         Args:
@@ -353,7 +380,7 @@ class DatabaseManager:
 
     # ==================== 数据维护 ====================
 
-    def close(self):
+    def close(self) -> None:
         """关闭数据库连接"""
         if hasattr(self._local, 'conn') and self._local.conn:
             self._local.conn.close()
