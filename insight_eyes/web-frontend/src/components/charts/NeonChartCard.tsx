@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { MetricCardConfig } from '@/types';
+import { useMemo } from 'react';
+import type { MetricCardConfig } from '@/types';
 import RealTimeChart from './RealTimeChart';
 
 interface NeonChartCardProps {

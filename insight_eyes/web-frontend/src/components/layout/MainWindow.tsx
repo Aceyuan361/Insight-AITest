@@ -1,14 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMonitoringStore } from '@/store/monitoringStore';
 import { api } from '@/services/api';
 import MenuBar from './MenuBar';
 import StatusBar from './StatusBar';
 import DeviceSelectionPanel from '../panels/DeviceSelectionPanel';
 import MonitorPanel from '../panels/MonitorPanel';
+import ReportPanel from '../panels/ReportPanel';
+
+type TabType = 'monitor' | 'report';
 
 export default function MainWindow() {
   const { setDevices } = useMonitoringStore();
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<TabType>('monitor');
 
   useEffect(() => {
     // 加载设备列表
@@ -42,15 +46,45 @@ export default function MainWindow() {
           </div>
         )}
 
-        {/* 主内容区域 */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-1">
-            <DeviceSelectionPanel />
-          </div>
-          <div className="lg:col-span-3">
-            <MonitorPanel />
+        {/* 标签页切换 */}
+        <div className="mb-6">
+          <div className="flex space-x-2 border-b border-gray-800">
+            <button
+              onClick={() => setActiveTab('monitor')}
+              className={`px-6 py-3 font-medium transition-colors ${
+                activeTab === 'monitor'
+                  ? 'text-neon-cpu border-b-2 border-neon-cpu'
+                  : 'text-text-secondary hover:text-text-primary'
+              }`}
+            >
+              实时监控
+            </button>
+            <button
+              onClick={() => setActiveTab('report')}
+              className={`px-6 py-3 font-medium transition-colors ${
+                activeTab === 'report'
+                  ? 'text-neon-cpu border-b-2 border-neon-cpu'
+                  : 'text-text-secondary hover:text-text-primary'
+              }`}
+            >
+              性能报告
+            </button>
           </div>
         </div>
+
+        {/* 主内容区域 */}
+        {activeTab === 'monitor' ? (
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div className="lg:col-span-1">
+              <DeviceSelectionPanel />
+            </div>
+            <div className="lg:col-span-3">
+              <MonitorPanel />
+            </div>
+          </div>
+        ) : (
+          <ReportPanel />
+        )}
       </div>
       <StatusBar />
     </div>

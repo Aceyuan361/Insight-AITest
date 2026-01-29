@@ -1,5 +1,3 @@
-import React from 'react';
-
 export default function MenuBar() {
   return (
     <nav className="bg-dark-card border-b border-gray-800">

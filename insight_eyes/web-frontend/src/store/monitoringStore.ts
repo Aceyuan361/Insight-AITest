@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Device, Session, MetricsData } from '@/types';
+import type { Device, Session, MetricsData } from '@/types';
 import { api } from '@/services/api';
 
 interface MonitoringState {

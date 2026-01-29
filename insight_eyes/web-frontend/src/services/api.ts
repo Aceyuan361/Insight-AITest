@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Device, Session } from '@/types';
+import type { Device, Session } from '@/types';
 
 const API_BASE_URL = '/api';
 

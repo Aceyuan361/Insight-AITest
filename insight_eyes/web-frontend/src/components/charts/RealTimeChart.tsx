@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
-import { MetricCardConfig } from '@/types';
+import type { MetricCardConfig } from '@/types';
 
 interface RealTimeChartProps {
   data: number[];

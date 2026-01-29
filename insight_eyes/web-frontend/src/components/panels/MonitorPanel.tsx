@@ -1,4 +1,3 @@
-import React from 'react';
 import { useMonitoringStore } from '@/store/monitoringStore';
 import { ALL_METRIC_CARDS } from '@/config/metricCards';
 import NeonChartCard from '@/components/charts/NeonChartCard';

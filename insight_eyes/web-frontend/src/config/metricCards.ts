@@ -1,4 +1,4 @@
-import { MetricCardConfig } from '@/types';
+import type { MetricCardConfig } from '@/types';
 
 export const ALL_METRIC_CARDS: MetricCardConfig[] = [
   {

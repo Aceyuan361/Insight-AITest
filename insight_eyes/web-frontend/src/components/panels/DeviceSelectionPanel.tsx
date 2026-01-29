@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useMonitoringStore } from '@/store/monitoringStore';
 import { api } from '@/services/api';
 
