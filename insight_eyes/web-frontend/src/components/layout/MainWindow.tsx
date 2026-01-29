@@ -4,6 +4,7 @@ import { api } from '@/services/api';
 import MenuBar from './MenuBar';
 import StatusBar from './StatusBar';
 import DeviceSelectionPanel from '../panels/DeviceSelectionPanel';
+import MonitorPanel from '../panels/MonitorPanel';
 
 export default function MainWindow() {
   const { setDevices } = useMonitoringStore();
@@ -47,7 +48,7 @@ export default function MainWindow() {
             <DeviceSelectionPanel />
           </div>
           <div className="lg:col-span-3">
-            {/* MonitorPanel will be added in next task */}
+            <MonitorPanel />
           </div>
         </div>
       </div>
