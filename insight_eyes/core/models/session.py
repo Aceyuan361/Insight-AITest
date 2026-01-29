@@ -29,6 +29,7 @@ class Session:
         id: 会话唯一标识符
         device_id: 设备唯一标识符
         app_package: 被监控应用的包名
+        platform: 平台类型 ('android' 或 'ios')
         status: 会话当前状态
         start_time: 会话开始时间
         end_time: 会话结束时间（可选）
@@ -37,6 +38,7 @@ class Session:
     id: int
     device_id: str
     app_package: str
+    platform: str
     status: SessionStatus
     start_time: datetime
     end_time: Optional[datetime] = None
@@ -52,6 +54,7 @@ class Session:
             "id": self.id,
             "device_id": self.device_id,
             "app_package": self.app_package,
+            "platform": self.platform,
             "status": self.status.value,
             "start_time": self.start_time.isoformat(),
             "end_time": self.end_time.isoformat() if self.end_time else None,
@@ -72,6 +75,7 @@ class Session:
             id=data["id"],
             device_id=data["device_id"],
             app_package=data["app_package"],
+            platform=data.get("platform", "android"),
             status=SessionStatus(data["status"]),
             start_time=datetime.fromisoformat(data["start_time"]),
             end_time=datetime.fromisoformat(data["end_time"]) if data.get("end_time") else None,
