@@ -1,23 +1,47 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMonitoringStore } from '@/store/monitoringStore';
-import { api } from '@/services/api';
+import { deviceApi } from '@/services/api';
 
 export default function DeviceSelectionPanel() {
-  const { devices, selectedDevice, selectDevice, isMonitoring } = useMonitoringStore();
+  const { devices, setDevices, selectedDevice, selectDevice, isMonitoring } = useMonitoringStore();
   const [appPackage, setAppPackage] = useState('com.example.app');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleRefresh = async () => {
+  // 加载设备列表
+  const loadDevices = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const updatedDevices = await api.getDevices();
-      useMonitoringStore.getState().setDevices(updatedDevices);
-    } catch (error) {
-      console.error('Failed to refresh devices:', error);
+      const deviceList = await deviceApi.getDevices();
+      setDevices(deviceList);
+    } catch (err) {
+      console.error('Failed to load devices:', err);
+      setError('无法加载设备列表，请检查后端服务是否正常运行');
     } finally {
       setLoading(false);
     }
   };
+
+  // 刷新设备列表
+  const handleRefresh = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const deviceList = await deviceApi.refreshDevices();
+      setDevices(deviceList);
+    } catch (err) {
+      console.error('Failed to refresh devices:', err);
+      setError('刷新设备列表失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 初始加载
+  useEffect(() => {
+    loadDevices();
+  }, []);
 
   return (
     <div className="bg-dark-card rounded-lg border border-gray-800 p-6">
@@ -31,6 +55,13 @@ export default function DeviceSelectionPanel() {
           {loading ? '刷新中...' : '刷新设备'}
         </button>
       </div>
+
+      {/* 错误提示 */}
+      {error && (
+        <div className="mb-4 p-3 bg-red-900 bg-opacity-30 border border-red-700 rounded-lg text-red-300 text-sm">
+          {error}
+        </div>
+      )}
 
       {/* 设备列表 */}
       <div className="space-y-2 mb-6">
