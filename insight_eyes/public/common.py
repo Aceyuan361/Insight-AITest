@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 设备检测模块
-提供 Android 设备检测和平台识别功能
+提供 Android 和 iOS 设备检测和平台识别功能
 """
 import subprocess
 from logzero import logger
@@ -18,14 +18,14 @@ class Platform(Enum):
 
 
 class Devices:
-    """设备检测工具类（仅支持 Android 设备）"""
+    """设备检测工具类（支持 Android 和 iOS 设备）"""
 
     def getDevices(self):
         """
         获取所有连接的设备列表
 
         Returns:
-            list: 设备信息字符串列表，如 ["Android emulator-5554"]
+            list: 设备信息字符串列表，如 ["Android emulator-5554", "iOS <device-serial>"]
         """
         devices = []
 
@@ -33,6 +33,10 @@ class Devices:
         android_devices = self._get_android_devices()
         for device_id in android_devices:
             devices.append(f"Android {device_id}")
+
+        # 获取 iOS 设备
+        ios_devices = self._get_ios_devices()
+        devices.extend(ios_devices)
 
         return devices
 
@@ -60,13 +64,35 @@ class Devices:
             logger.error(f"获取 Android 设备失败: {e}")
             return []
 
+    def _get_ios_devices(self):
+        """获取 iOS 设备列表"""
+        try:
+            from pymobiledevice3.usbmux import list_devices
+
+            devices = []
+            ios_device_list = list_devices()
+
+            for device in ios_device_list:
+                device_id = str(device.serial)
+                devices.append(f"iOS {device_id}")
+                logger.debug(f"检测到 iOS 设备: {device_id}")
+
+            return devices
+
+        except ImportError:
+            logger.debug("pymobiledevice3 未安装，跳过 iOS 设备扫描")
+            return []
+        except Exception as e:
+            logger.error(f"获取 iOS 设备失败: {e}")
+            return []
+
     def getIdbyDevice(self, device_info_str, platform):
         """
         从设备信息字符串中提取设备 ID
 
         Args:
-            device_info_str: 设备信息字符串，如 "Android emulator-5554"
-            platform: 平台类型 (Platform.Android)
+            device_info_str: 设备信息字符串，如 "Android emulator-5554" 或 "iOS <device-serial>"
+            platform: 平台类型 (Platform.Android 或 Platform.IOS)
 
         Returns:
             str: 设备 ID
@@ -75,5 +101,10 @@ class Devices:
             # Android: "Android emulator-5554" -> "emulator-5554"
             if device_info_str.startswith("Android "):
                 return device_info_str[8:].strip()
+            return device_info_str
+        elif platform == Platform.IOS:
+            # iOS: "iOS <device-serial>" -> "<device-serial>"
+            if device_info_str.startswith("iOS "):
+                return device_info_str[4:].strip()
             return device_info_str
         return device_info_str
