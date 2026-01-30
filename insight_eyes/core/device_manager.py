@@ -28,17 +28,78 @@ class DeviceManager:
     def scan_devices() -> List[Device]:
         """扫描可用设备
 
-        TODO: 从桌面层移植实际的设备扫描逻辑
-        - Android 设备通过 ADB 扫描
-        - iOS 设备通过 pymobiledevice3 扫描
+        扫描并返回所有已连接的 Android 和 iOS 设备。
+        使用桌面层的设备适配器进行设备连接和信息获取。
 
         Returns:
-            设备列表（当前返回空列表）
+            设备列表
         """
+        from insight_eyes.public.common import Devices, Platform
+        from insight_eyes.desktop.core.device_adapters import DeviceAdapterFactory
+
         logger.info("扫描设备...")
-        # TODO: 实现实际的设备扫描逻辑
-        # 这里先返回空列表，待后续从 desktop 移植实现
-        return []
+        devices = []
+
+        try:
+            # 获取当前连接的设备
+            devices_detector = Devices()
+            device_list = devices_detector.getDevices()
+
+            logger.debug(f"检测到 {len(device_list)} 个设备字符串: {device_list}")
+
+            # 处理每个设备
+            for device_str in device_list:
+                try:
+                    # 解析设备类型和ID
+                    if device_str.startswith("Android "):
+                        device_id = device_str[8:].strip()
+                        device_type = DeviceType.ANDROID
+                        platform = Platform.ANDROID
+                    elif device_str.startswith("iOS "):
+                        device_id = device_str[4:].strip()
+                        device_type = DeviceType.IOS
+                        platform = Platform.IOS
+                    else:
+                        logger.debug(f"跳过未知设备格式: {device_str}")
+                        continue
+
+                    logger.debug(f"处理设备: {device_id} ({device_type.value})")
+
+                    # 创建设备适配器并获取设备信息
+                    adapter = DeviceAdapterFactory.create_adapter(device_id, platform)
+                    if not adapter:
+                        logger.warning(f"无法为设备 {device_id} 创建适配器")
+                        continue
+
+                    # 连接设备并获取信息
+                    if adapter.connect():
+                        device_info = adapter.get_device_info()
+                        if device_info:
+                            # 转换桌面层 DeviceInfo 为核心层 Device 模型
+                            device = Device(
+                                device_id=device_info.device_id,
+                                name=device_info.name,
+                                type=device_type,
+                                status=DeviceStatus.ONLINE,
+                                sdk_version=device_info.os_version,
+                                model=device_info.model
+                            )
+                            devices.append(device)
+                            logger.info(f"发现设备: {device.name} ({device.type.value})")
+                        else:
+                            logger.warning(f"无法获取设备信息: {device_id}")
+                    else:
+                        logger.warning(f"无法连接到设备 {device_id}")
+
+                except Exception as e:
+                    logger.error(f"处理设备失败 [{device_str}]: {e}", exc_info=True)
+                    continue
+
+        except Exception as e:
+            logger.error(f"设备扫描异常: {e}", exc_info=True)
+
+        logger.info(f"扫描完成，共发现 {len(devices)} 个设备")
+        return devices
 
     @staticmethod
     async def start_session(device_id: str, app_package: str, platform: str = "android") -> Session:
