@@ -1,14 +1,30 @@
 import { useState, useEffect } from 'react';
 import { useMonitoringStore } from '@/store/monitoringStore';
-import { api } from '@/services/api';
+import { deviceApi } from '@/services/api';
 import { getMockAppsForDevice, getAppName } from '@/services/mockApps';
 import type { AppInfo } from '@/types';
 
 export default function DeviceSelectionPanel() {
-  const { devices, selectedDevice, selectDevice, isMonitoring, currentSession, batteryInfo } = useMonitoringStore();
+  const { devices, selectedDevice, selectDevice, isMonitoring, currentSession, batteryInfo, setDevices } = useMonitoringStore();
   const [apps, setApps] = useState<AppInfo[]>([]);
   const [selectedAppPackage, setSelectedAppPackage] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // 加载设备列表
+  const loadDevices = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const deviceList = await deviceApi.getDevices();
+      setDevices(deviceList);
+    } catch (err) {
+      console.error('Failed to load devices:', err);
+      setError('无法加载设备列表，请检查后端服务是否正常运行');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // 当选择的设备改变时，加载应用列表
   useEffect(() => {
@@ -26,20 +42,27 @@ export default function DeviceSelectionPanel() {
 
   const handleRefresh = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const updatedDevices = await api.getDevices();
-      useMonitoringStore.getState().setDevices(updatedDevices);
+      const deviceList = await deviceApi.refreshDevices();
+      setDevices(deviceList);
       // 刷新后重新加载应用列表
       if (selectedDevice) {
         const deviceApps = getMockAppsForDevice(selectedDevice);
         setApps(deviceApps);
       }
-    } catch (error) {
-      console.error('Failed to refresh devices:', error);
+    } catch (err) {
+      console.error('Failed to refresh devices:', err);
+      setError('刷新设备列表失败');
     } finally {
       setLoading(false);
     }
   };
+
+  // 初始加载
+  useEffect(() => {
+    loadDevices();
+  }, []);
 
   const handleDeviceChange = (deviceId: string) => {
     selectDevice(deviceId);
@@ -102,6 +125,20 @@ export default function DeviceSelectionPanel() {
       }}>
         监控目标
       </div>
+
+      {/* 错误提示 */}
+      {error && (
+        <div style={{
+          padding: '8px 12px',
+          backgroundColor: 'rgba(127, 29, 29, 0.3)',
+          border: '1px solid #dc2626',
+          borderRadius: '6px',
+          color: '#fca5a5',
+          fontSize: '10pt',
+        }}>
+          {error}
+        </div>
+      )}
 
       {/* === 设备选择 === */}
       <div>
