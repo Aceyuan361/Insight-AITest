@@ -1,17 +1,39 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMonitoringStore } from '@/store/monitoringStore';
 import { api } from '@/services/api';
+import { getMockAppsForDevice, getAppName } from '@/services/mockApps';
+import type { AppInfo } from '@/types';
 
 export default function DeviceSelectionPanel() {
-  const { devices, selectedDevice, selectDevice, isMonitoring } = useMonitoringStore();
-  const [appPackage, setAppPackage] = useState('com.example.app');
+  const { devices, selectedDevice, selectDevice, isMonitoring, currentSession, batteryInfo } = useMonitoringStore();
+  const [apps, setApps] = useState<AppInfo[]>([]);
+  const [selectedAppPackage, setSelectedAppPackage] = useState<string>('');
   const [loading, setLoading] = useState(false);
+
+  // 当选择的设备改变时，加载应用列表
+  useEffect(() => {
+    if (selectedDevice) {
+      const deviceApps = getMockAppsForDevice(selectedDevice);
+      setApps(deviceApps);
+    }
+  }, [selectedDevice]);
+
+  // 从会话中获取应用名称
+  const currentAppName = currentSession?.app_name ||
+    (selectedAppPackage ? getAppName(selectedAppPackage) : '');
+  const currentDevice = devices.find(d => d.device_id === selectedDevice);
+  const currentDeviceName = currentDevice?.name || currentSession && devices.find(d => d.device_id === currentSession.device_id)?.name || '';
 
   const handleRefresh = async () => {
     setLoading(true);
     try {
       const updatedDevices = await api.getDevices();
       useMonitoringStore.getState().setDevices(updatedDevices);
+      // 刷新后重新加载应用列表
+      if (selectedDevice) {
+        const deviceApps = getMockAppsForDevice(selectedDevice);
+        setApps(deviceApps);
+      }
     } catch (error) {
       console.error('Failed to refresh devices:', error);
     } finally {
@@ -19,72 +41,285 @@ export default function DeviceSelectionPanel() {
     }
   };
 
+  const handleDeviceChange = (deviceId: string) => {
+    selectDevice(deviceId);
+    setSelectedAppPackage('');
+  };
+
+  const handleAppChange = (appPackage: string) => {
+    setSelectedAppPackage(appPackage);
+  };
+
+  const handleStartStopMonitoring = async () => {
+    if (isMonitoring) {
+      await useMonitoringStore.getState().stopMonitoring();
+    } else {
+      if (selectedDevice && selectedAppPackage) {
+        const device = devices.find(d => d.device_id === selectedDevice);
+        const platform = device?.type || 'android';
+        const appName = getAppName(selectedAppPackage);
+        await useMonitoringStore.getState().startMonitoring(
+          selectedDevice,
+          selectedAppPackage,
+          platform
+        );
+        // 更新会话中的应用名称
+        if (useMonitoringStore.getState().currentSession) {
+          useMonitoringStore.getState().currentSession!.app_name = appName;
+        }
+      }
+    }
+  };
+
+  const getPlatformIcon = (type: string) => {
+    return type === 'android' ? '🤖' : type === 'ios' ? '🍎' : '📱';
+  };
+
+  const getStatusText = (status: string) => {
+    const statusMap: Record<string, string> = {
+      'online': '在线',
+      'offline': '离线',
+      'unauthorized': '未授权',
+    };
+    return statusMap[status] || status;
+  };
+
+  const canStart = selectedDevice && selectedAppPackage && !isMonitoring;
+
   return (
-    <div className="bg-dark-card rounded-lg border border-gray-800 p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-neon-cpu">设备选择</h2>
+    <div style={{
+      padding: '12px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '16px',
+    }}>
+      {/* === 标题 === */}
+      <div style={{
+        fontSize: '16pt',
+        fontWeight: '700',
+        color: '#00d4ff',
+        padding: '4px 0px',
+      }}>
+        监控目标
+      </div>
+
+      {/* === 设备选择 === */}
+      <div>
+        <label style={{
+          fontSize: '11pt',
+          fontWeight: '600',
+          color: '#94a3b8',
+          display: 'block',
+          marginBottom: '8px',
+        }}>
+          设备
+        </label>
+        {isMonitoring && currentDevice ? (
+          // 监控中显示设备信息
+          <div style={{
+            width: '100%',
+            backgroundColor: '#121824',
+            color: '#e0e6ed',
+            border: '1px solid #1a1f2e',
+            borderRadius: '6px',
+            padding: '10px 12px',
+            fontSize: '10pt',
+          }}>
+            {getPlatformIcon(currentDevice.type)} {currentDevice.name} ({getStatusText(currentDevice.status)})
+          </div>
+        ) : (
+          // 未监控显示下拉框
+          <select
+            value={selectedDevice || ''}
+            onChange={(e) => handleDeviceChange(e.target.value)}
+            style={{
+              width: '100%',
+              backgroundColor: '#121824',
+              color: '#e0e6ed',
+              border: '1px solid #1a1f2e',
+              borderRadius: '6px',
+              padding: '10px 12px',
+              fontSize: '10pt',
+            }}
+          >
+            <option value="">选择设备...</option>
+            {devices.map((device) => (
+              <option key={device.device_id} value={device.device_id}>
+                {getPlatformIcon(device.type)} {device.name} ({getStatusText(device.status)})
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
+
+      {/* === 应用选择 === */}
+      <div>
+        <label style={{
+          fontSize: '11pt',
+          fontWeight: '600',
+          color: '#94a3b8',
+          display: 'block',
+          marginBottom: '8px',
+        }}>
+          应用
+        </label>
+        {isMonitoring && currentAppName ? (
+          // 监控中显示应用名称
+          <div style={{
+            width: '100%',
+            backgroundColor: '#121824',
+            color: '#e0e6ed',
+            border: '1px solid #1a1f2e',
+            borderRadius: '6px',
+            padding: '10px 12px',
+            fontSize: '10pt',
+          }}>
+            {currentAppName}
+          </div>
+        ) : (
+          // 未监控显示下拉框
+          <select
+            value={selectedAppPackage}
+            onChange={(e) => handleAppChange(e.target.value)}
+            disabled={!selectedDevice}
+            style={{
+              width: '100%',
+              backgroundColor: !selectedDevice ? '#1a1f2e' : '#121824',
+              color: '#e0e6ed',
+              border: '1px solid #1a1f2e',
+              borderRadius: '6px',
+              padding: '10px 12px',
+              fontSize: '10pt',
+              opacity: !selectedDevice ? 0.6 : 1,
+            }}
+          >
+            <option value="">选择应用...</option>
+            {apps.map((app) => (
+              <option key={app.package_name} value={app.package_name}>
+                {app.app_name}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
+
+      {/* === 当前目标显示 === */}
+      <div style={{
+        backgroundColor: '#0a0e17',
+        border: '1px solid #1a1f2e',
+        borderRadius: '8px',
+        padding: '12px',
+      }}>
+        <div style={{
+          fontSize: '11pt',
+          fontWeight: '600',
+          color: '#7dd3fc',
+          marginBottom: '8px',
+        }}>
+          当前目标
+        </div>
+        <div style={{
+          fontSize: '10pt',
+          color: currentDeviceName ? '#e0e6ed' : '#94a3b8',
+          padding: '4px 8px',
+        }}>
+          设备: {currentDeviceName || '未选择'}
+        </div>
+        <div style={{
+          fontSize: '10pt',
+          color: currentAppName ? '#e0e6ed' : '#94a3b8',
+          padding: '4px 8px',
+        }}>
+          应用: {currentAppName || '未选择'}
+        </div>
+      </div>
+
+      {/* === 控制按钮 === */}
+      <div style={{ display: 'flex', gap: '12px' }}>
+        <button
+          onClick={handleStartStopMonitoring}
+          disabled={!canStart && !isMonitoring}
+          style={{
+            flex: 1,
+            backgroundColor: isMonitoring ? '#00BFFF' : canStart ? '#00d4ff' : '#1a1f2e',
+            color: isMonitoring ? '#0a0e17' : canStart ? '#0a0e17' : '#64748b',
+            border: 'none',
+            borderRadius: '6px',
+            padding: '12px 24px',
+            fontSize: '11pt',
+            fontWeight: '600',
+            cursor: canStart || isMonitoring ? 'pointer' : 'not-allowed',
+          }}
+        >
+          {isMonitoring ? '停止监控' : '开始监控'}
+        </button>
         <button
           onClick={handleRefresh}
           disabled={loading}
-          className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+          style={{
+            flex: 1,
+            backgroundColor: '#1a1f2e',
+            color: '#e0e6ed',
+            border: '1px solid #2d3748',
+            borderRadius: '6px',
+            padding: '12px 24px',
+            fontSize: '11pt',
+            fontWeight: '600',
+            opacity: loading ? 0.5 : 1,
+          }}
         >
           {loading ? '刷新中...' : '刷新设备'}
         </button>
       </div>
 
-      {/* 设备列表 */}
-      <div className="space-y-2 mb-6">
-        {devices.length === 0 ? (
-          <div className="text-center text-text-secondary py-8">
-            未检测到设备，请连接设备后点击刷新
-          </div>
-        ) : (
-          devices.map((device) => (
-            <div
-              key={device.device_id}
-              onClick={() => !isMonitoring && selectDevice(device.device_id)}
-              className={`p-4 rounded-lg border transition-all cursor-pointer ${
-                selectedDevice === device.device_id
-                  ? 'border-neon-cpu bg-gray-800'
-                  : 'border-gray-800 hover:border-gray-700'
-              } ${isMonitoring ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center">
-                    <h3 className="font-bold text-lg">{device.device_name || device.device_id}</h3>
-                    <span className={`ml-2 px-2 py-1 text-xs rounded ${
-                      device.platform === 'android'
-                        ? 'bg-green-900 text-green-300'
-                        : 'bg-blue-900 text-blue-300'
-                    }`}>
-                      {device.platform.toUpperCase()}
-                    </span>
-                  </div>
-                  <p className="text-sm text-text-secondary mt-1">{device.device_id}</p>
-                </div>
-                <div className={`w-3 h-3 rounded-full ${
-                  device.status === 'online' ? 'bg-green-500' : 'bg-gray-500'
-                }`} />
-              </div>
-            </div>
-          ))
-        )}
+      {/* === 状态显示 === */}
+      <div style={{
+        fontSize: '10pt',
+        color: isMonitoring ? '#22c55e' : '#64748b',
+        padding: '8px',
+        backgroundColor: '#0a0e17',
+        borderRadius: '6px',
+        textAlign: 'center',
+      }}>
+        {isMonitoring ? '● 监控中' : '● 未监控'}
       </div>
 
-      {/* 应用包名输入 */}
-      <div className="border-t border-gray-800 pt-4">
-        <label className="block text-sm font-medium text-text-secondary mb-2">
-          应用包名 / Bundle ID
-        </label>
-        <input
-          type="text"
-          value={appPackage}
-          onChange={(e) => setAppPackage(e.target.value)}
-          placeholder="com.example.app"
-          disabled={isMonitoring}
-          className="w-full px-4 py-2 bg-gray-900 border border-gray-800 rounded-lg focus:border-neon-cpu focus:outline-none disabled:opacity-50"
-        />
+      {/* === 电池信息 === */}
+      <div style={{
+        backgroundColor: '#0a0e17',
+        border: '1px solid #1a1f2e',
+        borderRadius: '8px',
+        padding: '12px',
+      }}>
+        <div style={{
+          fontSize: '11pt',
+          fontWeight: '600',
+          color: '#00ff87',
+          marginBottom: '8px',
+        }}>
+          电池信息
+        </div>
+        <div style={{
+          fontSize: '10pt',
+          color: '#94a3b8',
+          padding: '4px 8px',
+        }}>
+          电量: {batteryInfo.level}%
+        </div>
+        <div style={{
+          fontSize: '10pt',
+          color: '#94a3b8',
+          padding: '4px 8px',
+        }}>
+          温度: {batteryInfo.temperature}°C
+        </div>
+        <div style={{
+          fontSize: '10pt',
+          color: '#94a3b8',
+          padding: '4px 8px',
+        }}>
+          容量: {batteryInfo.capacity}
+        </div>
       </div>
     </div>
   );

@@ -1,19 +1,29 @@
 export interface Device {
   device_id: string;
-  device_name: string;
-  platform: 'android' | 'ios';
-  status: 'online' | 'offline';
+  name: string;
+  type: 'android' | 'ios';
+  status: 'online' | 'offline' | 'unauthorized';
+  sdk_version?: string;
+  model?: string;
 }
 
 export interface Session {
   id: number;
   device_id: string;
   app_package: string;
+  app_name?: string;  // 应用友好名称，用于显示
   platform: string;
   status: 'created' | 'running' | 'stopped' | 'error';
   start_time: string;
   end_time?: string;
   duration?: number;
+}
+
+export interface AppInfo {
+  package_name: string;   // 包名或 Bundle ID
+  app_name: string;       // 应用友好名称
+  pid?: number;           // 进程ID
+  is_running?: boolean;   // 是否正在运行
 }
 
 export interface MetricsData {

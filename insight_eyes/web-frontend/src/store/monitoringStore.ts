@@ -2,6 +2,49 @@ import { create } from 'zustand';
 import type { Device, Session, MetricsData } from '@/types';
 import { api } from '@/services/api';
 
+interface BatteryInfo {
+  level: string;
+  temperature: string;
+  capacity: string;
+}
+
+// 生成模拟时间序列数据
+function generateMockData() {
+  const dataPoints = 60; // 60个数据点
+  const now = Date.now();
+  const timestamps: string[] = [];
+  const metricsData: Record<string, number[]> = {
+    cpu: [],
+    memory: [],
+    fps: [],
+    network_up: [],
+    network_down: [],
+  };
+
+  for (let i = 0; i < dataPoints; i++) {
+    const time = new Date(now - (dataPoints - i) * 1000);
+    timestamps.push(time.toISOString());
+
+    // CPU: 0-100之间的波动数据，模拟真实使用情况
+    metricsData.cpu.push(Math.max(5, Math.min(95, 30 + Math.sin(i / 5) * 25 + Math.random() * 20)));
+
+    // Memory: 150-350MB之间波动
+    metricsData.memory.push(Math.max(150, Math.min(350, 250 + Math.sin(i / 8) * 80 + Math.random() * 30)));
+
+    // FPS: 55-60之间，偶尔掉帧
+    const fpsValue = Math.random() > 0.9 ? Math.floor(Math.random() * 20 + 40) : Math.floor(Math.random() * 5 + 55);
+    metricsData.fps.push(fpsValue);
+
+    // Network Upload: 0-50 KB/s
+    metricsData.network_up.push(Math.max(0, Math.min(50, Math.random() * 30)));
+
+    // Network Download: 0-200 KB/s
+    metricsData.network_down.push(Math.max(0, Math.min(200, Math.random() * 100 + 20)));
+  }
+
+  return { timestamps, metricsData };
+}
+
 interface MonitoringState {
   // 状态
   devices: Device[];
@@ -11,6 +54,7 @@ interface MonitoringState {
   metricsData: Record<string, number[]>;
   timestamps: string[];
   wsConnection: WebSocket | null;
+  batteryInfo: BatteryInfo;
 
   // Actions
   setDevices: (devices: Device[]) => void;
@@ -19,17 +63,41 @@ interface MonitoringState {
   stopMonitoring: () => Promise<void>;
   updateMetrics: (data: MetricsData) => void;
   clearMetrics: () => void;
+  setBatteryInfo: (info: BatteryInfo) => void;
 }
 
+// 生成初始模拟数据
+const initialMockData = generateMockData();
+
 export const useMonitoringStore = create<MonitoringState>((set, get) => ({
-  // 初始状态
-  devices: [],
-  selectedDevice: null,
-  isMonitoring: false,
-  currentSession: null,
-  metricsData: {},
-  timestamps: [],
+  // 初始状态 - 使用模拟数据以便UI展示
+  devices: [
+    {
+      device_id: 'ios-device-00008030',
+      name: 'iOS Device (00008030)',
+      type: 'ios',
+      status: 'online',
+    },
+  ],
+  selectedDevice: 'ios-device-00008030',
+  isMonitoring: true, // 默认显示监控状态
+  currentSession: {
+    id: 1,
+    device_id: 'ios-device-00008030',
+    app_package: 'com.ss.android.ugc.aweme',
+    app_name: '抖音',
+    platform: 'ios',
+    status: 'running',
+    start_time: new Date(Date.now() - 60000).toISOString(),
+  },
+  metricsData: initialMockData.metricsData,
+  timestamps: initialMockData.timestamps,
   wsConnection: null,
+  batteryInfo: {
+    level: '100',
+    temperature: '25.0',
+    capacity: '--',
+  },
 
   // 设置设备列表
   setDevices: (devices) => set({ devices }),
@@ -49,10 +117,10 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
     try {
       const session: Session = await api.startMonitoring(deviceId, appPackage, platform);
 
-      // I1: 使用环境变量配置 WebSocket URL
-      const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8000';
-      // 建立 WebSocket 连接
-      const ws = new WebSocket(`${wsUrl}/ws/monitoring/${session.id}`);
+      // I1: 使用环境变量配置 WebSocket URL，否则使用相对路径通过代理
+      const wsUrl = import.meta.env.VITE_WS_URL || '';
+      // 建立 WebSocket 连接（相对路径会通过 Vite 代理到后端）
+      const ws = new WebSocket(wsUrl ? `${wsUrl}/ws/monitoring/${session.id}` : `/ws/monitoring/${session.id}`);
 
       ws.onopen = () => {
         console.log('WebSocket connected');
@@ -163,4 +231,7 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
     metricsData: {},
     timestamps: [],
   }),
+
+  // 设置电池信息
+  setBatteryInfo: (info) => set({ batteryInfo: info }),
 }));

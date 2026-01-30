@@ -10,44 +10,76 @@ interface NeonChartCardProps {
 
 export default function NeonChartCard({ config, data, timestamps }: NeonChartCardProps) {
   // 使用 useMemo 优化统计计算，避免不必要的重渲染
-  const { currentValue, avgValue, maxValue } = useMemo(() => {
+  const { currentValue, avgValue, maxValue, minValue } = useMemo(() => {
     const currentValue = data.length > 0 ? data[data.length - 1] : 0;
     const avgValue = data.length > 0
       ? data.reduce((sum, val) => sum + val, 0) / data.length
       : 0;
     const maxValue = data.length > 0 ? Math.max(...data) : 0;
+    const minValue = data.length > 0 ? Math.min(...data) : 0;
 
-    return { currentValue, avgValue, maxValue };
+    return { currentValue, avgValue, maxValue, minValue };
   }, [data]);
 
   return (
     <div
-      className="relative bg-dark-card rounded-lg p-4 border-t-2 min-h-[180px]"
-      style={{ borderColor: config.color }}
+      className="min-h-[180px] flex flex-col"
+      style={{
+        backgroundColor: '#141414',
+        borderRadius: '12px',
+        border: '1px solid rgba(255,255,255,0.05)',
+        borderTop: `2px solid ${config.color}`,
+        padding: '15px',
+      }}
     >
-      {/* 标题 */}
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-medium text-text-secondary">{config.title}</h3>
-        <div className="flex items-center space-x-2 text-xs text-text-secondary">
-          <span>最大: {maxValue.toFixed(config.decimals)}</span>
-          <span>平均: {avgValue.toFixed(config.decimals)}</span>
+      {/* 标题栏 */}
+      <div className="flex items-center justify-between mb-2 flex-shrink-0">
+        <h3 style={{
+          fontSize: '1.1rem',
+          fontWeight: '500',
+          color: '#ffffff',
+        }}>
+          {config.title}
+        </h3>
+        <div style={{
+          fontSize: '0.85rem',
+          fontFamily: "'Roboto Mono', 'Consolas', 'Monaco', monospace",
+          color: config.color,
+        }}>
+          Max: {maxValue.toFixed(config.decimals)}
+          {config.unit}
+          <span> | </span>
+          Min: {minValue.toFixed(config.decimals)}
+          {config.unit}
+          <span> | </span>
+          Avg: {avgValue.toFixed(config.decimals)}
+          {config.unit}
         </div>
       </div>
 
-      {/* 当前值 */}
-      <div className="mb-2">
+      {/* 图表区域 - 占据主要空间 */}
+      <div className="flex-1 min-h-0" style={{ minHeight: '180px' }}>
+        <RealTimeChart data={data} timestamps={timestamps} config={config} />
+      </div>
+
+      {/* 当前值 - 移到底部，字体减小 */}
+      <div className="mt-2 flex-shrink-0 flex items-baseline">
         <span
-          className="text-4xl font-bold neon-glow"
-          style={{ color: config.color }}
+          style={{
+            fontSize: '1.1rem',
+            fontWeight: 'bold',
+            color: config.color,
+          }}
         >
           {currentValue.toFixed(config.decimals)}
         </span>
-        <span className="ml-1 text-sm text-text-secondary">{config.unit}</span>
-      </div>
-
-      {/* 图表 */}
-      <div className="absolute bottom-4 left-4 right-4 top-20">
-        <RealTimeChart data={data} timestamps={timestamps} config={config} />
+        <span style={{
+          marginLeft: '4px',
+          fontSize: '0.7rem',
+          color: '#888888',
+        }}>
+          {config.unit}
+        </span>
       </div>
     </div>
   );

@@ -26,7 +26,7 @@ __version__ = "1.0.3"
 # 从环境变量读取允许的来源
 ALLOWED_ORIGINS = os.getenv(
     "ALLOWED_ORIGINS",
-    "http://localhost:3000,http://localhost:8000,http://127.0.0.1:3000"
+    "http://localhost:80,http://localhost:81,http://localhost:3000,http://localhost:8000,http://127.0.0.1:80,http://127.0.0.1:81"
 ).split(",")
 
 

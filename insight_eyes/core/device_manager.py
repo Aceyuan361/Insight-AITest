@@ -28,17 +28,123 @@ class DeviceManager:
     def scan_devices() -> List[Device]:
         """扫描可用设备
 
-        TODO: 从桌面层移植实际的设备扫描逻辑
-        - Android 设备通过 ADB 扫描
-        - iOS 设备通过 pymobiledevice3 扫描
+        扫描 Android 设备（通过 ADB）和 iOS 设备（通过 pymobiledevice3）。
 
         Returns:
-            设备列表（当前返回空列表）
+            设备列表
         """
         logger.info("扫描设备...")
-        # TODO: 实现实际的设备扫描逻辑
-        # 这里先返回空列表，待后续从 desktop 移植实现
-        return []
+        devices = []
+
+        # 扫描 Android 设备
+        android_devices = DeviceManager._scan_android_devices()
+        devices.extend(android_devices)
+
+        # 扫描 iOS 设备
+        ios_devices = DeviceManager._scan_ios_devices()
+        devices.extend(ios_devices)
+
+        logger.info(f"扫描完成，共发现 {len(devices)} 个设备")
+        return devices
+
+    @staticmethod
+    def _scan_android_devices() -> List[Device]:
+        """扫描 Android 设备
+
+        Returns:
+            Android 设备列表
+        """
+        devices = []
+        try:
+            from insight_eyes.public.adb import ADBHelper
+
+            adb_helper = ADBHelper()
+            device_ids = adb_helper.devices()
+
+            for device_id in device_ids:
+                try:
+                    # 获取设备属性
+                    model = adb_helper.get_device_property("ro.product.model", device_id) or device_id
+                    sdk_version = adb_helper.get_device_property("ro.build.version.sdk", device_id)
+                    device_name = adb_helper.get_device_property("ro.product.manufacturer", device_id) or model
+
+                    # 获取设备状态
+                    # 这里简化处理，如果能获取到属性说明设备在线
+                    status = DeviceStatus.ONLINE
+
+                    device = Device(
+                        device_id=device_id,
+                        name=f"{device_name} ({model})",
+                        type=DeviceType.ANDROID,
+                        status=status,
+                        sdk_version=sdk_version,
+                        model=model,
+                    )
+                    devices.append(device)
+                    logger.info(f"发现 Android 设备: {device.name} ({device_id})")
+
+                except Exception as e:
+                    logger.warning(f"获取 Android 设备信息失败 [{device_id}]: {e}")
+                    # 即使获取详细信息失败，也添加设备到列表
+                    devices.append(Device(
+                        device_id=device_id,
+                        name=f"Android Device ({device_id[:8]}...)",
+                        type=DeviceType.ANDROID,
+                        status=DeviceStatus.ONLINE,
+                    ))
+
+        except FileNotFoundError:
+            logger.debug("ADB 未找到，跳过 Android 设备扫描")
+        except Exception as e:
+            logger.error(f"扫描 Android 设备失败: {e}")
+
+        return devices
+
+    @staticmethod
+    def _scan_ios_devices() -> List[Device]:
+        """扫描 iOS 设备
+
+        Returns:
+            iOS 设备列表
+        """
+        devices = []
+
+        try:
+            # 尝试导入 pymobiledevice3
+            try:
+                from pymobiledevice3.usbmux import list_devices
+            except ImportError:
+                logger.debug("pymobiledevice3 未安装，跳过 iOS 设备扫描")
+                return devices
+
+            # 扫描 iOS 设备
+            ios_device_list = list_devices()
+
+            for device in ios_device_list:
+                try:
+                    device_id = str(device.serial)
+
+                    # 获取设备信息
+                    device_type = device.connection_type
+                    model = getattr(device, 'device_class', 'iOS Device')
+
+                    device = Device(
+                        device_id=device_id,
+                        name=f"iOS Device ({device_id[:8]}...)",
+                        type=DeviceType.IOS,
+                        status=DeviceStatus.ONLINE,
+                        model=model,
+                    )
+                    devices.append(device)
+                    logger.info(f"发现 iOS 设备: {device.name} ({device_id})")
+
+                except Exception as e:
+                    logger.warning(f"处理 iOS 设备信息失败: {e}")
+
+        except Exception as e:
+            logger.debug(f"扫描 iOS 设备失败: {e}")
+
+        return devices
 
     @staticmethod
     async def start_session(device_id: str, app_package: str, platform: str = "android") -> Session:

@@ -18,7 +18,12 @@ export default {
         dark: {
           bg: '#0a0a0a',
           card: '#141414',
-        }
+        },
+        // 文字颜色
+        text: {
+          primary: '#ffffff',
+          secondary: '#aaaaaa',
+        },
       },
       fontFamily: {
         sans: ['"Microsoft YaHei UI"', 'Segoe UI', 'Arial', 'sans-serif'],
