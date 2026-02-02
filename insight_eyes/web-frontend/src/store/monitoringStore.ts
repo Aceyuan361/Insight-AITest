@@ -70,32 +70,23 @@ interface MonitoringState {
 const initialMockData = generateMockData();
 
 export const useMonitoringStore = create<MonitoringState>((set, get) => ({
-  // 初始状态 - 使用模拟数据以便UI展示
-  devices: [
-    {
-      device_id: 'ios-device-00008030',
-      name: 'iOS Device (00008030)',
-      type: 'ios',
-      status: 'online',
-    },
-  ],
-  selectedDevice: 'ios-device-00008030',
-  isMonitoring: true, // 默认显示监控状态
-  currentSession: {
-    id: 1,
-    device_id: 'ios-device-00008030',
-    app_package: 'com.ss.android.ugc.aweme',
-    app_name: '抖音',
-    platform: 'ios',
-    status: 'running',
-    start_time: new Date(Date.now() - 60000).toISOString(),
+  // 初始状态 - 从空状态开始，让用户从真实设备列表中选择
+  devices: [],
+  selectedDevice: null,
+  isMonitoring: false,
+  currentSession: null,
+  metricsData: {
+    cpu: [],
+    memory: [],
+    fps: [],
+    network_up: [],
+    network_down: [],
   },
-  metricsData: initialMockData.metricsData,
-  timestamps: initialMockData.timestamps,
+  timestamps: [],
   wsConnection: null,
   batteryInfo: {
-    level: '100',
-    temperature: '25.0',
+    level: '--',
+    temperature: '--',
     capacity: '--',
   },
 
