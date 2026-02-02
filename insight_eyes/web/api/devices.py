@@ -112,7 +112,7 @@ async def get_device_apps(device_id: str, include_system: bool = False):
     """获取设备应用列表"""
     try:
         from insight_eyes.desktop.core.app_enumerator import AppEnumeratorFactory
-        from insight_eyes.desktop.core.models import DeviceType
+        from insight_eyes.core.models.device import DeviceType
         from insight_eyes.public.common import Platform
 
         devices = DeviceManager.scan_devices()
@@ -130,16 +130,35 @@ async def get_device_apps(device_id: str, include_system: bool = False):
         apps = enumerator.enumerate_apps(include_system_apps=include_system)
 
         try:
-            running_apps = enumerator.get_running_apps()
-            running_packages = {app.package_name for app in running_apps}
+            # iOS 平台使用 SysmonService 检查进程（需要开发者模式）
+            if platform == Platform.IOS:
+                try:
+                    from insight_eyes.public.ios.sysmon_service import SysmonService
+                    sysmon_service = SysmonService.get_instance(device_id)
 
-            for app in apps:
-                if app.package_name in running_packages:
-                    running_app = next((a for a in running_apps if a.package_name == app.package_name), None)
-                    if running_app:
-                        app.is_running = True
-                        app.pid = running_app.pid
-                        app.status = running_app.status
+                    if sysmon_service.connect():
+                        for app in apps:
+                            process = sysmon_service.get_process_by_bundle_id(app.package_name)
+                            if process:
+                                app.is_running = True
+                                app.pid = process.get('pid')
+                        logger.info(f"iOS 进程检测完成: {sum(1 for a in apps if a.is_running)}/{len(apps)} 个运行中")
+                    else:
+                        logger.warning("iOS DVT 连接失败（可能需要开发者模式），跳过进程检测")
+                except Exception as ios_error:
+                    logger.warning(f"iOS 进程检测失败: {ios_error}，跳过检测")
+            else:
+                # Android 平台使用标准方法
+                running_apps = enumerator.get_running_apps()
+                running_packages = {app.package_name for app in running_apps}
+
+                for app in apps:
+                    if app.package_name in running_packages:
+                        running_app = next((a for a in running_apps if a.package_name == app.package_name), None)
+                        if running_app:
+                            app.is_running = True
+                            app.pid = running_app.pid
+                            app.status = running_app.status
         except Exception as e:
             logger.warning(f"获取运行中的应用失败: {e}")
 

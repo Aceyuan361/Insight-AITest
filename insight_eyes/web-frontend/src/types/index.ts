@@ -21,9 +21,17 @@ export interface Session {
 
 export interface AppInfo {
   package_name: string;   // 包名或 Bundle ID
-  app_name: string;       // 应用友好名称
+  name: string;           // 应用友好名称（匹配API返回）
   pid?: number;           // 进程ID
   is_running?: boolean;   // 是否正在运行
+  status?: string;        // 运行状态
+}
+
+export interface AlarmRecord {
+  id: string;
+  time: string;
+  level: '严重' | '警告';
+  content: string;
 }
 
 export interface MetricsData {

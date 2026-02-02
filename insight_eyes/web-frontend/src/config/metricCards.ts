@@ -51,4 +51,15 @@ export const ALL_METRIC_CARDS: MetricCardConfig[] = [
     enabled: true,
     priority: 5,
   },
+  {
+    metricId: 'gpu',
+    title: 'GPU Usage (%)',
+    color: '#ff006e',  // 粉红色 - GPU（与桌面版一致）
+    yMin: 0,
+    yMax: 100,
+    decimals: 0,  // 匹配桌面版：0位小数
+    unit: '%',
+    enabled: false,  // 默认禁用（与桌面版一致）
+    priority: 6,
+  },
 ];

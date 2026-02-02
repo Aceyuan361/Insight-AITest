@@ -7,7 +7,7 @@ from logzero import logger
 
 from insight_eyes.core.device_manager import DeviceManager
 from insight_eyes.core.database import DatabaseManager
-from insight_eyes.web.api.schemas import StartMonitoringRequest, SessionResponse
+from insight_eyes.web.api.schemas import StartMonitoringRequest, StopMonitoringRequest, SessionResponse
 
 
 router = APIRouter(prefix="/api/monitoring", tags=["monitoring"])
@@ -17,8 +17,14 @@ router = APIRouter(prefix="/api/monitoring", tags=["monitoring"])
 async def start_monitoring(request: StartMonitoringRequest):
     """开始监控"""
     try:
-        session = await DeviceManager.start_session(request.device_id, request.app_package)
-        logger.info(f"启动监控会话: {session.id}")
+        # 传递采样间隔和平台到核心层
+        session = await DeviceManager.start_session(
+            request.device_id,
+            request.app_package,
+            platform=request.platform,  # 添加平台参数
+            sampling_interval=request.sampling_interval
+        )
+        logger.info(f"启动监控会话: {session.id}, 平台: {request.platform}, 采样间隔: {request.sampling_interval}ms")
 
         return SessionResponse(
             id=session.id,
@@ -36,12 +42,12 @@ async def start_monitoring(request: StartMonitoringRequest):
 
 
 @router.post("/stop")
-async def stop_monitoring(session_id: int):
+async def stop_monitoring(request: StopMonitoringRequest):
     """停止监控"""
     try:
-        await DeviceManager.stop_session(session_id)
-        logger.info(f"停止监控会话: {session_id}")
-        return {"status": "stopped", "session_id": session_id}
+        await DeviceManager.stop_session(request.session_id)
+        logger.info(f"停止监控会话: {request.session_id}")
+        return {"status": "stopped", "session_id": request.session_id}
     except Exception as e:
         logger.error(f"停止监控失败: {e}")
         raise HTTPException(status_code=500, detail=str(e))

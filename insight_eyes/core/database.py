@@ -112,7 +112,8 @@ class DatabaseManager:
                 status TEXT NOT NULL DEFAULT 'running',
                 duration INTEGER DEFAULT 0,
                 platform TEXT NOT NULL CHECK(platform IN ('android', 'ios')),
-                tags TEXT
+                tags TEXT,
+                sampling_interval INTEGER DEFAULT 1000
             )
         ''')
 
@@ -152,7 +153,8 @@ class DatabaseManager:
         device_id: str,
         app_package: str,
         platform: str = 'android',
-        tags: Optional[Dict[str, Any]] = None
+        tags: Optional[Dict[str, Any]] = None,
+        sampling_interval: int = 1000
     ) -> Session:
         """创建新的监控会话
 
@@ -161,6 +163,7 @@ class DatabaseManager:
             app_package: 包名或 Bundle ID
             platform: 平台类型 ('android' 或 'ios')
             tags: 测试场景标记
+            sampling_interval: 采样间隔（毫秒），默认1000ms
 
         Returns:
             Session: 会话对象
@@ -183,9 +186,9 @@ class DatabaseManager:
 
         with self.transaction() as conn:
             cursor = conn.execute('''
-                INSERT INTO sessions (device_id, app_package, platform, start_time, status)
-                VALUES (?, ?, ?, ?, ?)
-            ''', (device_id, app_package, platform, datetime.now().isoformat(), SessionStatus.RUNNING.value))
+                INSERT INTO sessions (device_id, app_package, platform, start_time, status, sampling_interval)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (device_id, app_package, platform, datetime.now().isoformat(), SessionStatus.RUNNING.value, sampling_interval))
             session_id = cursor.lastrowid
 
         return Session(
@@ -194,7 +197,8 @@ class DatabaseManager:
             app_package=app_package,
             platform=platform,
             start_time=datetime.now(),
-            status=SessionStatus.RUNNING
+            status=SessionStatus.RUNNING,
+            sampling_interval=sampling_interval
         )
 
     def update_session(self, session_id: int, **kwargs: Any) -> None:
@@ -243,7 +247,8 @@ class DatabaseManager:
                 start_time=datetime.fromisoformat(row['start_time']),
                 end_time=datetime.fromisoformat(row['end_time']) if row['end_time'] else None,
                 status=SessionStatus(row['status']),
-                duration=row['duration']
+                duration=row['duration'],
+                sampling_interval=row['sampling_interval'] if 'sampling_interval' in row.keys() else 1000
             )
         return None
 
@@ -290,7 +295,8 @@ class DatabaseManager:
                 start_time=datetime.fromisoformat(row['start_time']),
                 end_time=datetime.fromisoformat(row['end_time']) if row['end_time'] else None,
                 status=SessionStatus(row['status']),
-                duration=row['duration']
+                duration=row['duration'],
+                sampling_interval=row['sampling_interval'] if 'sampling_interval' in row.keys() else 1000
             ))
 
         return sessions

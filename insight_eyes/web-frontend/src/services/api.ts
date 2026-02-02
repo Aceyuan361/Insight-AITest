@@ -61,19 +61,20 @@ export const api = {
   },
 
   // 开始监控
-  async startMonitoring(deviceId: string, appPackage: string, platform: string = 'android'): Promise<Session> {
+  async startMonitoring(deviceId: string, appPackage: string, platform: string = 'android', samplingInterval: number = 1000): Promise<Session> {
     const response = await axios.post(`${API_BASE_URL}/monitoring/start`, {
       device_id: deviceId,
       app_package: appPackage,
       platform,
+      sampling_interval: samplingInterval,
     });
     return response.data;
   },
 
   // 停止监控
   async stopMonitoring(sessionId: number): Promise<{ status: string; session_id: number }> {
-    const response = await axios.post(`${API_BASE_URL}/monitoring/stop`, null, {
-      params: { session_id: sessionId },
+    const response = await axios.post(`${API_BASE_URL}/monitoring/stop`, {
+      session_id: sessionId,
     });
     return response.data;
   },

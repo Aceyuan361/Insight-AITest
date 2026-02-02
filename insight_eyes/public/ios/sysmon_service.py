@@ -231,37 +231,38 @@ class SysmonService:
         if not processes:
             return None
 
-        # 提取应用名（智能处理 Bundle ID）
+        # 提取所有可能的应用名（从 Bundle ID 的各个部分）
         parts = bundle_id.split('.')
-        if len(parts) > 1:
-            common_tlds = {'com', 'net', 'org', 'io', 'co', 'app'}
-            if parts[-1].lower() in common_tlds and len(parts) >= 2:
-                app_name = parts[-2]
-            else:
-                app_name = parts[-1]
-        else:
-            app_name = bundle_id
+        possible_names = []
 
-        logger.debug(f"查找进程: Bundle ID='{bundle_id}', 提取应用名='{app_name}'")
+        # 添加所有部分作为可能的应用名
+        for part in parts:
+            if part and part.lower() not in {'com', 'net', 'org', 'io', 'co', 'app', 'www'}:
+                possible_names.append(part.lower())
+
+        logger.debug(f"查找进程: Bundle ID='{bundle_id}', 可能的应用名={possible_names}")
 
         for process in processes:
             exec_name = process.get('execName', '')
             comm = process.get('comm', '')
             name = process.get('name', '')
 
-            # 使用应用名进行匹配（大小写不敏感）
-            if (app_name.lower() in exec_name.lower() or
-                app_name.lower() in comm.lower() or
-                app_name.lower() in name.lower()):
+            # 尝试所有可能的应用名进行匹配（大小写不敏感）
+            for app_name in possible_names:
+                if (app_name in exec_name.lower() or
+                    app_name in comm.lower() or
+                    app_name in name.lower()):
 
-                logger.info(f"✓ 找到进程!")
-                logger.info(f"  PID: {process.get('pid')}")
-                logger.info(f"  Name: {name}")
-                logger.info(f"  cpuUsage: {process.get('cpuUsage', 'N/A')}")
-                logger.info(f"  physFootprint: {process.get('physFootprint', 'N/A')}")
-                logger.info(f"  memResidentSize: {process.get('memResidentSize', 'N/A')}")
+                    logger.info(f"✓ 找到进程!")
+                    logger.info(f"  Bundle ID: {bundle_id}")
+                    logger.info(f"  匹配名称: {app_name}")
+                    logger.info(f"  PID: {process.get('pid')}")
+                    logger.info(f"  Name: {name}")
+                    logger.info(f"  cpuUsage: {process.get('cpuUsage', 'N/A')}")
+                    logger.info(f"  physFootprint: {process.get('physFootprint', 'N/A')}")
+                    logger.info(f"  memResidentSize: {process.get('memResidentSize', 'N/A')}")
 
-                return process
+                    return process
 
         logger.warning(f"✗ 未找到 Bundle ID 为 '{bundle_id}' 的进程")
         return None

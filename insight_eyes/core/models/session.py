@@ -34,6 +34,7 @@ class Session:
         start_time: 会话开始时间
         end_time: 会话结束时间（可选）
         duration: 会话持续时间，单位为秒（可选）
+        sampling_interval: 采样间隔，单位为毫秒（默认1000ms）
     """
     id: int
     device_id: str
@@ -43,6 +44,7 @@ class Session:
     start_time: datetime
     end_time: Optional[datetime] = None
     duration: Optional[int] = None  # 秒
+    sampling_interval: int = 1000  # 毫秒，默认1秒
 
     def to_dict(self) -> Dict[str, Any]:
         """将会话对象转换为字典
@@ -59,6 +61,7 @@ class Session:
             "start_time": self.start_time.isoformat(),
             "end_time": self.end_time.isoformat() if self.end_time else None,
             "duration": self.duration,
+            "sampling_interval": self.sampling_interval,
         }
 
     @classmethod
@@ -80,4 +83,5 @@ class Session:
             start_time=datetime.fromisoformat(data["start_time"]),
             end_time=datetime.fromisoformat(data["end_time"]) if data.get("end_time") else None,
             duration=data.get("duration"),
+            sampling_interval=data.get("sampling_interval", 1000),
         )

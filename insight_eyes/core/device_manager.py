@@ -102,13 +102,14 @@ class DeviceManager:
         return devices
 
     @staticmethod
-    async def start_session(device_id: str, app_package: str, platform: str = "android") -> Session:
+    async def start_session(device_id: str, app_package: str, platform: str = "android", sampling_interval: int = 1000) -> Session:
         """开始监控会话
 
         Args:
             device_id: 设备ID
             app_package: 应用包名
             platform: 平台类型 ('android' 或 'ios')
+            sampling_interval: 采样间隔（毫秒），默认1000ms
 
         Returns:
             创建的会话对象
@@ -116,9 +117,9 @@ class DeviceManager:
         import os
         db_path = os.path.join(os.path.expanduser("~"), ".insight_eye", "monitoring.db")
         db = DatabaseManager(db_path)
-        session = db.create_session(device_id, app_package, platform=platform)
+        session = db.create_session(device_id, app_package, platform=platform, sampling_interval=sampling_interval)
 
-        logger.info(f"开始监控会话: {session.id}")
+        logger.info(f"开始监控会话: {session.id}, 采样间隔: {sampling_interval}ms")
         return session
 
     @staticmethod
@@ -143,26 +144,145 @@ class DeviceManager:
     async def stream_metrics(session_id: int) -> AsyncIterator[MetricsData]:
         """流式推送监控数据
 
-        TODO: 从桌面层移植实际的数据采集逻辑
-        - 创建后台采集线程
-        - 通过设备适配器采集数据
-        - 实时推送到 WebSocket
+        从桌面层移植实际的数据采集逻辑，确保与桌面版算法一致：
+        - 直接使用桌面层的设备适配器进行数据采集
+        - 保持与桌面版相同的计算精度
+        - 每秒采集一次数据
+
+        采集频率：1秒
+        数据来源：桌面层 AndroidAPM / IOSAPM
 
         Args:
             session_id: 会话ID
 
         Yields:
-            监控指标数据（当前返回模拟数据）
+            监控指标数据（实时采集的真实数据）
         """
         import asyncio
+        import os
+        from insight_eyes.public.common import Platform
 
-        # TODO: 实现实际的数据采集逻辑
-        # 这里先返回模拟数据，待后续从 desktop 移植实现
-        while True:
-            await asyncio.sleep(1)
-            yield MetricsData(
-                timestamp=datetime.now(),
-                cpu=50.0,
-                memory=512.0,
-                fps=60.0,
-            )
+        # 获取会话信息
+        db_path = os.path.join(os.path.expanduser("~"), ".insight_eye", "monitoring.db")
+        db = DatabaseManager(db_path)
+        session = db.get_session(session_id)
+
+        if not session:
+            logger.error(f"会话不存在: {session_id}")
+            return
+
+        logger.info(f"开始流式推送监控数据: session={session_id}, device={session.device_id}, app={session.app_package}")
+
+        # 导入桌面层的设备适配器，直接使用采集方法
+        from insight_eyes.desktop.core.device_adapters import DeviceAdapterFactory
+
+        try:
+            # 创建设备适配器
+            platform = Platform.ANDROID if session.platform == 'android' else Platform.IOS
+            adapter = DeviceAdapterFactory.create_adapter(session.device_id, platform)
+
+            if not adapter:
+                logger.error(f"无法创建设备适配器: {session.device_id}")
+                return
+
+            # 确保设备已连接
+            if not adapter.is_connected():
+                logger.info(f"连接设备: {session.device_id}")
+                if not adapter.connect():
+                    logger.error(f"设备连接失败: {session.device_id}")
+                    return
+
+            logger.info(f"设备适配器已就绪，开始数据采集")
+
+            try:
+                while True:
+                    try:
+                        # 直接使用适配器采集各项指标数据
+                        metrics_data = MetricsData(timestamp=datetime.now())
+
+                        # 采集 FPS
+                        try:
+                            fps_data = adapter.collect_fps(session.app_package)
+                            if fps_data:
+                                metrics_data.fps = float(fps_data.get('fps', 0))
+                        except Exception as e:
+                            logger.debug(f"FPS采集失败: {e}")
+
+                        # 采集内存
+                        try:
+                            memory_data = adapter.collect_memory(session.app_package)
+                            if memory_data:
+                                # iOS使用used_mb，Android使用totalPass
+                                if session.platform == 'ios':
+                                    metrics_data.memory = float(memory_data.get('used_mb', 0))
+                                else:
+                                    metrics_data.memory = float(memory_data.get('totalPass', 0))
+                        except Exception as e:
+                            logger.debug(f"内存采集失败: {e}")
+
+                        # 采集 CPU
+                        try:
+                            cpu_data = adapter.collect_cpu(session.app_package)
+                            if cpu_data:
+                                # iOS使用cpu_app，Android使用appCpuRate
+                                if session.platform == 'ios':
+                                    metrics_data.cpu = float(cpu_data.get('cpu_app', 0.0))
+                                else:
+                                    metrics_data.cpu = float(cpu_data.get('appCpuRate', 0.0))
+                        except Exception as e:
+                            logger.debug(f"CPU采集失败: {e}")
+
+                        # 采集网络
+                        try:
+                            network_data = adapter.collect_network(session.app_package)
+                            if network_data:
+                                metrics_data.network_up = float(network_data.get('upFlow', 0.0))
+                                metrics_data.network_down = float(network_data.get('downFlow', 0.0))
+                        except Exception as e:
+                            logger.debug(f"网络采集失败: {e}")
+
+                        # 采集电池
+                        try:
+                            battery_data = adapter.collect_battery()
+                            if battery_data:
+                                metrics_data.battery = float(battery_data.get('level', 0))
+                                metrics_data.temperature = float(battery_data.get('temperature', 0.0))
+                        except Exception as e:
+                            logger.debug(f"电池采集失败: {e}")
+
+                        # 检查是否至少有一个指标采集成功
+                        has_data = any([
+                            metrics_data.fps is not None,
+                            metrics_data.memory is not None,
+                            metrics_data.cpu is not None,
+                            metrics_data.network_up is not None,
+                            metrics_data.network_down is not None,
+                            metrics_data.battery is not None
+                        ])
+
+                        if has_data:
+                            logger.debug(f"数据采集成功: CPU={metrics_data.cpu:.1f}%, "
+                                         f"Memory={metrics_data.memory:.1f}MB, "
+                                         f"FPS={metrics_data.fps:.0f}")
+                            yield metrics_data
+                        else:
+                            logger.warning(f"所有指标采集均失败: {session.device_id}/{session.app_package}")
+
+                    except Exception as e:
+                        logger.error(f"数据采集异常: {e}", exc_info=True)
+
+                    # 使用会话配置的采样间隔（毫秒转换为秒）
+                    sleep_seconds = session.sampling_interval / 1000
+                    await asyncio.sleep(sleep_seconds)
+
+            except asyncio.CancelledError:
+                logger.info(f"流式推送已取消: session={session_id}")
+            finally:
+                # 清理适配器资源
+                if adapter:
+                    adapter.cleanup()
+                logger.info(f"设备适配器资源已清理: session={session_id}")
+
+        except Exception as e:
+            logger.error(f"流式推送异常: {e}", exc_info=True)
+            raise

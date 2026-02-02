@@ -10,6 +10,11 @@ export default function DeviceSelectionPanel() {
   const [selectedAppPackage, setSelectedAppPackage] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showAppNotRunningWarning, setShowAppNotRunningWarning] = useState(false);
+  const [showBackgroundAppWarning, setShowBackgroundAppWarning] = useState(false);
+  const [pendingAppPackage, setPendingAppPackage] = useState<string | null>(null);
+  const [pendingAppName, setPendingAppName] = useState<string>('');
+  const [pendingAppPid, setPendingAppPid] = useState<number | undefined>(undefined);
 
   // 加载设备列表
   const loadDevices = async () => {
@@ -28,10 +33,24 @@ export default function DeviceSelectionPanel() {
 
   // 当选择的设备改变时，加载应用列表
   useEffect(() => {
-    if (selectedDevice) {
-      const deviceApps = getMockAppsForDevice(selectedDevice);
-      setApps(deviceApps);
-    }
+    const loadApps = async () => {
+      if (selectedDevice) {
+        setLoading(true);
+        try {
+          const deviceApps = await deviceApi.getDeviceApps(selectedDevice);
+          setApps(deviceApps);
+        } catch (err) {
+          console.error('Failed to load apps:', err);
+          // 如果API失败，使用模拟数据作为回退
+          const deviceApps = getMockAppsForDevice(selectedDevice);
+          setApps(deviceApps);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadApps();
   }, [selectedDevice]);
 
   // 从会话中获取应用名称
@@ -48,8 +67,12 @@ export default function DeviceSelectionPanel() {
       setDevices(deviceList);
       // 刷新后重新加载应用列表
       if (selectedDevice) {
-        const deviceApps = getMockAppsForDevice(selectedDevice);
-        setApps(deviceApps);
+        try {
+          const deviceApps = await deviceApi.getDeviceApps(selectedDevice);
+          setApps(deviceApps);
+        } catch (err) {
+          console.error('Failed to reload apps:', err);
+        }
       }
     } catch (err) {
       console.error('Failed to refresh devices:', err);
@@ -78,20 +101,146 @@ export default function DeviceSelectionPanel() {
       await useMonitoringStore.getState().stopMonitoring();
     } else {
       if (selectedDevice && selectedAppPackage) {
-        const device = devices.find(d => d.device_id === selectedDevice);
-        const platform = device?.type || 'android';
-        const appName = getAppName(selectedAppPackage);
-        await useMonitoringStore.getState().startMonitoring(
-          selectedDevice,
-          selectedAppPackage,
-          platform
-        );
-        // 更新会话中的应用名称
-        if (useMonitoringStore.getState().currentSession) {
-          useMonitoringStore.getState().currentSession!.app_name = appName;
+        try {
+          // ===== 启动前自动刷新应用列表以获取最新状态 =====
+          setLoading(true);
+          const latestApps = await deviceApi.getDeviceApps(selectedDevice);
+          setApps(latestApps);
+
+          // 检查应用是否在运行（匹配桌面版逻辑）
+          const targetApp = latestApps.find(app => app.package_name === selectedAppPackage);
+          const device = devices.find(d => d.device_id === selectedDevice);
+
+          // 检查应用是否在运行（iOS 和 Android 统一处理）
+          // 注意：iOS 进程检测需要开发者模式，如果未启用，is_running 会是 false
+          if (!targetApp || !targetApp.is_running) {
+            // 应用未运行，显示警告对话框
+            setPendingAppPackage(selectedAppPackage);
+            setShowAppNotRunningWarning(true);
+            return;
+          }
+
+          // ===== 新增：检查应用是否在后台运行（匹配桌面版第1070-1087行）=====
+          if (targetApp.status === 'background') {
+            // 应用在后台运行，显示警告对话框
+            setPendingAppPackage(selectedAppPackage);
+            setPendingAppName(targetApp.name);
+            setPendingAppPid(targetApp.pid);
+            setShowBackgroundAppWarning(true);
+            return;
+          }
+
+          // 应用正在前台运行，正常启动监控
+          const platform = device?.type || 'android';
+          const appName = getAppName(selectedAppPackage);
+          await useMonitoringStore.getState().startMonitoring(
+            selectedDevice,
+            selectedAppPackage,
+            platform
+          );
+          // 更新会话中的应用名称
+          if (useMonitoringStore.getState().currentSession) {
+            useMonitoringStore.getState().currentSession!.app_name = appName;
+          }
+        } catch (error) {
+          console.error('刷新应用列表失败:', error);
+          // 如果刷新失败，使用现有数据继续检查
+          const targetApp = apps.find(app => app.package_name === selectedAppPackage);
+
+          if (!targetApp || !targetApp.is_running) {
+            setPendingAppPackage(selectedAppPackage);
+            setShowAppNotRunningWarning(true);
+            return;
+          }
+
+          // 检查后台应用
+          if (targetApp.status === 'background') {
+            setPendingAppPackage(selectedAppPackage);
+            setPendingAppName(targetApp.name);
+            setPendingAppPid(targetApp.pid);
+            setShowBackgroundAppWarning(true);
+            return;
+          }
+
+          const device = devices.find(d => d.device_id === selectedDevice);
+          const platform = device?.type || 'android';
+          const appName = getAppName(selectedAppPackage);
+          await useMonitoringStore.getState().startMonitoring(
+            selectedDevice,
+            selectedAppPackage,
+            platform
+          );
+          if (useMonitoringStore.getState().currentSession) {
+            useMonitoringStore.getState().currentSession!.app_name = appName;
+          }
+        } finally {
+          setLoading(false);
         }
       }
     }
+  };
+
+  // 确认启动未运行的应用
+  const handleConfirmStartNotRunning = async () => {
+    setShowAppNotRunningWarning(false);
+    if (selectedDevice && pendingAppPackage) {
+      const device = devices.find(d => d.device_id === selectedDevice);
+      const platform = device?.type || 'android';
+      const appName = getAppName(pendingAppPackage);
+      try {
+        await useMonitoringStore.getState().startMonitoring(
+          selectedDevice,
+          pendingAppPackage,
+          platform
+        );
+        if (useMonitoringStore.getState().currentSession) {
+          useMonitoringStore.getState().currentSession!.app_name = appName;
+        }
+      } catch (error) {
+        console.error('启动监控失败:', error);
+      } finally {
+        setPendingAppPackage(null);
+      }
+    }
+  };
+
+  // 取消启动
+  const handleCancelStartNotRunning = () => {
+    setShowAppNotRunningWarning(false);
+    setPendingAppPackage(null);
+  };
+
+  // 确认启动后台应用
+  const handleConfirmStartBackground = async () => {
+    setShowBackgroundAppWarning(false);
+    if (selectedDevice && pendingAppPackage) {
+      const device = devices.find(d => d.device_id === selectedDevice);
+      const platform = device?.type || 'android';
+      try {
+        await useMonitoringStore.getState().startMonitoring(
+          selectedDevice,
+          pendingAppPackage,
+          platform
+        );
+        if (useMonitoringStore.getState().currentSession) {
+          useMonitoringStore.getState().currentSession!.app_name = pendingAppName;
+        }
+      } catch (error) {
+        console.error('启动监控失败:', error);
+      } finally {
+        setPendingAppPackage(null);
+        setPendingAppName('');
+        setPendingAppPid(undefined);
+      }
+    }
+  };
+
+  // 取消启动后台应用
+  const handleCancelStartBackground = () => {
+    setShowBackgroundAppWarning(false);
+    setPendingAppPackage(null);
+    setPendingAppName('');
+    setPendingAppPid(undefined);
   };
 
   const getPlatformIcon = (type: string) => {
@@ -233,7 +382,7 @@ export default function DeviceSelectionPanel() {
             <option value="">选择应用...</option>
             {apps.map((app) => (
               <option key={app.package_name} value={app.package_name}>
-                {app.app_name}
+                {app.name}
               </option>
             ))}
           </select>
@@ -358,6 +507,195 @@ export default function DeviceSelectionPanel() {
           容量: {batteryInfo.capacity}
         </div>
       </div>
+
+      {/* 应用未运行警告对话框 */}
+      {showAppNotRunningWarning && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+        }}>
+          <div style={{
+            backgroundColor: '#121824',
+            border: '2px solid #ffb400',
+            borderRadius: '12px',
+            padding: '24px',
+            maxWidth: '500px',
+            boxShadow: '0 8px 32px rgba(255, 180, 0, 0.3)',
+          }}>
+            <h3 style={{
+              color: '#ffb400',
+              fontSize: '16pt',
+              fontWeight: '700',
+              marginBottom: '16px',
+              marginTop: 0,
+            }}>
+              应用未运行
+            </h3>
+            <p style={{
+              color: '#e0e6ed',
+              fontSize: '11pt',
+              lineHeight: '1.6',
+              marginBottom: '16px',
+            }}>
+              没有找到应用正在运行的进程
+            </p>
+            <div style={{
+              backgroundColor: '#0a0e17',
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '16px',
+            }}>
+              <div style={{ color: '#94a3b8', fontSize: '10pt', marginBottom: '4px' }}>
+                应用包名:
+              </div>
+              <div style={{ color: '#e0e6ed', fontSize: '10pt', fontWeight: '500', wordBreak: 'break-all' }}>
+                {pendingAppPackage}
+              </div>
+            </div>
+            <div style={{
+              color: '#ffb400',
+              fontSize: '10pt',
+              marginBottom: '16px',
+              padding: '12px',
+              backgroundColor: 'rgba(255, 180, 0, 0.1)',
+              borderRadius: '6px',
+            }}>
+              <strong>提示：</strong>请检查应用是否在运行中，然后重试。
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <button
+                onClick={handleCancelStartNotRunning}
+                style={{
+                  backgroundColor: '#3b82f6',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '10px 32px',
+                  fontSize: '11pt',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                }}
+              >
+                我知道了
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 后台应用警告对话框 */}
+      {showBackgroundAppWarning && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+        }}>
+          <div style={{
+            backgroundColor: '#121824',
+            border: '2px solid #9370DB',  // 紫色边框（区别于未运行警告）
+            borderRadius: '12px',
+            padding: '24px',
+            maxWidth: '500px',
+            boxShadow: '0 8px 32px rgba(147, 112, 219, 0.3)',
+          }}>
+            <h3 style={{
+              color: '#9370DB',  // 紫色标题
+              fontSize: '16pt',
+              fontWeight: '700',
+              marginBottom: '16px',
+              marginTop: 0,
+            }}>
+              应用在后台运行
+            </h3>
+            <p style={{
+              color: '#e0e6ed',
+              fontSize: '11pt',
+              lineHeight: '1.6',
+              marginBottom: '16px',
+            }}>
+              应用正在后台运行（非前台）
+            </p>
+            <div style={{
+              backgroundColor: '#0a0e17',
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '16px',
+            }}>
+              <div style={{ color: '#94a3b8', fontSize: '10pt', marginBottom: '4px' }}>
+                应用名称:
+              </div>
+              <div style={{ color: '#e0e6ed', fontSize: '10pt', fontWeight: '500' }}>
+                {pendingAppName}
+              </div>
+              <div style={{ color: '#94a3b8', fontSize: '10pt', marginBottom: '4px', marginTop: '8px' }}>
+                PID:
+              </div>
+              <div style={{ color: '#e0e6ed', fontSize: '10pt', fontWeight: '500' }}>
+                {pendingAppPid}
+              </div>
+            </div>
+            <div style={{
+              color: '#9370DB',
+              fontSize: '10pt',
+              marginBottom: '16px',
+              padding: '12px',
+              backgroundColor: 'rgba(147, 112, 219, 0.1)',
+              borderRadius: '6px',
+            }}>
+              <strong>提示：</strong>后台运行时可能无法采集到完整的性能数据。
+            </div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={handleCancelStartBackground}
+                style={{
+                  flex: 1,
+                  backgroundColor: '#475569',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '10px 24px',
+                  fontSize: '11pt',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                }}
+              >
+                取消
+              </button>
+              <button
+                onClick={handleConfirmStartBackground}
+                style={{
+                  flex: 1,
+                  backgroundColor: '#9370DB',  // 紫色按钮
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '10px 24px',
+                  fontSize: '11pt',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                }}
+              >
+                继续监控
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

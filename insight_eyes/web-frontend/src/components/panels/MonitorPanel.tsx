@@ -1,25 +1,20 @@
 import { useMonitoringStore } from '@/store/monitoringStore';
 import { ALL_METRIC_CARDS } from '@/config/metricCards';
 import NeonChartCard from '@/components/charts/NeonChartCard';
-import MonitoringControls from '@/components/widgets/MonitoringControls';
 
 export default function MonitorPanel() {
-  const { metricsData, timestamps, isMonitoring, currentSession } = useMonitoringStore();
+  const { metricsData, timestamps, isMonitoring, currentSession, enabledMetricIds } = useMonitoringStore();
 
   // 获取应用名称用于标题显示
   const appName = currentSession?.app_name || '';
 
-  // 获取启用的卡片（最多5个）
+  // 关键修改：根据store中的enabledMetricIds过滤卡片（动态显示）
   const enabledCards = ALL_METRIC_CARDS
-    .filter(card => card.enabled)
-    .sort((a, b) => a.priority - b.priority)
-    .slice(0, 5);
+    .filter(card => enabledMetricIds.includes(card.metricId))
+    .sort((a, b) => a.priority - b.priority);
 
   return (
     <div className="space-y-6">
-      {/* 控制栏 */}
-      <MonitoringControls />
-
       {/* 主标题栏 - 始终显示，与桌面版一致 */}
       <div
         className="text-center mb-6"

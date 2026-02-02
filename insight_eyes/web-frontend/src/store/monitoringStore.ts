@@ -8,6 +8,13 @@ interface BatteryInfo {
   capacity: string;
 }
 
+interface AlarmRecord {
+  id: string;
+  time: string;
+  level: '严重' | '警告';
+  content: string;
+}
+
 // 生成模拟时间序列数据
 function generateMockData() {
   const dataPoints = 60; // 60个数据点
@@ -55,15 +62,22 @@ interface MonitoringState {
   timestamps: string[];
   wsConnection: WebSocket | null;
   batteryInfo: BatteryInfo;
+  alarms: AlarmRecord[];
+  enabledMetricIds: string[];  // 启用的指标ID列表
+  samplingInterval: number;  // 采样间隔（毫秒）
 
   // Actions
   setDevices: (devices: Device[]) => void;
   selectDevice: (deviceId: string) => void;
-  startMonitoring: (deviceId: string, appPackage: string, platform?: string) => Promise<void>;
+  startMonitoring: (deviceId: string, appPackage: string, platform?: string, samplingInterval?: number) => Promise<void>;
   stopMonitoring: () => Promise<void>;
   updateMetrics: (data: MetricsData) => void;
   clearMetrics: () => void;
   setBatteryInfo: (info: BatteryInfo) => void;
+  addAlarm: (alarm: AlarmRecord) => void;
+  clearAlarms: () => void;
+  setEnabledMetrics: (metricIds: string[]) => void;  // 新增
+  setSamplingInterval: (interval: number) => void;  // 新增
 }
 
 // 生成初始模拟数据
@@ -81,6 +95,7 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
     fps: [],
     network_up: [],
     network_down: [],
+    gpu: [],  // 新增GPU
   },
   timestamps: [],
   wsConnection: null,
@@ -89,6 +104,9 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
     temperature: '--',
     capacity: '--',
   },
+  alarms: [],
+  enabledMetricIds: ['cpu', 'memory', 'fps', 'network_up', 'network_down'],  // 默认启用前5个
+  samplingInterval: 1000,  // 默认1秒
 
   // 设置设备列表
   setDevices: (devices) => set({ devices }),
@@ -96,8 +114,11 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
   // 选择设备
   selectDevice: (deviceId) => set({ selectedDevice: deviceId }),
 
+  // 设置采样间隔
+  setSamplingInterval: (interval) => set({ samplingInterval: interval }),
+
   // 开始监控
-  startMonitoring: async (deviceId, appPackage, platform = 'android') => {
+  startMonitoring: async (deviceId, appPackage, platform = 'android', samplingIntervalParam) => {
     // C1: 防止重复启动监控
     const currentState = get();
     if (currentState.isMonitoring) {
@@ -106,7 +127,9 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
     }
 
     try {
-      const session: Session = await api.startMonitoring(deviceId, appPackage, platform);
+      // 使用传入的采样间隔参数，如果没有则使用store中的默认值
+      const interval = samplingIntervalParam ?? currentState.samplingInterval;
+      const session: Session = await api.startMonitoring(deviceId, appPackage, platform, interval);
 
       // I1: 使用环境变量配置 WebSocket URL，否则使用相对路径通过代理
       const wsUrl = import.meta.env.VITE_WS_URL || '';
@@ -225,4 +248,15 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
 
   // 设置电池信息
   setBatteryInfo: (info) => set({ batteryInfo: info }),
+
+  // 添加告警
+  addAlarm: (alarm) => set((state) => ({
+    alarms: [...state.alarms, alarm],
+  })),
+
+  // 清除所有告警
+  clearAlarms: () => set({ alarms: [] }),
+
+  // 设置启用的指标列表
+  setEnabledMetrics: (metricIds) => set({ enabledMetricIds: metricIds }),
 }));

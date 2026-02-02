@@ -2,39 +2,11 @@
  * 告警记录列表组件
  * 显示格式：[时间] [严重程度] 内容
  */
-import { useState } from 'react';
-
-interface AlarmRecord {
-  id: string;
-  time: string;
-  level: '严重' | '警告';
-  content: string;
-}
-
-// 模拟告警数据
-const mockAlarms: AlarmRecord[] = [
-  {
-    id: '1',
-    time: '15:03:10',
-    level: '严重',
-    content: 'MemoryGrowthRate: 内存增长率过高',
-  },
-  {
-    id: '2',
-    time: '15:02:45',
-    level: '警告',
-    content: 'FPS低于阈值 (28 < 30)',
-  },
-  {
-    id: '3',
-    time: '15:01:30',
-    level: '警告',
-    content: 'CPU使用率过高 (85% > 80%)',
-  },
-];
+import { useMonitoringStore } from '@/store/monitoringStore';
+import type { AlarmRecord } from '@/types';
 
 export default function AlarmRecords() {
-  const [alarms] = useState<AlarmRecord[]>(mockAlarms);
+  const { alarms } = useMonitoringStore();
 
   return (
     <div>
@@ -54,7 +26,7 @@ export default function AlarmRecords() {
         overflowY: 'auto',
         padding: '8px',
       }}>
-        {alarms.length === 0 ? (
+        {!alarms || alarms.length === 0 ? (
           <div style={{
             fontSize: '11px',
             color: '#64748b',
@@ -80,7 +52,7 @@ export default function AlarmRecords() {
                 color: alarm.level === '严重' ? '#ef4444' : '#f59e0b',
                 marginLeft: '8px',
               }}>
-                {alarm.level}
+                [{alarm.level}]
               </span>
               <span style={{ marginLeft: '8px' }}>{alarm.content}</span>
             </div>

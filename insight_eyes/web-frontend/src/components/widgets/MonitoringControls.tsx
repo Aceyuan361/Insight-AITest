@@ -7,6 +7,7 @@ export default function MonitoringControls() {
     isMonitoring,
     startMonitoring,
     stopMonitoring,
+    samplingInterval,
   } = useMonitoringStore();
 
   const [appPackage, setAppPackage] = useState('com.example.app');
@@ -20,7 +21,7 @@ export default function MonitoringControls() {
 
     setLoading(true);
     try {
-      await startMonitoring(selectedDevice, appPackage);
+      await startMonitoring(selectedDevice, appPackage, 'android', samplingInterval);
     } catch (error) {
       alert('启动监控失败: ' + error);
     } finally {
