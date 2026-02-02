@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useMemo } from 'react';
 import * as echarts from 'echarts';
 import type { MetricCardConfig } from '@/types';
 
@@ -12,75 +12,12 @@ export default function RealTimeChart({ data, timestamps, config }: RealTimeChar
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
 
-  // 悬停提示状态
-  const [tooltipData, setTooltipData] = useState<{
-    title: string;
-    time: string;
-    value: string;
-    unit: string;
-  } | null>(null);
-  const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
-  const hideTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // 清除自动隐藏定时器
-  const clearHideTimer = useCallback(() => {
-    if (hideTimerRef.current) {
-      clearTimeout(hideTimerRef.current);
-      hideTimerRef.current = null;
-    }
-  }, []);
-
-  // 设置自动隐藏
-  const scheduleHide = useCallback(() => {
-    clearHideTimer();
-    hideTimerRef.current = setTimeout(() => {
-      setTooltipData(null);
-      setTooltipPosition(null);
-    }, 2000);
-  }, [clearHideTimer]);
-
+  // 清理函数
   useEffect(() => {
     if (!chartRef.current) return;
 
     // 初始化图表
     chartInstance.current = echarts.init(chartRef.current);
-
-    // 添加鼠标移动事件监听
-    const handleMouseMove = (params: any) => {
-      if (!params.dataIndex && params.dataIndex !== 0) return;
-
-      const dataIndex = params.dataIndex;
-      if (dataIndex < 0 || dataIndex >= data.length) return;
-
-      // 格式化时间
-      const date = new Date(timestamps[dataIndex]);
-      const timeStr = `${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`;
-
-      // 设置提示数据
-      setTooltipData({
-        title: config.title,
-        time: timeStr,
-        value: data[dataIndex].toFixed(config.decimals),
-        unit: config.unit,
-      });
-
-      // 设置提示位置（鼠标位置）
-      setTooltipPosition({
-        x: params.event.event.clientX,
-        y: params.event.event.clientY,
-      });
-
-      // 重新安排自动隐藏
-      scheduleHide();
-    };
-
-    // 鼠标离开图表时隐藏提示
-    const handleMouseLeave = () => {
-      scheduleHide();
-    };
-
-    chartInstance.current.on('mousemove', handleMouseMove);
-    chartInstance.current.on('globalout', handleMouseLeave);
 
     // 添加窗口resize监听器
     const handleResize = () => {
@@ -92,94 +29,283 @@ export default function RealTimeChart({ data, timestamps, config }: RealTimeChar
     return () => {
       window.removeEventListener('resize', handleResize);
       chartInstance.current?.dispose();
-      clearHideTimer();
     };
-  }, [config, scheduleHide, clearHideTimer]);
+  }, []);
+
+  // 计算X轴刻度间隔（完全复刻桌面版逻辑）
+  const xAxisInterval = useMemo(() => {
+    const len = data.length;
+    if (len <= 20) return 5;
+    if (len <= 40) return 10;
+    return 15;
+  }, [data.length]);
+
+  // 格式化时间戳（HH:mm:ss）
+  const formatTime = (date: Date): string => {
+    return date.toLocaleTimeString('zh-CN', {
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  };
+
+  // 解析ISO时间字符串
+  const parseTimestamp = (ts: string): Date => {
+    return new Date(ts);
+  };
+
+  // 生成X轴刻度数据（动态间隔）
+  const xAxisData = useMemo(() => {
+    const result: string[] = [];
+    for (let i = 0; i < data.length; i += xAxisInterval) {
+      if (i < timestamps.length) {
+        result.push(formatTime(parseTimestamp(timestamps[i])));
+      }
+    }
+    // 确保最后一个时间点总是显示
+    if (timestamps.length > 0 && (result.length === 0 || xAxisInterval * (result.length - 1) < data.length - 1)) {
+      const lastIndex = timestamps.length - 1;
+      const lastTime = formatTime(parseTimestamp(timestamps[lastIndex]));
+      if (result.length === 0 || result[result.length - 1] !== lastTime) {
+        result.push(lastTime);
+      }
+    }
+    return result;
+  }, [timestamps, data.length, xAxisInterval]);
+
+  // 计算统计数据（Max | Min | Avg）
+  const statistics = useMemo(() => {
+    if (data.length === 0) return null;
+    const valid = data.filter(v => v != null && !isNaN(v));
+    if (valid.length === 0) return null;
+
+    const max = Math.max(...valid);
+    const min = Math.min(...valid);
+    const avg = valid.reduce((a, b) => a + b, 0) / valid.length;
+
+    return { max, min, avg };
+  }, [data]);
 
   useEffect(() => {
     if (!chartInstance.current) return;
 
-    // 预处理时间戳数据
-    const formattedTimestamps = timestamps.map(t => {
-      const date = new Date(t);
-      return `${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`;
-    });
-
     const option: echarts.EChartsOption = {
+      // 网格布局（完全复刻桌面版）
       grid: {
-        top: 35,    // 桌面版网格顶部边距
-        left: 55,   // 桌面版网格左侧边距
-        right: 20,  // 桌面版网格右侧边距
-        bottom: 30, // 桌面版网格底部边距
+        top: 35,
+        left: 55,
+        right: 20,
+        bottom: 30,
       },
+
+      // X轴时间刻度（完全复刻桌面版）
       xAxis: {
         type: 'category',
-        data: formattedTimestamps,
-        show: false,
+        data: xAxisData,
+        axisLabel: {
+          color: '#888888',
+          fontSize: 11,
+          fontFamily: 'Arial, sans-serif',
+          interval: xAxisInterval - 1, // 动态间隔
+        },
+        axisLine: {
+          lineStyle: { color: '#444' }
+        },
+        axisTick: {
+          lineStyle: { color: '#444' }
+        },
       },
+
+      // Y轴配置
       yAxis: {
         type: 'value',
-        min: config.yMin,
-        max: config.yMax,
+        min: config.yMin === 'dataMin' ? undefined : config.yMin,
+        max: config.yMax === 'dataMax' ? undefined : config.yMax,
         splitLine: {
           show: true,
           lineStyle: {
-            color: 'rgba(255, 255, 255, 0.08)', // 桌面版网格线透明度
+            color: 'rgba(255, 255, 255, 0.08)',
           },
         },
         axisLabel: {
-          color: '#888888', // 桌面版Y轴标签颜色
-          fontSize: 11,     // 桌面版Y轴字体大小
+          color: '#888888',
+          fontSize: 11,
           fontFamily: 'Arial, sans-serif',
+          formatter: (value: number) => value.toFixed(config.decimals) + config.unit,
+        },
+        axisLine: {
+          lineStyle: { color: '#444' }
+        },
+        axisTick: {
+          lineStyle: { color: '#444' }
         },
       },
+
+      // Tooltip配置（完全复刻桌面版交互体验）
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+          type: 'line',
+          lineStyle: {
+            color: '#444',
+            type: 'dashed',
+            width: 1,
+          },
+        },
+        backgroundColor: 'rgba(18, 24, 36, 0.95)',
+        borderColor: '#1a1f2e',
+        borderWidth: 1,
+        textStyle: {
+          color: '#e0e6ed',
+        },
+        padding: [12, 16],
+        formatter: (params: any) => {
+          if (!params || params.length === 0) return '';
+          const point = params[0];
+          const dataIndex = point.dataIndex;
+
+          // 获取准确的时间戳
+          let timeStr = '';
+          if (dataIndex >= 0 && dataIndex < timestamps.length) {
+            timeStr = formatTime(parseTimestamp(timestamps[dataIndex]));
+          }
+
+          const value = point.value as number;
+          const unit = config.unit;
+
+          return `
+            <div style="padding: 4px 0;">
+              <div style="color: #94a3b8; font-size: 12px; margin-bottom: 6px;">${config.title}</div>
+              <div style="margin: 4px 0;">
+                <span style="color: #64748b;">时间:</span>
+                <span style="color: #e0e6ed; margin-left: 8px; font-family: 'Roboto Mono', monospace;">${timeStr}</span>
+              </div>
+              <div>
+                <span style="color: #64748b;">数值:</span>
+                <span style="color: ${config.color}; margin-left: 8px; font-family: 'Roboto Mono', monospace; font-weight: 500;">${value.toFixed(config.decimals)}${unit}</span>
+              </div>
+            </div>
+          `;
+        },
+      },
+
+      // 系列配置（添加数据点高亮效果）
       series: [
         {
           type: 'line',
           data: data,
           smooth: true,
-          smoothMonotone: 'x', // 抗锯齿优化
-          symbol: 'none',
+          smoothMonotone: 'x',
+          symbol: 'none', // 默认不显示数据点
+          sampling: 'lttb', // 降采样优化性能
+
+          // 线条样式（完全复刻桌面版）
           lineStyle: {
             color: config.color,
-            width: 3,  // 增加线条宽度以更突出
+            width: 2.5,
           },
+
+          // 渐变填充（完全复刻桌面版）
           areaStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: config.color + '38' }, // 35% 透明度
-              { offset: 1, color: config.color + '00' },
+              { offset: 0, color: hexToRgba(config.color, 0.35) },
+              { offset: 1, color: hexToRgba(config.color, 0) },
             ]),
           },
-          z: 1, // 确保线条在下层
+
+          // 数据点高亮效果（完全复刻桌面版悬停体验）
+          emphasis: {
+            focus: 'series',
+            itemStyle: {
+              color: config.color,
+              borderColor: config.color,
+              borderWidth: 2,
+            },
+          },
+
+          // 悬停时显示数据点标记
+          markPoint: {
+            data: [],
+            symbol: 'circle',
+            symbolSize: 12,
+            itemStyle: {
+              color: config.color,
+              borderColor: config.color,
+            },
+            label: { show: false },
+            silent: true, // 不响应鼠标事件（由tooltip控制）
+          },
+
+          z: 1,
         },
       ],
+
       animation: false,
-      // 禁用默认tooltip
-      tooltip: {
-        show: false,
-      },
     };
 
-    chartInstance.current.setOption(option);
-  }, [data, timestamps, config.yMin, config.yMax, config.color]);
+    chartInstance.current.setOption(option, true);
 
-  // 动态导入ChartTooltip（避免循环依赖）
-  const [ChartTooltip, setChartTooltip] = useState<any>(null);
-  useEffect(() => {
-    import('@/components/widgets/ChartTooltip').then((mod) => {
-      setChartTooltip(() => mod.default);
-    });
-  }, []);
+    // 监听鼠标事件，动态显示/隐藏数据点
+    const handleMouseOver = () => {
+      chartInstance.current?.setOption({
+        series: [{
+          markPoint: {
+            data: data.map((_, i) => ({
+              coord: [i, _],
+              itemStyle: {
+                color: config.color,
+                borderColor: config.color,
+              },
+            })),
+          },
+        }],
+      });
+    };
+
+    const handleMouseOut = () => {
+      chartInstance.current?.setOption({
+        series: [{
+          markPoint: { data: [] },
+        }],
+      });
+    };
+
+    chartInstance.current.on('mouseover', handleMouseOver);
+    chartInstance.current.on('globalout', handleMouseOut);
+
+    return () => {
+      chartInstance.current?.off('mouseover', handleMouseOver);
+      chartInstance.current?.off('globalout', handleMouseOut);
+    };
+  }, [data, xAxisData, timestamps, config, xAxisInterval]);
+
+  // 辅助函数：十六进制颜色转rgba
+  function hexToRgba(hex: string, alpha: number): string {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
 
   return (
-    <>
+    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       <div ref={chartRef} style={{ width: '100%', height: '100%', minHeight: '80px' }} />
-      {ChartTooltip && tooltipData && tooltipPosition && (
-        <ChartTooltip
-          data={tooltipData}
-          position={tooltipPosition}
-        />
+
+      {/* 统计信息（可选显示） */}
+      {statistics && (
+        <div style={{
+          position: 'absolute',
+          top: 8,
+          right: 8,
+          fontSize: '11px',
+          color: config.color,
+          fontFamily: "'Roboto Mono', monospace",
+          opacity: 0.8,
+        }}>
+          Max: {statistics.max.toFixed(config.decimals)}{config.unit} | Min: {statistics.min.toFixed(config.decimals)}{config.unit} | Avg: {statistics.avg.toFixed(config.decimals)}{config.unit}
+        </div>
       )}
-    </>
+    </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useMonitoringStore } from '@/store/monitoringStore';
 import AlarmRecords from '@/components/widgets/AlarmRecords';
 import { configManager } from '@/utils/configManager';
@@ -7,6 +7,7 @@ export default function ConfigPanel() {
   const { isMonitoring, selectedDevice, setEnabledMetrics, devices, setSamplingInterval: setStoreSamplingInterval, samplingInterval: storeSamplingInterval } = useMonitoringStore();
   const [samplingInterval, setSamplingInterval] = useState('1s');
   const [showGpuWarning, setShowGpuWarning] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 采样频率字符串到毫秒的映射
   const intervalToMs = (interval: string): number => {
@@ -111,6 +112,111 @@ export default function ConfigPanel() {
     configManager.saveEnabledMetrics(enabledIds);
   };
 
+  // 导出配置
+  const handleExportConfig = () => {
+    const config = {
+      samplingInterval,
+      enabledMetrics: metrics.filter(m => m.enabled).map(m => m.key),
+      thresholds,
+    };
+
+    const configJson = JSON.stringify(config, null, 2);
+    const blob = new Blob([configJson], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `insight-eye-config-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // 导入配置
+  const handleImportConfig = () => {
+    fileInputRef.current?.click();
+  };
+
+  // 处理文件选择
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const config = JSON.parse(event.target?.result as string);
+
+        // 应用配置
+        if (config.samplingInterval) {
+          setSamplingInterval(config.samplingInterval);
+          setStoreSamplingInterval(intervalToMs(config.samplingInterval));
+          configManager.saveSamplingInterval(config.samplingInterval);
+        }
+
+        if (config.enabledMetrics && Array.isArray(config.enabledMetrics)) {
+          const updatedMetrics = metrics.map(m => ({
+            ...m,
+            enabled: config.enabledMetrics.includes(m.key),
+          }));
+          setMetrics(updatedMetrics);
+          setEnabledMetrics(config.enabledMetrics);
+          configManager.saveEnabledMetrics(config.enabledMetrics);
+        }
+
+        if (config.thresholds) {
+          setThresholds(config.thresholds);
+        }
+
+        alert('配置导入成功！');
+      } catch (error) {
+        alert('配置导入失败：无效的配置文件');
+        console.error('Import config error:', error);
+      }
+    };
+    reader.readAsText(file);
+
+    // 重置文件输入，以便可以重复选择同一文件
+    e.target.value = '';
+  };
+
+  // 重置配置
+  const handleResetConfig = () => {
+    if (!confirm('确定要重置为默认配置吗？')) {
+      return;
+    }
+
+    // 重置为默认值
+    const defaultInterval = '1s';
+    const defaultMetrics = metrics.map(m => ({
+      ...m,
+      enabled: ['cpu', 'memory', 'fps', 'network_up', 'network_down'].includes(m.key),
+    }));
+    const defaultThresholds = {
+      fps: 30,
+      memory: 500,
+      cpu: 80,
+      temperature: 45.0,
+    };
+
+    setSamplingInterval(defaultInterval);
+    setStoreSamplingInterval(intervalToMs(defaultInterval));
+    setMetrics(defaultMetrics);
+    setThresholds(defaultThresholds);
+
+    // 清除localStorage
+    localStorage.removeItem('samplingInterval');
+    localStorage.removeItem('enabledMetrics');
+
+    // 更新store
+    setEnabledMetrics(defaultMetrics.filter(m => m.enabled).map(m => m.key));
+
+    alert('配置已重置为默认值');
+  };
+
+  // 打开配置目录（Web版本不支持，提供说明）
+  const handleOpenConfigDir = () => {
+    alert('配置存储在浏览器 localStorage 中。\n\n如需完全清除配置，请清除浏览器缓存。');
+  };
+
   return (
     <div style={{
       padding: '12px',
@@ -118,14 +224,88 @@ export default function ConfigPanel() {
       flexDirection: 'column',
       gap: '16px',
     }}>
+      {/* 隐藏的文件输入 */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".json"
+        style={{ display: 'none' }}
+        onChange={handleFileChange}
+      />
+
       {/* === 标题 === */}
       <div style={{
         fontSize: '16pt',
         fontWeight: '700',
         color: '#00d4ff',
         padding: '4px 0px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
       }}>
-        采集配置
+        <span>采集配置</span>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            onClick={handleExportConfig}
+            style={{
+              backgroundColor: '#121824',
+              color: '#e0e6ed',
+              border: '1px solid #1a1f2e',
+              borderRadius: '6px',
+              padding: '6px 12px',
+              fontSize: '10pt',
+              cursor: 'pointer',
+            }}
+            title="导出配置到JSON文件"
+          >
+            导出配置
+          </button>
+          <button
+            onClick={handleImportConfig}
+            style={{
+              backgroundColor: '#121824',
+              color: '#e0e6ed',
+              border: '1px solid #1a1f2e',
+              borderRadius: '6px',
+              padding: '6px 12px',
+              fontSize: '10pt',
+              cursor: 'pointer',
+            }}
+            title="从JSON文件导入配置"
+          >
+            导入配置
+          </button>
+          <button
+            onClick={handleResetConfig}
+            style={{
+              backgroundColor: '#ef4444',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '6px',
+              padding: '6px 12px',
+              fontSize: '10pt',
+              cursor: 'pointer',
+            }}
+            title="重置为默认配置"
+          >
+            重置配置
+          </button>
+          <button
+            onClick={handleOpenConfigDir}
+            style={{
+              backgroundColor: '#121824',
+              color: '#e0e6ed',
+              border: '1px solid #1a1f2e',
+              borderRadius: '6px',
+              padding: '6px 12px',
+              fontSize: '10pt',
+              cursor: 'pointer',
+            }}
+            title="查看配置存储位置"
+          >
+            配置说明
+          </button>
+        </div>
       </div>
 
       {/* === 采集配置 === */}

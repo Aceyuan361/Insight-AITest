@@ -193,7 +193,17 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
     // I2: 调用 API 停止监控，只有在成功后才清除状态
     if (currentSession) {
       try {
+        // 1. 停止监控
         await api.stopMonitoring(currentSession.id);
+
+        // 2. 获取统计数据（桌面版功能）
+        try {
+          const statistics = await api.getSessionStatistics(currentSession.id);
+          console.log('Session statistics:', statistics);
+        } catch (statsError) {
+          console.warn('Failed to get session statistics:', statsError);
+          // 统计数据获取失败不影响停止监控流程
+        }
 
         // 只有在 API 调用成功后才清除状态
         set({

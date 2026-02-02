@@ -1,8 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useMonitoringStore } from '@/store/monitoringStore';
 import { deviceApi } from '@/services/api';
-import { getMockAppsForDevice, getAppName } from '@/services/mockApps';
 import type { AppInfo } from '@/types';
+
+// 从包名获取应用名称的辅助函数
+function getAppName(packageName: string): string {
+  if (!packageName) return '';
+  const parts = packageName.split('.');
+  // 返回最后一部分作为应用名
+  return parts[parts.length - 1] || packageName;
+}
 
 export default function DeviceSelectionPanel() {
   const { devices, selectedDevice, selectDevice, isMonitoring, currentSession, batteryInfo, setDevices } = useMonitoringStore();
@@ -41,9 +48,7 @@ export default function DeviceSelectionPanel() {
           setApps(deviceApps);
         } catch (err) {
           console.error('Failed to load apps:', err);
-          // 如果API失败，使用模拟数据作为回退
-          const deviceApps = getMockAppsForDevice(selectedDevice);
-          setApps(deviceApps);
+          setApps([]);
         } finally {
           setLoading(false);
         }
