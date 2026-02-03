@@ -218,7 +218,12 @@ export default function SessionList({
             type="checkbox"
             checked={selectedIds.size === filteredSessions.length && filteredSessions.length > 0}
             onChange={handleSelectAllChange}
-            className="w-3 h-3 rounded border-gray-600 bg-gray-800 text-neon-cpu focus:ring-neon-cpu"
+            className="w-3 h-3 rounded"
+            style={{
+              border: '1px solid #4b5563',
+              backgroundColor: '#1f2937',
+              accentColor: '#00d4ff',
+            }}
           />
         </div>
         <div className="col-span-6">时间</div>
@@ -236,10 +241,16 @@ export default function SessionList({
           </span>
           <button
             onClick={handleBatchDelete}
-            className="px-2 py-1 text-xs rounded font-medium"
+            className="px-2 py-1 text-xs rounded font-medium transition-colors"
             style={{
               backgroundColor: '#ef4444',
               color: '#ffffff',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#dc2626';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#ef4444';
             }}
           >
             批量删除
@@ -294,7 +305,12 @@ export default function SessionList({
                       checked={isRowSelected}
                       onChange={(e) => toggleSelectSession(session.id, e)}
                       onClick={(e) => e.stopPropagation()}
-                      className="w-3 h-3 rounded border-gray-600 bg-gray-800 text-neon-cpu focus:ring-neon-cpu"
+                      className="w-3 h-3 rounded"
+                      style={{
+                        border: '1px solid #4b5563',
+                        backgroundColor: '#1f2937',
+                        accentColor: '#00d4ff',
+                      }}
                     />
                   </div>
 

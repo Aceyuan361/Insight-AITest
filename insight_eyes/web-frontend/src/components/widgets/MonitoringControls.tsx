@@ -49,7 +49,14 @@ export default function MonitoringControls() {
           onChange={(e) => setAppPackage(e.target.value)}
           placeholder="应用包名 (如: com.example.app)"
           disabled={isMonitoring}
-          className="w-full px-4 py-2 bg-gray-900 border border-gray-800 rounded-lg focus:border-neon-cpu focus:outline-none disabled:opacity-50"
+          className="w-full px-4 py-2 border rounded-lg focus:outline-none disabled:opacity-50 transition-colors"
+          style={{
+            backgroundColor: '#121824',
+            color: '#e0e6ed',
+            border: '1px solid #1a1f2e',
+          }}
+          onFocus={(e) => e.currentTarget.style.borderColor = '#00d4ff'}
+          onBlur={(e) => e.currentTarget.style.borderColor = '#1a1f2e'}
         />
       </div>
 
@@ -58,7 +65,11 @@ export default function MonitoringControls() {
           <button
             onClick={handleStart}
             disabled={!selectedDevice || loading}
-            className="px-6 py-2 bg-neon-cpu text-black font-bold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 font-bold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              backgroundColor: '#00d4ff',
+              color: '#0a0e17',
+            }}
           >
             {loading ? '启动中...' : '开始监控'}
           </button>

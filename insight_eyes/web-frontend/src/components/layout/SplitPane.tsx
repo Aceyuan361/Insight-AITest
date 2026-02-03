@@ -124,14 +124,23 @@ export default function SplitPane({
       <div
         ref={resizerRef}
         onMouseDown={handleMouseDown}
-        className={`flex-shrink-0 ${
-          isHorizontal
-            ? 'w-1 cursor-col-resize hover:bg-neon-cpu/50'
-            : 'h-1 cursor-row-resize hover:bg-neon-cpu/50'
-        } ${isDragging ? 'bg-neon-cpu' : 'bg-gray-700'} transition-colors`}
+        className={`flex-shrink-0 transition-colors ${
+          isHorizontal ? 'w-1 cursor-col-resize' : 'h-1 cursor-row-resize'
+        }`}
         style={{
           position: 'relative',
           zIndex: 10,
+          backgroundColor: isDragging ? '#00d4ff' : '#374151',
+        }}
+        onMouseEnter={(e) => {
+          if (!isDragging) {
+            e.currentTarget.style.backgroundColor = 'rgba(0, 212, 255, 0.5)';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!isDragging) {
+            e.currentTarget.style.backgroundColor = '#374151';
+          }
         }}
       >
         {/* 拖动指示器 */}

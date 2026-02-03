@@ -54,7 +54,7 @@ export default function ReportPanel() {
         <select
           value={platformFilter}
           onChange={(e) => setPlatformFilter(e.target.value as 'all' | 'android' | 'ios')}
-          className="px-3 py-2 rounded-lg border bg-gray-900 text-gray-200 focus:outline-none focus:ring-2 focus:ring-neon-cpu"
+          className="px-3 py-2 rounded-lg border focus:outline-none transition-colors"
           style={{
             backgroundColor: '#121824',
             color: '#e0e6ed',
@@ -63,6 +63,8 @@ export default function ReportPanel() {
             padding: '6px 12px',
             minWidth: '120px',
           }}
+          onFocus={(e) => e.currentTarget.style.borderColor = '#00d4ff'}
+          onBlur={(e) => e.currentTarget.style.borderColor = '#1a1f2e'}
         >
           <option value="all">全部设备</option>
           <option value="android">Android</option>
@@ -75,7 +77,7 @@ export default function ReportPanel() {
           placeholder="搜索包名或应用名..."
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
-          className="px-3 py-2 rounded-lg border bg-gray-900 text-gray-200 focus:outline-none focus:ring-2 focus:ring-neon-cpu"
+          className="px-3 py-2 rounded-lg border focus:outline-none transition-colors"
           style={{
             backgroundColor: '#121824',
             color: '#e0e6ed',
@@ -84,6 +86,8 @@ export default function ReportPanel() {
             padding: '6px 12px',
             minWidth: '200px',
           }}
+          onFocus={(e) => e.currentTarget.style.borderColor = '#00d4ff'}
+          onBlur={(e) => e.currentTarget.style.borderColor = '#1a1f2e'}
         />
 
         {/* 刷新按钮 */}
@@ -95,6 +99,14 @@ export default function ReportPanel() {
             color: '#e0e6ed',
             minWidth: '80px',
             padding: '6px 16px',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#2d3748';
+            e.currentTarget.style.color = '#00d4ff';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = '#1a1f2e';
+            e.currentTarget.style.color = '#e0e6ed';
           }}
         >
           刷新

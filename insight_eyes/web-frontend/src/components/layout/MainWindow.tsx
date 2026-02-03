@@ -51,11 +51,7 @@ export default function MainWindow() {
           <div className="flex space-x-2" style={{ borderBottom: '1px solid #1a1f2e' }}>
             <button
               onClick={() => setActiveTab('monitor')}
-              className={`px-6 py-3 font-medium transition-colors ${
-                activeTab === 'monitor'
-                  ? 'text-neon-cpu border-b-2'
-                  : 'text-text-secondary hover:text-text-primary'
-              }`}
+              className="px-6 py-3 font-medium transition-colors"
               style={{
                 borderBottom: activeTab === 'monitor' ? '2px solid #00d4ff' : 'none',
                 color: activeTab === 'monitor' ? '#00d4ff' : '#94a3b8',
@@ -65,11 +61,7 @@ export default function MainWindow() {
             </button>
             <button
               onClick={() => setActiveTab('report')}
-              className={`px-6 py-3 font-medium transition-colors ${
-                activeTab === 'report'
-                  ? 'text-neon-cpu border-b-2'
-                  : 'text-text-secondary hover:text-text-primary'
-              }`}
+              className="px-6 py-3 font-medium transition-colors"
               style={{
                 borderBottom: activeTab === 'report' ? '2px solid #00d4ff' : 'none',
                 color: activeTab === 'report' ? '#00d4ff' : '#94a3b8',
