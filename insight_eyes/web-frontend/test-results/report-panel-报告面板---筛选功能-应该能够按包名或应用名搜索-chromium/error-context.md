@@ -1,0 +1,197 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - navigation [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: 性能监控工具
+      - generic [ref=e7]:
+        - link "文件(F)" [ref=e8] [cursor=pointer]:
+          - /url: "#"
+        - link "编辑(E)" [ref=e9] [cursor=pointer]:
+          - /url: "#"
+        - link "工具(T)" [ref=e10] [cursor=pointer]:
+          - /url: "#"
+        - link "帮助(H)" [ref=e11] [cursor=pointer]:
+          - /url: "#"
+      - button "刷新设备" [ref=e13] [cursor=pointer]
+  - generic [ref=e14]:
+    - generic [ref=e16]:
+      - button "实时监控" [ref=e17]
+      - button "性能报告" [ref=e18]
+    - generic [ref=e19]:
+      - generic [ref=e20]:
+        - heading "测试报告" [level=2] [ref=e21]
+        - combobox [ref=e22]:
+          - option "全部设备" [selected]
+          - option "Android"
+          - option "iOS"
+        - textbox "搜索包名或应用名..." [active] [ref=e23]
+        - button "刷新" [ref=e24]
+      - generic [ref=e26]:
+        - generic [ref=e29]:
+          - generic [ref=e30]:
+            - checkbox [ref=e32]
+            - generic [ref=e33]: 时间
+            - generic [ref=e34]: 会话ID
+          - generic [ref=e36]:
+            - generic [ref=e37] [cursor=pointer]:
+              - checkbox [ref=e39]
+              - generic [ref=e40]: 2026-02-03 10:51:10
+              - generic [ref=e41]:
+                - generic [ref=e42]: "#25"
+                - generic [ref=e43]: RUN
+            - generic [ref=e44] [cursor=pointer]:
+              - checkbox [ref=e46]
+              - generic [ref=e47]: 2026-02-02 20:28:52
+              - generic [ref=e48]:
+                - generic [ref=e49]: "#24"
+                - generic [ref=e50]: STO
+            - generic [ref=e51] [cursor=pointer]:
+              - checkbox [ref=e53]
+              - generic [ref=e54]: 2026-02-02 20:27:32
+              - generic [ref=e55]:
+                - generic [ref=e56]: "#23"
+                - generic [ref=e57]: STO
+            - generic [ref=e58] [cursor=pointer]:
+              - checkbox [ref=e60]
+              - generic [ref=e61]: 2026-02-02 18:28:27
+              - generic [ref=e62]:
+                - generic [ref=e63]: "#22"
+                - generic [ref=e64]: RUN
+            - generic [ref=e65] [cursor=pointer]:
+              - checkbox [ref=e67]
+              - generic [ref=e68]: 2026-02-02 16:15:21
+              - generic [ref=e69]:
+                - generic [ref=e70]: "#21"
+                - generic [ref=e71]: STO
+            - generic [ref=e72] [cursor=pointer]:
+              - checkbox [ref=e74]
+              - generic [ref=e75]: 2026-02-02 14:40:35
+              - generic [ref=e76]:
+                - generic [ref=e77]: "#20"
+                - generic [ref=e78]: STO
+            - generic [ref=e79] [cursor=pointer]:
+              - checkbox [ref=e81]
+              - generic [ref=e82]: 2026-02-02 14:24:58
+              - generic [ref=e83]:
+                - generic [ref=e84]: "#19"
+                - generic [ref=e85]: STO
+            - generic [ref=e86] [cursor=pointer]:
+              - checkbox [ref=e88]
+              - generic [ref=e89]: 2026-02-02 14:22:15
+              - generic [ref=e90]:
+                - generic [ref=e91]: "#18"
+                - generic [ref=e92]: STO
+            - generic [ref=e93] [cursor=pointer]:
+              - checkbox [ref=e95]
+              - generic [ref=e96]: 2026-02-02 14:20:28
+              - generic [ref=e97]:
+                - generic [ref=e98]: "#17"
+                - generic [ref=e99]: RUN
+            - generic [ref=e100] [cursor=pointer]:
+              - checkbox [ref=e102]
+              - generic [ref=e103]: 2026-02-02 14:09:27
+              - generic [ref=e104]:
+                - generic [ref=e105]: "#16"
+                - generic [ref=e106]: RUN
+            - generic [ref=e107] [cursor=pointer]:
+              - checkbox [ref=e109]
+              - generic [ref=e110]: 2026-02-02 14:04:20
+              - generic [ref=e111]:
+                - generic [ref=e112]: "#15"
+                - generic [ref=e113]: RUN
+            - generic [ref=e114] [cursor=pointer]:
+              - checkbox [ref=e116]
+              - generic [ref=e117]: 2026-02-02 11:53:41
+              - generic [ref=e118]:
+                - generic [ref=e119]: "#14"
+                - generic [ref=e120]: RUN
+            - generic [ref=e121] [cursor=pointer]:
+              - checkbox [ref=e123]
+              - generic [ref=e124]: 2026-02-02 11:07:30
+              - generic [ref=e125]:
+                - generic [ref=e126]: "#13"
+                - generic [ref=e127]: RUN
+            - generic [ref=e128] [cursor=pointer]:
+              - checkbox [ref=e130]
+              - generic [ref=e131]: 2026-01-30 12:14:04
+              - generic [ref=e132]:
+                - generic [ref=e133]: "#12"
+                - generic [ref=e134]: RUN
+            - generic [ref=e135] [cursor=pointer]:
+              - checkbox [ref=e137]
+              - generic [ref=e138]: 2026-01-30 12:05:33
+              - generic [ref=e139]:
+                - generic [ref=e140]: "#11"
+                - generic [ref=e141]: RUN
+            - generic [ref=e142] [cursor=pointer]:
+              - checkbox [ref=e144]
+              - generic [ref=e145]: 2026-01-30 12:01:37
+              - generic [ref=e146]:
+                - generic [ref=e147]: "#10"
+                - generic [ref=e148]: RUN
+            - generic [ref=e149] [cursor=pointer]:
+              - checkbox [ref=e151]
+              - generic [ref=e152]: 2026-01-30 11:50:30
+              - generic [ref=e153]:
+                - generic [ref=e154]: "#9"
+                - generic [ref=e155]: RUN
+            - generic [ref=e156] [cursor=pointer]:
+              - checkbox [ref=e158]
+              - generic [ref=e159]: 2026-01-30 11:42:38
+              - generic [ref=e160]:
+                - generic [ref=e161]: "#8"
+                - generic [ref=e162]: RUN
+            - generic [ref=e163] [cursor=pointer]:
+              - checkbox [ref=e165]
+              - generic [ref=e166]: 2026-01-30 11:40:25
+              - generic [ref=e167]:
+                - generic [ref=e168]: "#7"
+                - generic [ref=e169]: RUN
+            - generic [ref=e170] [cursor=pointer]:
+              - checkbox [ref=e172]
+              - generic [ref=e173]: 2026-01-30 11:37:50
+              - generic [ref=e174]:
+                - generic [ref=e175]: "#6"
+                - generic [ref=e176]: RUN
+            - generic [ref=e177] [cursor=pointer]:
+              - checkbox [ref=e179]
+              - generic [ref=e180]: 2026-01-30 11:27:52
+              - generic [ref=e181]:
+                - generic [ref=e182]: "#5"
+                - generic [ref=e183]: RUN
+            - generic [ref=e184] [cursor=pointer]:
+              - checkbox [ref=e186]
+              - generic [ref=e187]: 2026-01-30 11:24:25
+              - generic [ref=e188]:
+                - generic [ref=e189]: "#4"
+                - generic [ref=e190]: RUN
+            - generic [ref=e191] [cursor=pointer]:
+              - checkbox [ref=e193]
+              - generic [ref=e194]: 2026-01-30 11:02:35
+              - generic [ref=e195]:
+                - generic [ref=e196]: "#3"
+                - generic [ref=e197]: STO
+            - generic [ref=e198] [cursor=pointer]:
+              - checkbox [ref=e200]
+              - generic [ref=e201]: 2026-01-29 18:28:10
+              - generic [ref=e202]:
+                - generic [ref=e203]: "#2"
+                - generic [ref=e204]: RUN
+            - generic [ref=e205] [cursor=pointer]:
+              - checkbox [ref=e207]
+              - generic [ref=e208]: 2026-01-29 18:14:04
+              - generic [ref=e209]:
+                - generic [ref=e210]: "#1"
+                - generic [ref=e211]: STO
+        - generic:
+          - generic:
+            - img
+        - paragraph [ref=e218]: 请选择一个会话查看详情
+  - contentinfo [ref=e219]:
+    - generic [ref=e221]:
+      - generic [ref=e223]: 未监控
+      - generic [ref=e224]: 未选择设备
+      - generic [ref=e225]: 2:13:23 PM
+```

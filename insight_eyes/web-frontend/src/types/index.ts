@@ -41,6 +41,7 @@ export interface MetricsData {
   fps?: number;
   network_up?: number;
   network_down?: number;
+  gpu?: number;
   battery?: number;
   temperature?: number;
 }

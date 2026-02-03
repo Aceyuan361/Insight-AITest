@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Device, Session, MetricsData } from '@/types';
 import { api } from '@/services/api';
+import { exportHtmlReport } from '@/services/htmlExporter';
 
 interface BatteryInfo {
   level: string;
@@ -13,43 +14,6 @@ interface AlarmRecord {
   time: string;
   level: '严重' | '警告';
   content: string;
-}
-
-// 生成模拟时间序列数据
-function generateMockData() {
-  const dataPoints = 60; // 60个数据点
-  const now = Date.now();
-  const timestamps: string[] = [];
-  const metricsData: Record<string, number[]> = {
-    cpu: [],
-    memory: [],
-    fps: [],
-    network_up: [],
-    network_down: [],
-  };
-
-  for (let i = 0; i < dataPoints; i++) {
-    const time = new Date(now - (dataPoints - i) * 1000);
-    timestamps.push(time.toISOString());
-
-    // CPU: 0-100之间的波动数据，模拟真实使用情况
-    metricsData.cpu.push(Math.max(5, Math.min(95, 30 + Math.sin(i / 5) * 25 + Math.random() * 20)));
-
-    // Memory: 150-350MB之间波动
-    metricsData.memory.push(Math.max(150, Math.min(350, 250 + Math.sin(i / 8) * 80 + Math.random() * 30)));
-
-    // FPS: 55-60之间，偶尔掉帧
-    const fpsValue = Math.random() > 0.9 ? Math.floor(Math.random() * 20 + 40) : Math.floor(Math.random() * 5 + 55);
-    metricsData.fps.push(fpsValue);
-
-    // Network Upload: 0-50 KB/s
-    metricsData.network_up.push(Math.max(0, Math.min(50, Math.random() * 30)));
-
-    // Network Download: 0-200 KB/s
-    metricsData.network_down.push(Math.max(0, Math.min(200, Math.random() * 100 + 20)));
-  }
-
-  return { timestamps, metricsData };
 }
 
 interface MonitoringState {
@@ -79,9 +43,6 @@ interface MonitoringState {
   setEnabledMetrics: (metricIds: string[]) => void;  // 新增
   setSamplingInterval: (interval: number) => void;  // 新增
 }
-
-// 生成初始模拟数据
-const initialMockData = generateMockData();
 
 export const useMonitoringStore = create<MonitoringState>((set, get) => ({
   // 初始状态 - 从空状态开始，让用户从真实设备列表中选择
@@ -181,9 +142,9 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
     }
   },
 
-  // 停止监控
-  stopMonitoring: async () => {
-    const { currentSession, wsConnection } = get();
+  // 停止监控（带数据统计和 HTML 导出）
+  stopMonitoring: async (autoExport = true) => {
+    const { currentSession, wsConnection, timestamps } = get();
 
     // 关闭 WebSocket
     if (wsConnection) {
@@ -196,13 +157,24 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
         // 1. 停止监控
         await api.stopMonitoring(currentSession.id);
 
-        // 2. 获取统计数据（桌面版功能）
-        try {
-          const statistics = await api.getSessionStatistics(currentSession.id);
-          console.log('Session statistics:', statistics);
-        } catch (statsError) {
-          console.warn('Failed to get session statistics:', statsError);
-          // 统计数据获取失败不影响停止监控流程
+        // 2. 获取统计数据和导出 HTML 报告（桌面版功能）
+        if (autoExport && timestamps.length > 0) {
+          try {
+            // 获取会话详情、指标数据和设备信息
+            const [sessionDetail, metrics, device, alerts] = await Promise.all([
+              api.getSession(currentSession.id),
+              api.getSessionMetrics(currentSession.id),
+              api.getDevice(currentSession.device_id).catch(() => null),
+              api.getSessionAlerts(currentSession.id).catch(() => []),
+            ]);
+
+            // 导出 HTML 报告
+            await exportHtmlReport(sessionDetail, metrics, device, alerts);
+            console.log('HTML report exported successfully');
+          } catch (exportError) {
+            console.warn('Failed to export HTML report:', exportError);
+            // 导出失败不影响停止监控流程
+          }
         }
 
         // 只有在 API 调用成功后才清除状态
@@ -210,6 +182,8 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
           isMonitoring: false,
           currentSession: null,
           wsConnection: null,
+          metricsData: {},
+          timestamps: [],
         });
       } catch (error) {
         console.error('Error stopping monitoring:', error);

@@ -4,23 +4,36 @@
  * 完全复刻桌面版 html_exporter.py 的功能
  */
 
-import type { Session, MetricsData, Device } from '@/types';
+import type { Session, Device } from '@/types';
 
-// 统计数据接口
-export interface Statistics {
-  fps?: MetricStats;
-  cpu_app?: MetricStats;
-  memory_pss?: MetricStats;
-  network_up?: MetricStats;
-  network_down?: MetricStats;
+// 后端 API 返回的 MetricsData 类型
+export interface ApiMetricsData {
+  id: number;
+  session_id: number;
+  timestamp: string;
+  fps?: number;
+  cpu_app?: number;
+  memory_pss?: number;
+  network_up_speed?: number;
+  network_down_speed?: number;
 }
 
+// 统计数据类型（需要先定义，因为 Statistics 会引用它）
 export interface MetricStats {
   max: number;
   min: number;
   avg: number;
   median: number;
   count: number;
+}
+
+// 统计数据接口
+export interface Statistics {
+  fps?: MetricStats | undefined;
+  cpu_app?: MetricStats | undefined;
+  memory_pss?: MetricStats | undefined;
+  network_up?: MetricStats | undefined;
+  network_down?: MetricStats | undefined;
 }
 
 // HTML 导出上下文
@@ -59,24 +72,24 @@ interface AlertInfo {
 /**
  * 计算统计数据
  */
-function calculateStatistics(metrics: MetricsData[]): Statistics {
-  const extractValues = (key: string): number[] => {
-    return metrics
-      .map(m => (m as any)[key])
-      .filter(v => v != null && !isNaN(v));
+function calculateStatistics(metrics: ApiMetricsData[]): Statistics {
+  const extractValues = (key: keyof ApiMetricsData): number[] => {
+    const values: (number | string | undefined)[] = metrics.map(m => m[key]);
+    const numbers = values.filter((v): v is number => typeof v === 'number' && !isNaN(v));
+    return numbers;
   };
 
-  const calcStats = (values: number[]): MetricStats | null => {
-    const valid = values.filter(v => v != null && !isNaN(v));
-    if (valid.length === 0) return null;
+  const calcStats = (values: number[]): MetricStats | undefined => {
+    if (values.length === 0) return undefined;
 
-    const max = Math.max(...valid);
-    const min = Math.min(...valid);
-    const avg = valid.reduce((a, b) => a + b, 0) / valid.length;
-    const sorted = [...valid].sort((a, b) => a - b);
-    const median = sorted[Math.floor(sorted.length / 2)];
+    const max = Math.max(...values);
+    const min = Math.min(...values);
+    const avg = values.reduce((a, b) => a + b, 0) / values.length;
+    const sorted = [...values].sort((a, b) => a - b);
+    const medianIndex = Math.floor(sorted.length / 2);
+    const median = sorted[medianIndex];
 
-    return { max, min, avg, median, count: valid.length };
+    return { max, min, avg, median, count: values.length };
   };
 
   return {
@@ -91,7 +104,7 @@ function calculateStatistics(metrics: MetricsData[]): Statistics {
 /**
  * 构建 ECharts 图表配置
  */
-function buildChartConfigs(metrics: MetricsData[]): Record<string, any> {
+function buildChartConfigs(metrics: ApiMetricsData[]): Record<string, any> {
   const timestamps = metrics.map(m => {
     const date = new Date(m.timestamp);
     return date.toLocaleTimeString('zh-CN', {
@@ -105,7 +118,7 @@ function buildChartConfigs(metrics: MetricsData[]): Record<string, any> {
   const charts: Record<string, any> = {};
 
   // FPS 图表
-  const fpsData = metrics.map(m => (m as any).fps);
+  const fpsData = metrics.map(m => m.fps);
   if (fpsData.some(v => v != null)) {
     charts.fps = buildEchartsConfig(
       'FPS',
@@ -117,7 +130,7 @@ function buildChartConfigs(metrics: MetricsData[]): Record<string, any> {
   }
 
   // CPU 图表
-  const cpuData = metrics.map(m => (m as any).cpu_app);
+  const cpuData = metrics.map(m => m.cpu_app);
   if (cpuData.some(v => v != null)) {
     charts.cpu = buildEchartsConfig(
       'CPU Usage',
@@ -129,7 +142,7 @@ function buildChartConfigs(metrics: MetricsData[]): Record<string, any> {
   }
 
   // Memory 图表
-  const memData = metrics.map(m => (m as any).memory_pss);
+  const memData = metrics.map(m => m.memory_pss);
   if (memData.some(v => v != null)) {
     charts.memory = buildEchartsConfig(
       'Memory Usage',
@@ -141,7 +154,7 @@ function buildChartConfigs(metrics: MetricsData[]): Record<string, any> {
   }
 
   // Network Up 图表
-  const upData = metrics.map(m => (m as any).network_up_speed);
+  const upData = metrics.map(m => m.network_up_speed);
   if (upData.some(v => v != null)) {
     charts.network_up = buildEchartsConfig(
       'Network Upload',
@@ -153,7 +166,7 @@ function buildChartConfigs(metrics: MetricsData[]): Record<string, any> {
   }
 
   // Network Down 图表
-  const downData = metrics.map(m => (m as any).network_down_speed);
+  const downData = metrics.map(m => m.network_down_speed);
   if (downData.some(v => v != null)) {
     charts.network_down = buildEchartsConfig(
       'Network Download',
@@ -173,10 +186,13 @@ function buildChartConfigs(metrics: MetricsData[]): Record<string, any> {
 function buildEchartsConfig(
   title: string,
   timestamps: string[],
-  data: number[],
+  data: (number | null | undefined)[],
   color: string,
   unit: string
 ): any {
+  // 过滤掉空值，只保留有效数字
+  const cleanData = data.filter((v): v is number => v != null && !isNaN(v));
+
   return {
     title: {
       text: title,
@@ -222,7 +238,7 @@ function buildEchartsConfig(
     },
     series: [{
       type: 'line',
-      data: data,
+      data: cleanData,
       smooth: true,
       symbol: 'none',
       lineStyle: { color, width: 2 },
@@ -288,7 +304,7 @@ function formatTimestamp(ts: string): string {
  */
 export async function exportHtmlReport(
   session: Session,
-  metrics: MetricsData[],
+  metrics: ApiMetricsData[],
   device: Device | null,
   alerts: any[] = []
 ): Promise<void> {
@@ -323,7 +339,7 @@ export async function exportHtmlReport(
 
   // 5. 准备模板上下文
   const context: HtmlExportContext = {
-    title: `性能测试报告 - ${session.package_name}`,
+    title: `性能测试报告 - ${session.app_package}`,
     session: sessionInfo,
     device,
     statistics,
@@ -337,7 +353,7 @@ export async function exportHtmlReport(
   const htmlContent = renderHtmlTemplate(context);
 
   // 7. 下载文件
-  const filename = `report_${Date.now()}_${session.package_name.replace(/\./g, '_')}.html`;
+  const filename = `report_${Date.now()}_${session.app_package.replace(/\./g, '_')}.html`;
   downloadHtmlFile(htmlContent, filename);
 }
 
@@ -477,7 +493,7 @@ function renderHtmlTemplate(context: HtmlExportContext): string {
         ${statistics ? renderStatisticsSection(statistics) : ''}
 
         <div class="chart-grid">
-            ${Object.entries(charts).map(([chartId, chartConfig]) => `
+            ${Object.entries(charts).map(([chartId]) => `
                 <div class="chart-container">
                     <div id="chart-${chartId}" class="chart"></div>
                 </div>

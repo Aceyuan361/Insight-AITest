@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useMemo } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import * as echarts from 'echarts';
 import type { MetricCardConfig } from '@/types';
 
@@ -120,8 +120,8 @@ export default function RealTimeChart({ data, timestamps, config }: RealTimeChar
       // Y轴配置
       yAxis: {
         type: 'value',
-        min: config.yMin === 'dataMin' ? undefined : config.yMin,
-        max: config.yMax === 'dataMax' ? undefined : config.yMax,
+        min: config.yMin,
+        max: config.yMax,
         splitLine: {
           show: true,
           lineStyle: {
@@ -199,6 +199,7 @@ export default function RealTimeChart({ data, timestamps, config }: RealTimeChar
           smoothMonotone: 'x',
           symbol: 'none', // 默认不显示数据点
           sampling: 'lttb', // 降采样优化性能
+          showSymbol: false, // 不显示普通数据点
 
           // 线条样式（完全复刻桌面版）
           lineStyle: {
@@ -217,24 +218,30 @@ export default function RealTimeChart({ data, timestamps, config }: RealTimeChar
           // 数据点高亮效果（完全复刻桌面版悬停体验）
           emphasis: {
             focus: 'series',
+            scale: true,
             itemStyle: {
               color: config.color,
               borderColor: config.color,
               borderWidth: 2,
+              shadowColor: config.color,
+              shadowBlur: 8,
             },
           },
 
-          // 悬停时显示数据点标记
+          // 默认不显示 markPoint（由 tooltip 控制悬停点显示）
           markPoint: {
             data: [],
             symbol: 'circle',
-            symbolSize: 12,
+            symbolSize: 10,
             itemStyle: {
               color: config.color,
-              borderColor: config.color,
+              borderColor: '#fff',
+              borderWidth: 2,
+              shadowColor: config.color,
+              shadowBlur: 10,
             },
             label: { show: false },
-            silent: true, // 不响应鼠标事件（由tooltip控制）
+            silent: false, // 允许响应鼠标事件
           },
 
           z: 1,
@@ -246,38 +253,8 @@ export default function RealTimeChart({ data, timestamps, config }: RealTimeChar
 
     chartInstance.current.setOption(option, true);
 
-    // 监听鼠标事件，动态显示/隐藏数据点
-    const handleMouseOver = () => {
-      chartInstance.current?.setOption({
-        series: [{
-          markPoint: {
-            data: data.map((_, i) => ({
-              coord: [i, _],
-              itemStyle: {
-                color: config.color,
-                borderColor: config.color,
-              },
-            })),
-          },
-        }],
-      });
-    };
-
-    const handleMouseOut = () => {
-      chartInstance.current?.setOption({
-        series: [{
-          markPoint: { data: [] },
-        }],
-      });
-    };
-
-    chartInstance.current.on('mouseover', handleMouseOver);
-    chartInstance.current.on('globalout', handleMouseOut);
-
-    return () => {
-      chartInstance.current?.off('mouseover', handleMouseOver);
-      chartInstance.current?.off('globalout', handleMouseOut);
-    };
+    // ECharts 的 emphasis 和 tooltip 会自动处理悬停效果
+    // 不需要额外的事件监听
   }, [data, xAxisData, timestamps, config, xAxisInterval]);
 
   // 辅助函数：十六进制颜色转rgba

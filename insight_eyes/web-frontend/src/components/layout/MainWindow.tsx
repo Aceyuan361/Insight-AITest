@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMonitoringStore } from '@/store/monitoringStore';
-import { api } from '@/services/api';
 import MenuBar from './MenuBar';
 import StatusBar from './StatusBar';
 import DeviceSelectionPanel from '../panels/DeviceSelectionPanel';
@@ -12,7 +11,7 @@ type TabType = 'monitor' | 'report';
 
 export default function MainWindow() {
   const { setDevices } = useMonitoringStore();
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('monitor');
 
   useEffect(() => {

@@ -1,0 +1,437 @@
+<testsuites id="" name="" tests="20" failures="7" skipped="2" errors="0" time="141.464361">
+<testsuite name="report-panel.spec.ts" timestamp="2026-02-03T06:12:18.358Z" hostname="chromium" tests="20" failures="7" skipped="2" time="102.575" errors="0">
+<testcase name="报告面板 - 布局验证 › 应该显示报告面板标题" classname="report-panel.spec.ts" time="4.405">
+</testcase>
+<testcase name="报告面板 - 布局验证 › 应该显示所有筛选控件" classname="report-panel.spec.ts" time="2.468">
+</testcase>
+<testcase name="报告面板 - 布局验证 › 应该显示会话列表和详情区域" classname="report-panel.spec.ts" time="4.155">
+<system-out>
+<![CDATA[当前会话数量: 33
+]]>
+</system-out>
+</testcase>
+<testcase name="报告面板 - 布局验证 › 平台筛选下拉框应该有三个选项" classname="report-panel.spec.ts" time="1.986">
+</testcase>
+<testcase name="报告面板 - 布局验证 › 搜索输入框应该接受文本输入" classname="report-panel.spec.ts" time="2.007">
+</testcase>
+<testcase name="报告面板 - 会话选择和详情查看 › 应该能够选择会话并查看详情" classname="report-panel.spec.ts" time="4.152">
+<system-out>
+<![CDATA[选中的会话ID: 25
+]]>
+</system-out>
+</testcase>
+<testcase name="报告面板 - 会话选择和详情查看 › 选中会话后应该显示会话详情" classname="report-panel.spec.ts" time="5.948">
+<system-out>
+<![CDATA[会话信息栏已显示
+]]>
+</system-out>
+</testcase>
+<testcase name="报告面板 - 会话选择和详情查看 › 应该能够切换不同会话" classname="report-panel.spec.ts" time="6.128">
+<failure message="report-panel.spec.ts:157:3 应该能够切换不同会话" type="FAILURE">
+<![CDATA[  [chromium] › report-panel.spec.ts:157:3 › 报告面板 - 会话选择和详情查看 › 应该能够切换不同会话 ──────────────────────────
+
+    Error: expect(received).not.toEqual(expected) // deep equality
+
+    Expected: not 25
+
+
+      173 |
+      174 |     // 验证会话ID不同
+    > 175 |     expect(firstId).not.toEqual(secondId);
+          |                         ^
+      176 |   });
+      177 | });
+      178 |
+        at C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.3\insight_eyes\web-frontend\tests\e2e\report-panel.spec.ts:175:25
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---会话选择和详情查看-应该能够切换不同会话-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---会话选择和详情查看-应该能够切换不同会话-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\..\test-results\report-panel-报告面板---会话选择和详情查看-应该能够切换不同会话-chromium\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---会话选择和详情查看-应该能够切换不同会话-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\..\test-results\report-panel-报告面板---会话选择和详情查看-应该能够切换不同会话-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[第一个选中的会话ID: 25
+第二个选中的会话ID: 25
+
+[[ATTACHMENT|test-results\report-panel-报告面板---会话选择和详情查看-应该能够切换不同会话-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---会话选择和详情查看-应该能够切换不同会话-chromium\video.webm]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---会话选择和详情查看-应该能够切换不同会话-chromium\error-context.md]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---会话选择和详情查看-应该能够切换不同会话-chromium\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="报告面板 - 筛选功能 › 应该能够按平台筛选会话" classname="report-panel.spec.ts" time="11.122">
+<failure message="report-panel.spec.ts:192:3 应该能够按平台筛选会话" type="FAILURE">
+<![CDATA[  [chromium] › report-panel.spec.ts:192:3 › 报告面板 - 筛选功能 › 应该能够按平台筛选会话 ──────────────────────────────
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 33
+    Received: 133
+
+      219 |
+      220 |     // 验证全部会话数量等于初始数量
+    > 221 |     expect(allCount).toBe(initialCount);
+          |                      ^
+      222 |
+      223 |     // 截图
+      224 |     await page.screenshot({
+        at C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.3\insight_eyes\web-frontend\tests\e2e\report-panel.spec.ts:221:22
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---筛选功能-应该能够按平台筛选会话-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---筛选功能-应该能够按平台筛选会话-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\..\test-results\report-panel-报告面板---筛选功能-应该能够按平台筛选会话-chromium\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---筛选功能-应该能够按平台筛选会话-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\..\test-results\report-panel-报告面板---筛选功能-应该能够按平台筛选会话-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[初始会话数量: 33
+Android 会话数量: 33
+iOS 会话数量: 73
+全部会话数量: 133
+
+[[ATTACHMENT|test-results\report-panel-报告面板---筛选功能-应该能够按平台筛选会话-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---筛选功能-应该能够按平台筛选会话-chromium\video.webm]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---筛选功能-应该能够按平台筛选会话-chromium\error-context.md]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---筛选功能-应该能够按平台筛选会话-chromium\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="报告面板 - 筛选功能 › 应该能够按包名或应用名搜索" classname="report-panel.spec.ts" time="7.442">
+<failure message="report-panel.spec.ts:230:3 应该能够按包名或应用名搜索" type="FAILURE">
+<![CDATA[  [chromium] › report-panel.spec.ts:230:3 › 报告面板 - 筛选功能 › 应该能够按包名或应用名搜索 ────────────────────────────
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 33
+    Received: 133
+
+      250 |
+      251 |     // 验证清空后数量恢复
+    > 252 |     expect(afterClearCount).toBe(initialCount);
+          |                             ^
+      253 |
+      254 |     // 截图
+      255 |     await page.screenshot({
+        at C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.3\insight_eyes\web-frontend\tests\e2e\report-panel.spec.ts:252:29
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---筛选功能-应该能够按包名或应用名搜索-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---筛选功能-应该能够按包名或应用名搜索-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\..\test-results\report-panel-报告面板---筛选功能-应该能够按包名或应用名搜索-chromium\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---筛选功能-应该能够按包名或应用名搜索-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\..\test-results\report-panel-报告面板---筛选功能-应该能够按包名或应用名搜索-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[初始会话数量: 33
+搜索结果数量: 33
+清空后会话数量: 133
+
+[[ATTACHMENT|test-results\report-panel-报告面板---筛选功能-应该能够按包名或应用名搜索-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---筛选功能-应该能够按包名或应用名搜索-chromium\video.webm]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---筛选功能-应该能够按包名或应用名搜索-chromium\error-context.md]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---筛选功能-应该能够按包名或应用名搜索-chromium\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="报告面板 - 筛选功能 › 搜索不存在的应用应该返回空结果" classname="report-panel.spec.ts" time="6.033">
+<failure message="report-panel.spec.ts:261:3 搜索不存在的应用应该返回空结果" type="FAILURE">
+<![CDATA[  [chromium] › report-panel.spec.ts:261:3 › 报告面板 - 筛选功能 › 搜索不存在的应用应该返回空结果 ──────────────────────────
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 0
+    Received: 33
+
+      273 |
+      274 |     // 应该返回0个结果
+    > 275 |     expect(searchCount).toBe(0);
+          |                         ^
+      276 |
+      277 |     // 验证空状态显示
+      278 |     const isEmpty = await reportPanel.isEmptyState();
+        at C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.3\insight_eyes\web-frontend\tests\e2e\report-panel.spec.ts:275:25
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---筛选功能-搜索不存在的应用应该返回空结果-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---筛选功能-搜索不存在的应用应该返回空结果-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\..\test-results\report-panel-报告面板---筛选功能-搜索不存在的应用应该返回空结果-chromium\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---筛选功能-搜索不存在的应用应该返回空结果-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\..\test-results\report-panel-报告面板---筛选功能-搜索不存在的应用应该返回空结果-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[搜索结果数量: 33
+
+[[ATTACHMENT|test-results\report-panel-报告面板---筛选功能-搜索不存在的应用应该返回空结果-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---筛选功能-搜索不存在的应用应该返回空结果-chromium\video.webm]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---筛选功能-搜索不存在的应用应该返回空结果-chromium\error-context.md]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---筛选功能-搜索不存在的应用应该返回空结果-chromium\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="报告面板 - 筛选功能 › 刷新按钮应该重新加载会话列表" classname="report-panel.spec.ts" time="5.286">
+<failure message="report-panel.spec.ts:288:3 刷新按钮应该重新加载会话列表" type="FAILURE">
+<![CDATA[  [chromium] › report-panel.spec.ts:288:3 › 报告面板 - 筛选功能 › 刷新按钮应该重新加载会话列表 ───────────────────────────
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 33
+    Received: 133
+
+      296 |
+      297 |     // 数量应该保持一致
+    > 298 |     expect(afterRefreshCount).toBe(initialCount);
+          |                               ^
+      299 |   });
+      300 | });
+      301 |
+        at C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.3\insight_eyes\web-frontend\tests\e2e\report-panel.spec.ts:298:31
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---筛选功能-刷新按钮应该重新加载会话列表-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---筛选功能-刷新按钮应该重新加载会话列表-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\..\test-results\report-panel-报告面板---筛选功能-刷新按钮应该重新加载会话列表-chromium\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---筛选功能-刷新按钮应该重新加载会话列表-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\..\test-results\report-panel-报告面板---筛选功能-刷新按钮应该重新加载会话列表-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[刷新前会话数量: 33
+刷新后会话数量: 133
+
+[[ATTACHMENT|test-results\report-panel-报告面板---筛选功能-刷新按钮应该重新加载会话列表-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---筛选功能-刷新按钮应该重新加载会话列表-chromium\video.webm]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---筛选功能-刷新按钮应该重新加载会话列表-chromium\error-context.md]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---筛选功能-刷新按钮应该重新加载会话列表-chromium\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="报告面板 - 批量操作 › 应该能够全选所有会话" classname="report-panel.spec.ts" time="3.757">
+<failure message="report-panel.spec.ts:315:3 应该能够全选所有会话" type="FAILURE">
+<![CDATA[  [chromium] › report-panel.spec.ts:315:3 › 报告面板 - 批量操作 › 应该能够全选所有会话 ───────────────────────────────
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 34
+    Received: 1
+
+      328 |
+      329 |     // 验证选中的数量等于总会话数量
+    > 330 |     expect(selectedCount).toBe(sessionCount + 1); // +1 因为表头复选框也被计算
+          |                           ^
+      331 |
+      332 |     // 验证批量删除按钮出现
+      333 |     const isBatchDeleteVisible = await reportPanel.isBatchDeleteButtonVisible();
+        at C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.3\insight_eyes\web-frontend\tests\e2e\report-panel.spec.ts:330:27
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---批量操作-应该能够全选所有会话-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---批量操作-应该能够全选所有会话-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\..\test-results\report-panel-报告面板---批量操作-应该能够全选所有会话-chromium\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---批量操作-应该能够全选所有会话-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\..\test-results\report-panel-报告面板---批量操作-应该能够全选所有会话-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[会话数量: 33
+选中的会话数量: 1
+
+[[ATTACHMENT|test-results\report-panel-报告面板---批量操作-应该能够全选所有会话-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---批量操作-应该能够全选所有会话-chromium\video.webm]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---批量操作-应该能够全选所有会话-chromium\error-context.md]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---批量操作-应该能够全选所有会话-chromium\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="报告面板 - 批量操作 › 应该能够选中单个会话复选框" classname="report-panel.spec.ts" time="4.792">
+<system-out>
+<![CDATA[选中的会话数量: 1
+]]>
+</system-out>
+</testcase>
+<testcase name="报告面板 - 批量操作 › 应该能够取消选择会话" classname="report-panel.spec.ts" time="4.171">
+<failure message="report-panel.spec.ts:369:3 应该能够取消选择会话" type="FAILURE">
+<![CDATA[  [chromium] › report-panel.spec.ts:369:3 › 报告面板 - 批量操作 › 应该能够取消选择会话 ───────────────────────────────
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: false
+    Received: true
+
+      387 |     // 验证批量删除按钮消失
+      388 |     const isBatchDeleteVisible = await reportPanel.isBatchDeleteButtonVisible();
+    > 389 |     expect(isBatchDeleteVisible).toBe(false);
+          |                                  ^
+      390 |
+      391 |     // 截图
+      392 |     await page.screenshot({
+        at C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.3\insight_eyes\web-frontend\tests\e2e\report-panel.spec.ts:389:34
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---批量操作-应该能够取消选择会话-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---批量操作-应该能够取消选择会话-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\..\test-results\report-panel-报告面板---批量操作-应该能够取消选择会话-chromium\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---批量操作-应该能够取消选择会话-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\..\test-results\report-panel-报告面板---批量操作-应该能够取消选择会话-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[选中后会话数量: 1
+取消选择后会话数量: 26
+
+[[ATTACHMENT|test-results\report-panel-报告面板---批量操作-应该能够取消选择会话-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---批量操作-应该能够取消选择会话-chromium\video.webm]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---批量操作-应该能够取消选择会话-chromium\error-context.md]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---批量操作-应该能够取消选择会话-chromium\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="报告面板 - 批量操作 › 批量删除按钮应该可见且可点击" classname="report-panel.spec.ts" time="3.921">
+</testcase>
+<testcase name="报告面板 - 空状态处理 › 没有会话时应该显示空状态" classname="report-panel.spec.ts" time="2.763">
+<properties>
+<property name="skip" value="会话列表不为空，跳过空状态测试">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="报告面板 - 空状态处理 › 空状态时控件仍然应该可用" classname="report-panel.spec.ts" time="2.893">
+<properties>
+<property name="skip" value="会话列表不为空，跳过空状态测试">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="报告面板 - 响应式布局 › 在不同屏幕尺寸下布局应该正常" classname="report-panel.spec.ts" time="5.545">
+<system-out>
+<![CDATA[测试视口: Desktop (1920x1080)
+测试视口: Laptop (1366x768)
+测试视口: Small Laptop (1280x720)
+]]>
+</system-out>
+</testcase>
+<testcase name="报告面板 - 综合测试 › 完整的用户流程: 导航 -&gt; 筛选 -&gt; 选择会话 -&gt; 查看详情" classname="report-panel.spec.ts" time="13.601">
+<system-out>
+<![CDATA[=== 开始完整用户流程测试 ===
+1. 当前会话数量: 33
+2. 切换到 Android 筛选
+   Android 会话数量: 33
+3. 执行搜索
+4. 选择第一个会话
+   选中的会话ID: NaN
+5. 验证详情显示
+6. 清空筛选
+7. 最终会话数量: 133
+=== 完整用户流程测试完成 ===
+]]>
+</system-out>
+</testcase>
+</testsuite>
+</testsuites>

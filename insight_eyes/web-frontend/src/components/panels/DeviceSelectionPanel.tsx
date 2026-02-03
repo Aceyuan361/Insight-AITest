@@ -185,30 +185,6 @@ export default function DeviceSelectionPanel() {
     }
   };
 
-  // 确认启动未运行的应用
-  const handleConfirmStartNotRunning = async () => {
-    setShowAppNotRunningWarning(false);
-    if (selectedDevice && pendingAppPackage) {
-      const device = devices.find(d => d.device_id === selectedDevice);
-      const platform = device?.type || 'android';
-      const appName = getAppName(pendingAppPackage);
-      try {
-        await useMonitoringStore.getState().startMonitoring(
-          selectedDevice,
-          pendingAppPackage,
-          platform
-        );
-        if (useMonitoringStore.getState().currentSession) {
-          useMonitoringStore.getState().currentSession!.app_name = appName;
-        }
-      } catch (error) {
-        console.error('启动监控失败:', error);
-      } finally {
-        setPendingAppPackage(null);
-      }
-    }
-  };
-
   // 取消启动
   const handleCancelStartNotRunning = () => {
     setShowAppNotRunningWarning(false);

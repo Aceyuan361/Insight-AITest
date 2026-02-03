@@ -3,7 +3,6 @@
  * 显示格式：[时间] [严重程度] 内容
  */
 import { useMonitoringStore } from '@/store/monitoringStore';
-import type { AlarmRecord } from '@/types';
 
 export default function AlarmRecords() {
   const { alarms } = useMonitoringStore();

@@ -1,29 +1,42 @@
-import { useEffect, useState } from 'react';
+/**
+ * 会话列表组件 - 重构版
+ * 完全复刻桌面版会话列表表格格式
+ *
+ * 格式: 2列表格 (时间, 会话ID)
+ * 最大宽度: 300px
+ * 支持多选和批量删除
+ */
+import { useEffect, useState, useMemo } from 'react';
 import { api } from '@/services/api';
-import { exportHtmlReport } from '@/services/htmlExporter';
-import type { Session, Device, MetricsData } from '@/types';
+import type { Session, Device } from '@/types';
 
 interface SessionListProps {
   onSelectSession?: (sessionId: number | null) => void;
   selectedSessionId?: number | null;
+  platformFilter?: 'all' | 'android' | 'ios';
+  searchText?: string;
 }
 
-interface ExportingState {
-  [sessionId: number]: boolean;
-}
-
-export default function SessionList({ onSelectSession, selectedSessionId }: SessionListProps) {
+export default function SessionList({
+  onSelectSession,
+  selectedSessionId,
+  platformFilter = 'all',
+  searchText = '',
+}: SessionListProps) {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [devices, setDevices] = useState<Record<string, Device>>({});
   const [loading, setLoading] = useState(false);
-  const [exporting, setExporting] = useState<ExportingState>({});
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-  const [deletingIds, setDeletingIds] = useState<Set<number>>(new Set());
 
+  // 加载会话列表
   const loadSessions = async () => {
     setLoading(true);
+    // 清空之前的数据，防止重复
+    setSessions([]);
+    setSelectedIds(new Set());
+
     try {
-      const data = await api.getSessions(50);
+      const data = await api.getSessions(100);
       setSessions(data);
 
       // 加载设备信息
@@ -47,69 +60,87 @@ export default function SessionList({ onSelectSession, selectedSessionId }: Sess
     }
   };
 
-  useEffect(() => { loadSessions(); }, []);
+  useEffect(() => {
+    loadSessions();
+  }, []);
 
-  const formatDate = (dateString: string) => new Date(dateString).toLocaleString('zh-CN');
+  // 格式化时间显示 (YYYY-MM-DD HH:mm:ss)
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    }).replace(/\//g, '-');
+  };
 
-  const getStatusColor = (status: string) => {
+  // 获取状态颜色
+  const getStatusColor = (status: string): string => {
     switch (status) {
-      case 'running': return 'text-green-400';
-      case 'stopped': return 'text-gray-400';
-      case 'error': return 'text-red-400';
-      default: return 'text-yellow-400';
+      case 'running': return '#22c55e'; // green-500
+      case 'stopped': return '#9ca3af'; // gray-400
+      case 'error': return '#ef4444'; // red-500
+      default: return '#eab308'; // yellow-500
     }
   };
 
-  // 导出 HTML 报告
-  const handleExportHtml = async (session: Session) => {
-    setExporting({ ...exporting, [session.id]: true });
-    try {
-      const [metrics, alerts] = await Promise.all([
-        api.getSessionMetrics(session.id, 10000),
-        api.getSessionAlerts(session.id),
-      ]);
-
-      const device = devices[session.device_id] || null;
-      await exportHtmlReport(session, metrics, device, alerts);
-    } catch (error) {
-      console.error('Failed to export HTML report:', error);
-      alert('导出报告失败: ' + (error as Error).message);
-    } finally {
-      setExporting({ ...exporting, [session.id]: false });
-    }
-  };
-
-  // 删除单个会话
-  const handleDeleteSession = async (sessionId: number) => {
-    if (!confirm(`确定要删除会话 ${sessionId} 吗？\n\n此操作不可撤销，将删除该会话的所有数据和告警记录。`)) {
-      return;
-    }
-
-    setDeletingIds(new Set([...deletingIds, sessionId]));
-    try {
-      await api.deleteSession(sessionId);
-
-      // 如果删除的是当前选中的会话，清空选中状态
-      if (selectedSessionId === sessionId) {
-        onSelectSession?.(null);
+  // 应用筛选
+  const filteredSessions = useMemo(() => {
+    return sessions.filter((session) => {
+      // 平台筛选 - 只有当设备已加载时才进行平台筛选
+      if (platformFilter !== 'all') {
+        const device = devices[session.device_id];
+        // 如果设备未找到，可能是iOS设备（数据库type字段可能是ios）
+        // 检查session本身的platform字段作为fallback
+        const sessionPlatform = device?.type || session.platform?.toLowerCase();
+        if (!sessionPlatform || sessionPlatform !== platformFilter) {
+          return false;
+        }
       }
 
-      // 从选中列表中移除
-      const newSelectedIds = new Set(selectedIds);
-      newSelectedIds.delete(sessionId);
-      setSelectedIds(newSelectedIds);
+      // 搜索筛选
+      if (searchText && searchText.trim()) {
+        const searchLower = searchText.toLowerCase().trim();
+        const packageName = session.app_package.toLowerCase();
+        const appName = (session.app_name || '').toLowerCase();
+        if (!packageName.includes(searchLower) && !appName.includes(searchLower)) {
+          return false;
+        }
+      }
 
-      // 刷新会话列表
-      await loadSessions();
-    } catch (error) {
-      console.error('Failed to delete session:', error);
-      alert('删除会话失败: ' + (error as Error).message);
-    } finally {
-      setDeletingIds(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(sessionId);
-        return newSet;
-      });
+      return true;
+    });
+  }, [sessions, devices, platformFilter, searchText]);
+
+  // 切换选中状态
+  const toggleSelectSession = (sessionId: number, e?: React.MouseEvent | React.ChangeEvent) => {
+    if (e && 'stopPropagation' in e) {
+      e.stopPropagation();
+    }
+    const newSelectedIds = new Set(selectedIds);
+    if (newSelectedIds.has(sessionId)) {
+      newSelectedIds.delete(sessionId);
+    } else {
+      newSelectedIds.add(sessionId);
+    }
+    setSelectedIds(newSelectedIds);
+  };
+
+  // 全选/取消全选
+  const toggleSelectAll = () => {
+    const isAllSelected = selectedIds.size > 0 && filteredSessions.length > 0 &&
+      filteredSessions.every(session => selectedIds.has(session.id));
+
+    if (isAllSelected) {
+      // 取消全选
+      setSelectedIds(new Set());
+    } else {
+      // 全选
+      setSelectedIds(new Set(filteredSessions.map(s => s.id)));
     }
   };
 
@@ -153,106 +184,158 @@ export default function SessionList({ onSelectSession, selectedSessionId }: Sess
     }
   };
 
-  // 切换选中状态
-  const toggleSelectSession = (sessionId: number) => {
-    const newSelectedIds = new Set(selectedIds);
-    if (newSelectedIds.has(sessionId)) {
-      newSelectedIds.delete(sessionId);
-    } else {
-      newSelectedIds.add(sessionId);
-    }
-    setSelectedIds(newSelectedIds);
+  // 选择行
+  const handleRowClick = (sessionId: number) => {
+    onSelectSession?.(sessionId);
+  };
+
+  // 处理全选复选框变化
+  const handleSelectAllChange = () => {
+    toggleSelectAll();
   };
 
   return (
-    <div className="bg-dark-card rounded-lg border border-gray-800 p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-neon-cpu">会话历史</h2>
-        <div className="flex gap-2">
-          {selectedIds.size > 0 && (
-            <button
-              onClick={handleBatchDelete}
-              className="px-3 py-1 text-xs bg-red-500/20 hover:bg-red-500/40 text-red-400 rounded border border-red-500/50"
-            >
-              批量删除 ({selectedIds.size})
-            </button>
-          )}
-          <button onClick={loadSessions} disabled={loading} className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg">
-            {loading ? '加载中...' : '刷新'}
+    <div
+      className="flex flex-col h-full rounded-lg overflow-hidden"
+      style={{
+        backgroundColor: '#121824',
+        border: '1px solid #1a1f2e',
+        maxWidth: '300px',
+      }}
+    >
+      {/* 表头 */}
+      <div
+        className="grid grid-cols-12 gap-2 px-3 py-2 border-b font-semibold text-xs"
+        style={{
+          backgroundColor: '#121824',
+          borderColor: '#1a1f2e',
+          color: '#7dd3fc',
+          fontSize: '11px',
+        }}
+      >
+        <div className="col-span-1 flex items-center">
+          <input
+            type="checkbox"
+            checked={selectedIds.size === filteredSessions.length && filteredSessions.length > 0}
+            onChange={handleSelectAllChange}
+            className="w-3 h-3 rounded border-gray-600 bg-gray-800 text-neon-cpu focus:ring-neon-cpu"
+          />
+        </div>
+        <div className="col-span-6">时间</div>
+        <div className="col-span-5">会话ID</div>
+      </div>
+
+      {/* 批量操作栏 */}
+      {selectedIds.size > 0 && (
+        <div
+          className="px-3 py-2 border-b flex items-center justify-between"
+          style={{ borderColor: '#1a1f2e' }}
+        >
+          <span className="text-xs" style={{ color: '#94a3b8' }}>
+            已选 {selectedIds.size} 项
+          </span>
+          <button
+            onClick={handleBatchDelete}
+            className="px-2 py-1 text-xs rounded font-medium"
+            style={{
+              backgroundColor: '#ef4444',
+              color: '#ffffff',
+            }}
+          >
+            批量删除
           </button>
         </div>
-      </div>
-      <div className="space-y-2 max-h-[600px] overflow-y-auto">
-        {sessions.length === 0 ? (
-          <div className="text-center text-text-secondary py-8">暂无会话记录</div>
+      )}
+
+      {/* 表格内容 */}
+      <div className="flex-1 overflow-y-auto">
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <span style={{ color: '#64748b', fontSize: '12px' }}>加载中...</span>
+          </div>
+        ) : filteredSessions.length === 0 ? (
+          <div className="flex items-center justify-center py-8">
+            <span style={{ color: '#64748b', fontSize: '12px' }}>暂无会话记录</span>
+          </div>
         ) : (
-          sessions.map((session) => (
-            <div
-              key={session.id}
-              className={`p-4 rounded-lg border cursor-pointer transition-colors ${
-                selectedSessionId === session.id
-                  ? 'bg-neon-cpu/10 border-neon-cpu'
-                  : selectedIds.has(session.id)
-                  ? 'bg-gray-800 border-gray-700'
-                  : 'bg-gray-900 border-gray-800 hover:border-gray-700'
-              }`}
-              onClick={() => onSelectSession?.(session.id)}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.has(session.id)}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      toggleSelectSession(session.id);
+          <div>
+            {filteredSessions.map((session) => {
+              const isSelected = selectedSessionId === session.id;
+              const isRowSelected = selectedIds.has(session.id);
+
+              return (
+                <div
+                  key={session.id}
+                  onClick={() => handleRowClick(session.id)}
+                  className="grid grid-cols-12 gap-2 px-3 py-2 border-b cursor-pointer transition-colors"
+                  style={{
+                    borderColor: '#1a1f2e',
+                    backgroundColor: isSelected
+                      ? '#00d4ff'
+                      : isRowSelected
+                      ? '#1a1f2e'
+                      : 'transparent',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isSelected && !isRowSelected) {
+                      e.currentTarget.style.backgroundColor = '#1a1f2e';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSelected && !isRowSelected) {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }
+                  }}
+                >
+                  {/* 复选框 */}
+                  <div className="col-span-1 flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={isRowSelected}
+                      onChange={(e) => toggleSelectSession(session.id, e)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-3 h-3 rounded border-gray-600 bg-gray-800 text-neon-cpu focus:ring-neon-cpu"
+                    />
+                  </div>
+
+                  {/* 时间 */}
+                  <div
+                    className="col-span-6 flex items-center text-xs truncate"
+                    style={{
+                      color: isSelected ? '#0a0e17' : '#e0e6ed',
+                      fontSize: '11px',
                     }}
-                    onClick={(e) => e.stopPropagation()}
-                    className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-neon-cpu focus:ring-neon-cpu focus:ring-offset-gray-900"
-                  />
-                  <span className="font-bold">Session #{session.id}</span>
+                  >
+                    {formatDate(session.start_time)}
+                  </div>
+
+                  {/* 会话ID */}
+                  <div
+                    className="col-span-5 flex items-center justify-between text-xs"
+                    style={{ fontSize: '11px' }}
+                  >
+                    <span
+                      style={{
+                        color: isSelected ? '#0a0e17' : '#e0e6ed',
+                      }}
+                    >
+                      #{session.id}
+                    </span>
+                    <span
+                      className="px-1 rounded text-xs"
+                      style={{
+                        backgroundColor: isSelected ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.1)',
+                        color: isSelected ? '#0a0e17' : getStatusColor(session.status),
+                        fontSize: '9px',
+                      }}
+                    >
+                      {session.status.toUpperCase().slice(0, 3)}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className={`text-sm ${getStatusColor(session.status)}`}>
-                    {session.status.toUpperCase()}
-                  </span>
-                  {session.status === 'stopped' && (
-                    <>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleExportHtml(session);
-                        }}
-                        disabled={exporting[session.id] || deletingIds.has(session.id)}
-                        className="px-2 py-1 text-xs bg-neon-cpu/20 hover:bg-neon-cpu/40 text-neon-cpu rounded border border-neon-cpu/50 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {exporting[session.id] ? '导出中...' : '导出'}
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteSession(session.id);
-                        }}
-                        disabled={deletingIds.has(session.id)}
-                        className="px-2 py-1 text-xs bg-red-500/20 hover:bg-red-500/40 text-red-400 rounded border border-red-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {deletingIds.has(session.id) ? '删除中...' : '删除'}
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-              <div className="text-sm text-text-secondary space-y-1">
-                <p>设备: {devices[session.device_id]?.name || session.device_id}</p>
-                <p>应用: {session.app_package}</p>
-                <p>开始: {formatDate(session.start_time)}</p>
-                {session.end_time && <p>结束: {formatDate(session.end_time)}</p>}
-                {session.duration && (
-                  <p>时长: {Math.floor(session.duration / 60)}分{session.duration % 60}秒</p>
-                )}
-              </div>
-            </div>
-          ))
+              );
+            })}
+          </div>
         )}
       </div>
     </div>

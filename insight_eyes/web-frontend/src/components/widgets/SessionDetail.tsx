@@ -1,8 +1,21 @@
-import { useEffect, useState } from 'react';
+/**
+ * 会话详情组件 - 重构版
+ * 完全复刻桌面版 SessionReportWidget 布局
+ *
+ * 布局结构:
+ * - 顶部: 紧凑会话信息栏
+ * - 中间: SplitPane (70:30)
+ *   - 左侧: 图表区域 (2×3网格)
+ *   - 右侧: 统计面板 (滚动)
+ * - 底部: 操作按钮
+ */
+import { useState } from 'react';
 import { api } from '@/services/api';
 import { exportHtmlReport } from '@/services/htmlExporter';
-import type { Session, Device, MetricsData, AlertInfo } from '@/types';
-import { MetricStats } from '@/services/htmlExporter';
+import SessionInfoBar from './SessionInfoBar';
+import SessionCharts from '../charts/SessionCharts';
+import StatsPanel from './StatsPanel';
+import SplitPane from '../layout/SplitPane';
 
 interface SessionDetailProps {
   sessionId: number | null;
@@ -11,54 +24,20 @@ interface SessionDetailProps {
 }
 
 export default function SessionDetail({ sessionId, onClose, onDeleted }: SessionDetailProps) {
-  const [session, setSession] = useState<Session | null>(null);
-  const [device, setDevice] = useState<Device | null>(null);
-  const [statistics, setStatistics] = useState<Record<string, MetricStats> | null>(null);
-  const [alerts, setAlerts] = useState<AlertInfo[]>([]);
-  const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
-    if (sessionId) {
-      loadSessionDetail(sessionId);
-    }
-  }, [sessionId]);
-
-  const loadSessionDetail = async (id: number) => {
-    setLoading(true);
-    try {
-      const [sessionData, statsData, alertsData] = await Promise.all([
-        api.getSession(id),
-        api.getSessionStatistics(id),
-        api.getSessionAlerts(id),
-      ]);
-
-      setSession(sessionData);
-
-      // 获取设备信息
-      try {
-        const deviceData = await api.getDevice(sessionData.device_id);
-        setDevice(deviceData);
-      } catch {
-        setDevice(null);
-      }
-
-      setStatistics(statsData);
-      setAlerts(alertsData);
-    } catch (error) {
-      console.error('Failed to load session detail:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // 导出 HTML
   const handleExportHtml = async () => {
-    if (!session) return;
+    if (!sessionId) return;
 
     setExporting(true);
     try {
-      const metrics = await api.getSessionMetrics(session.id, 10000);
+      const session = await api.getSession(sessionId);
+      const metrics = await api.getSessionMetrics(sessionId, 10000);
+      const device = await api.getDevice(session.device_id).catch(() => null);
+      const alerts = await api.getSessionAlerts(sessionId);
+
       await exportHtmlReport(session, metrics, device, alerts);
     } catch (error) {
       console.error('Failed to export HTML report:', error);
@@ -68,16 +47,17 @@ export default function SessionDetail({ sessionId, onClose, onDeleted }: Session
     }
   };
 
+  // 删除会话
   const handleDelete = async () => {
-    if (!session) return;
+    if (!sessionId) return;
 
-    if (!confirm(`确定要删除会话 ${session.id} 吗？\n\n此操作不可撤销，将删除该会话的所有数据和告警记录。`)) {
+    if (!confirm(`确定要删除会话 ${sessionId} 吗？\n\n此操作不可撤销，将删除该会话的所有数据和告警记录。`)) {
       return;
     }
 
     setDeleting(true);
     try {
-      await api.deleteSession(session.id);
+      await api.deleteSession(sessionId);
       onDeleted?.();
       onClose?.();
     } catch (error) {
@@ -88,178 +68,100 @@ export default function SessionDetail({ sessionId, onClose, onDeleted }: Session
     }
   };
 
-  const formatDate = (dateString: string) => new Date(dateString).toLocaleString('zh-CN');
-
+  // 空状态
   if (!sessionId) {
     return (
-      <div className="bg-dark-card rounded-lg border border-gray-800 p-8 text-center">
+      <div className="flex items-center justify-center h-full bg-dark-card rounded-lg border border-gray-800">
         <p className="text-text-secondary">请选择一个会话查看详情</p>
       </div>
     );
   }
 
-  if (loading) {
-    return (
-      <div className="bg-dark-card rounded-lg border border-gray-800 p-8 text-center">
-        <p className="text-text-secondary">加载中...</p>
-      </div>
-    );
-  }
-
-  if (!session) {
-    return (
-      <div className="bg-dark-card rounded-lg border border-gray-800 p-8 text-center">
-        <p className="text-red-400">加载会话详情失败</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6">
-      {/* 会话信息 */}
-      <div className="bg-dark-card rounded-lg border border-gray-800 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-neon-cpu">会话 #{session.id}</h2>
-          <div className="flex gap-2">
-            <button
-              onClick={handleExportHtml}
-              disabled={exporting || session.status !== 'stopped'}
-              className="px-4 py-2 bg-neon-cpu/20 hover:bg-neon-cpu/40 text-neon-cpu rounded border border-neon-cpu/50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {exporting ? '导出中...' : '导出HTML'}
-            </button>
-            <button
-              onClick={handleDelete}
-              disabled={deleting}
-              className="px-4 py-2 bg-red-500/20 hover:bg-red-500/40 text-red-400 rounded border border-red-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {deleting ? '删除中...' : '删除'}
-            </button>
-          </div>
-        </div>
+    <div className="flex flex-col h-full bg-dark-card rounded-lg border border-gray-800 overflow-hidden">
+      {/* 紧凑会话信息栏 */}
+      <SessionInfoBar sessionId={sessionId} />
 
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <span className="text-text-secondary">设备：</span>
-            <span className="text-text-primary">{device?.name || session.device_id}</span>
+      {/* 主内容区域: SplitPane (70:30) */}
+      <div className="flex-1 overflow-hidden">
+        <SplitPane
+          direction="horizontal"
+          defaultSize={700}
+          minSize={400}
+          maxSize={1200}
+          storageKey="report-split-position"
+          className="h-full"
+        >
+          {/* 左侧: 图表区域 */}
+          <div className="h-full overflow-hidden">
+            <SessionCharts sessionId={sessionId} />
           </div>
-          <div>
-            <span className="text-text-secondary">应用：</span>
-            <span className="text-text-primary">{session.app_package}</span>
+
+          {/* 右侧: 统计面板 */}
+          <div className="h-full overflow-hidden">
+            <StatsPanel sessionId={sessionId} />
           </div>
-          <div>
-            <span className="text-text-secondary">状态：</span>
-            <span className={`${
-              session.status === 'running' ? 'text-green-400' :
-              session.status === 'stopped' ? 'text-gray-400' :
-              'text-red-400'
-            }`}>
-              {session.status.toUpperCase()}
-            </span>
-          </div>
-          <div>
-            <span className="text-text-secondary">平台：</span>
-            <span className="text-text-primary">{session.platform}</span>
-          </div>
-          <div>
-            <span className="text-text-secondary">开始时间：</span>
-            <span className="text-text-primary">{formatDate(session.start_time)}</span>
-          </div>
-          {session.end_time && (
-            <div>
-              <span className="text-text-secondary">结束时间：</span>
-              <span className="text-text-primary">{formatDate(session.end_time)}</span>
-            </div>
-          )}
-        </div>
+        </SplitPane>
       </div>
 
-      {/* 统计数据 */}
-      {statistics && Object.keys(statistics).length > 0 && (
-        <div className="bg-dark-card rounded-lg border border-gray-800 p-6">
-          <h3 className="text-lg font-bold text-neon-cpu mb-4">性能统计</h3>
-          <div className="grid grid-cols-5 gap-4">
-            {statistics.fps && (
-              <div className="bg-gray-900 rounded p-4 border border-gray-800">
-                <div className="text-xs text-text-secondary mb-1">FPS</div>
-                <div className="text-xl font-bold text-yellow-400">{statistics.fps.avg.toFixed(1)}</div>
-                <div className="text-xs text-text-secondary mt-2">
-                  Max: {statistics.fps.max} | Min: {statistics.fps.min}
-                </div>
-              </div>
-            )}
-            {statistics.cpu_app && (
-              <div className="bg-gray-900 rounded p-4 border border-gray-800">
-                <div className="text-xs text-text-secondary mb-1">CPU</div>
-                <div className="text-xl font-bold text-cyan-400">{statistics.cpu_app.avg.toFixed(2)}%</div>
-                <div className="text-xs text-text-secondary mt-2">
-                  Max: {statistics.cpu_app.max}% | Min: {statistics.cpu_app.min}%
-                </div>
-              </div>
-            )}
-            {statistics.memory_pss && (
-              <div className="bg-gray-900 rounded p-4 border border-gray-800">
-                <div className="text-xs text-text-secondary mb-1">内存</div>
-                <div className="text-xl font-bold text-purple-400">{statistics.memory_pss.avg.toFixed(1)} MB</div>
-                <div className="text-xs text-text-secondary mt-2">
-                  Max: {statistics.memory_pss.max} MB | Min: {statistics.memory_pss.min} MB
-                </div>
-              </div>
-            )}
-            {statistics.network_up && (
-              <div className="bg-gray-900 rounded p-4 border border-gray-800">
-                <div className="text-xs text-text-secondary mb-1">网络上行</div>
-                <div className="text-xl font-bold text-green-400">{statistics.network_up.avg.toFixed(2)} KB/s</div>
-                <div className="text-xs text-text-secondary mt-2">
-                  Max: {statistics.network_up.max} KB/s
-                </div>
-              </div>
-            )}
-            {statistics.network_down && (
-              <div className="bg-gray-900 rounded p-4 border border-gray-800">
-                <div className="text-xs text-text-secondary mb-1">网络下行</div>
-                <div className="text-xl font-bold text-blue-400">{statistics.network_down.avg.toFixed(2)} KB/s</div>
-                <div className="text-xs text-text-secondary mt-2">
-                  Max: {statistics.network_down.max} KB/s
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {/* 底部操作按钮 */}
+      <div
+        className="flex items-center justify-between px-4 py-3 gap-4"
+        style={{
+          backgroundColor: '#0a0e17',
+          borderTop: '1px solid #1a1f2e',
+        }}
+      >
+        <button
+          onClick={handleExportHtml}
+          disabled={exporting}
+          className="px-4 py-2 rounded font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{
+            backgroundColor: '#121824',
+            color: '#00d4ff',
+            border: '1px solid #00d4ff',
+            borderRadius: '6px',
+            padding: '8px 16px',
+          }}
+          onMouseEnter={(e) => {
+            if (!exporting) {
+              e.currentTarget.style.backgroundColor = '#00d4ff';
+              e.currentTarget.style.color = '#0a0e17';
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = '#121824';
+            e.currentTarget.style.color = '#00d4ff';
+          }}
+        >
+          {exporting ? '导出中...' : '导出 HTML 报告'}
+        </button>
 
-      {/* 告警记录 */}
-      {alerts.length > 0 && (
-        <div className="bg-dark-card rounded-lg border border-gray-800 p-6">
-          <h3 className="text-lg font-bold text-red-400 mb-4">告警记录 ({alerts.length})</h3>
-          <div className="space-y-2 max-h-60 overflow-y-auto">
-            {alerts.map((alert) => (
-              <div key={alert.id} className="bg-gray-900 rounded p-3 border border-red-500/30">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-xs text-text-secondary">{formatDate(alert.timestamp)}</div>
-                    <div className="text-sm text-text-primary">{alert.description}</div>
-                  </div>
-                  <span className={`text-xs px-2 py-1 rounded ${
-                    alert.severity === 'critical' ? 'bg-red-500/20 text-red-400' :
-                    alert.severity === 'warning' ? 'bg-yellow-500/20 text-yellow-400' :
-                    'bg-blue-500/20 text-blue-400'
-                  }`}>
-                    {alert.severity}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* 无告警提示 */}
-      {alerts.length === 0 && (
-        <div className="bg-dark-card rounded-lg border border-gray-800 p-6 text-center">
-          <p className="text-text-secondary">无告警记录</p>
-        </div>
-      )}
+        <button
+          onClick={handleDelete}
+          disabled={deleting}
+          className="px-4 py-2 rounded font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{
+            backgroundColor: '#121824',
+            color: '#ef4444',
+            border: '1px solid #ef4444',
+            borderRadius: '6px',
+            padding: '8px 16px',
+          }}
+          onMouseEnter={(e) => {
+            if (!deleting) {
+              e.currentTarget.style.backgroundColor = '#ef4444';
+              e.currentTarget.style.color = '#0a0e17';
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = '#121824';
+            e.currentTarget.style.color = '#ef4444';
+          }}
+        >
+          {deleting ? '删除中...' : '删除会话'}
+        </button>
+      </div>
     </div>
   );
 }

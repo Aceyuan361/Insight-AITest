@@ -1,0 +1,1299 @@
+{
+  "config": {
+    "configFile": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\playwright.config.ts",
+    "rootDir": "C:/Users/86132/Desktop/收纳盒/性能工具/insight_eye/insight_eye-1.0.0/.worktrees/1.0.3/insight_eyes/web-frontend/tests/e2e",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/86132/Desktop/收纳盒/性能工具/insight_eye/insight_eye-1.0.0/.worktrees/1.0.3/insight_eyes/web-frontend/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/Users/86132/Desktop/收纳盒/性能工具/insight_eye/insight_eye-1.0.0/.worktrees/1.0.3/insight_eyes/web-frontend/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "html",
+        {
+          "outputFolder": "playwright-report"
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "playwright-results.json"
+        }
+      ],
+      [
+        "junit",
+        {
+          "outputFile": "playwright-results.xml"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "runAgents": "none",
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.58.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "report-panel.spec.ts",
+      "file": "report-panel.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "报告面板 - 布局验证",
+          "file": "report-panel.spec.ts",
+          "line": 15,
+          "column": 6,
+          "specs": [
+            {
+              "title": "应该显示报告面板标题",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 4405,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-03T06:12:21.824Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-9150787093716e869bde",
+              "file": "report-panel.spec.ts",
+              "line": 29,
+              "column": 3
+            },
+            {
+              "title": "应该显示所有筛选控件",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2468,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-03T06:12:29.828Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-c7d1a8cb8c8c8caeb24a",
+              "file": "report-panel.spec.ts",
+              "line": 41,
+              "column": 3
+            },
+            {
+              "title": "应该显示会话列表和详情区域",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 4155,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "当前会话数量: 33\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-03T06:12:32.331Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-64607f88fefe2b123460",
+              "file": "report-panel.spec.ts",
+              "line": 64,
+              "column": 3
+            },
+            {
+              "title": "平台筛选下拉框应该有三个选项",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1986,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-03T06:12:36.514Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-569485135ebfc988c29d",
+              "file": "report-panel.spec.ts",
+              "line": 83,
+              "column": 3
+            },
+            {
+              "title": "搜索输入框应该接受文本输入",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2007,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-03T06:12:38.527Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-4e815013593c6d9a9f7d",
+              "file": "report-panel.spec.ts",
+              "line": 88,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "报告面板 - 会话选择和详情查看",
+          "file": "report-panel.spec.ts",
+          "line": 96,
+          "column": 6,
+          "specs": [
+            {
+              "title": "应该能够选择会话并查看详情",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 4152,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "选中的会话ID: 25\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-03T06:12:40.558Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-8d65b4a3c26c3e9f4231",
+              "file": "report-panel.spec.ts",
+              "line": 109,
+              "column": 3
+            },
+            {
+              "title": "选中会话后应该显示会话详情",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 5948,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "会话信息栏已显示\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-03T06:12:44.735Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-593d6cf75185f27d5c3e",
+              "file": "report-panel.spec.ts",
+              "line": 129,
+              "column": 3
+            },
+            {
+              "title": "应该能够切换不同会话",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 6128,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\nExpected: not \u001b[32m25\u001b[39m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\nExpected: not \u001b[32m25\u001b[39m\n\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:175:25",
+                        "location": {
+                          "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts",
+                          "column": 25,
+                          "line": 175
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 173 |\u001b[39m\n \u001b[90m 174 |\u001b[39m     \u001b[90m// 验证会话ID不同\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 175 |\u001b[39m     expect(firstId)\u001b[33m.\u001b[39mnot\u001b[33m.\u001b[39mtoEqual(secondId)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 176 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 177 |\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 178 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts",
+                            "column": 25,
+                            "line": 175
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\nExpected: not \u001b[32m25\u001b[39m\n\n\n  173 |\n  174 |     // 验证会话ID不同\n> 175 |     expect(firstId).not.toEqual(secondId);\n      |                         ^\n  176 |   });\n  177 | });\n  178 |\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:175:25"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "第一个选中的会话ID: 25\n"
+                        },
+                        {
+                          "text": "第二个选中的会话ID: 25\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-03T06:12:50.710Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---会话选择和详情查看-应该能够切换不同会话-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---会话选择和详情查看-应该能够切换不同会话-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---会话选择和详情查看-应该能够切换不同会话-chromium\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---会话选择和详情查看-应该能够切换不同会话-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts",
+                        "column": 25,
+                        "line": 175
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-9eafe036e6c44b8b9c21",
+              "file": "report-panel.spec.ts",
+              "line": 157,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "报告面板 - 筛选功能",
+          "file": "report-panel.spec.ts",
+          "line": 179,
+          "column": 6,
+          "specs": [
+            {
+              "title": "应该能够按平台筛选会话",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 11122,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m33\u001b[39m\nReceived: \u001b[31m133\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m33\u001b[39m\nReceived: \u001b[31m133\u001b[39m\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:221:22",
+                        "location": {
+                          "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts",
+                          "column": 22,
+                          "line": 221
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 219 |\u001b[39m\n \u001b[90m 220 |\u001b[39m     \u001b[90m// 验证全部会话数量等于初始数量\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 221 |\u001b[39m     expect(allCount)\u001b[33m.\u001b[39mtoBe(initialCount)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 222 |\u001b[39m\n \u001b[90m 223 |\u001b[39m     \u001b[90m// 截图\u001b[39m\n \u001b[90m 224 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mscreenshot({\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts",
+                            "column": 22,
+                            "line": 221
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m33\u001b[39m\nReceived: \u001b[31m133\u001b[39m\n\n  219 |\n  220 |     // 验证全部会话数量等于初始数量\n> 221 |     expect(allCount).toBe(initialCount);\n      |                      ^\n  222 |\n  223 |     // 截图\n  224 |     await page.screenshot({\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:221:22"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "初始会话数量: 33\n"
+                        },
+                        {
+                          "text": "Android 会话数量: 33\n"
+                        },
+                        {
+                          "text": "iOS 会话数量: 73\n"
+                        },
+                        {
+                          "text": "全部会话数量: 133\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-03T06:13:01.316Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---筛选功能-应该能够按平台筛选会话-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---筛选功能-应该能够按平台筛选会话-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---筛选功能-应该能够按平台筛选会话-chromium\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---筛选功能-应该能够按平台筛选会话-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts",
+                        "column": 22,
+                        "line": 221
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-e2eda7d13bb574850892",
+              "file": "report-panel.spec.ts",
+              "line": 192,
+              "column": 3
+            },
+            {
+              "title": "应该能够按包名或应用名搜索",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 7442,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m33\u001b[39m\nReceived: \u001b[31m133\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m33\u001b[39m\nReceived: \u001b[31m133\u001b[39m\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:252:29",
+                        "location": {
+                          "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts",
+                          "column": 29,
+                          "line": 252
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 250 |\u001b[39m\n \u001b[90m 251 |\u001b[39m     \u001b[90m// 验证清空后数量恢复\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 252 |\u001b[39m     expect(afterClearCount)\u001b[33m.\u001b[39mtoBe(initialCount)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                             \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 253 |\u001b[39m\n \u001b[90m 254 |\u001b[39m     \u001b[90m// 截图\u001b[39m\n \u001b[90m 255 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mscreenshot({\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts",
+                            "column": 29,
+                            "line": 252
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m33\u001b[39m\nReceived: \u001b[31m133\u001b[39m\n\n  250 |\n  251 |     // 验证清空后数量恢复\n> 252 |     expect(afterClearCount).toBe(initialCount);\n      |                             ^\n  253 |\n  254 |     // 截图\n  255 |     await page.screenshot({\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:252:29"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "初始会话数量: 33\n"
+                        },
+                        {
+                          "text": "搜索结果数量: 33\n"
+                        },
+                        {
+                          "text": "清空后会话数量: 133\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-03T06:13:16.807Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---筛选功能-应该能够按包名或应用名搜索-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---筛选功能-应该能够按包名或应用名搜索-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---筛选功能-应该能够按包名或应用名搜索-chromium\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---筛选功能-应该能够按包名或应用名搜索-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts",
+                        "column": 29,
+                        "line": 252
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-66135fdd4bc2b280eb8b",
+              "file": "report-panel.spec.ts",
+              "line": 230,
+              "column": 3
+            },
+            {
+              "title": "搜索不存在的应用应该返回空结果",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 6033,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m33\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m33\u001b[39m\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:275:25",
+                        "location": {
+                          "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts",
+                          "column": 25,
+                          "line": 275
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 273 |\u001b[39m\n \u001b[90m 274 |\u001b[39m     \u001b[90m// 应该返回0个结果\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 275 |\u001b[39m     expect(searchCount)\u001b[33m.\u001b[39mtoBe(\u001b[35m0\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 276 |\u001b[39m\n \u001b[90m 277 |\u001b[39m     \u001b[90m// 验证空状态显示\u001b[39m\n \u001b[90m 278 |\u001b[39m     \u001b[36mconst\u001b[39m isEmpty \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m reportPanel\u001b[33m.\u001b[39misEmptyState()\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts",
+                            "column": 25,
+                            "line": 275
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m33\u001b[39m\n\n  273 |\n  274 |     // 应该返回0个结果\n> 275 |     expect(searchCount).toBe(0);\n      |                         ^\n  276 |\n  277 |     // 验证空状态显示\n  278 |     const isEmpty = await reportPanel.isEmptyState();\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:275:25"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "搜索结果数量: 33\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-03T06:13:28.902Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---筛选功能-搜索不存在的应用应该返回空结果-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---筛选功能-搜索不存在的应用应该返回空结果-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---筛选功能-搜索不存在的应用应该返回空结果-chromium\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---筛选功能-搜索不存在的应用应该返回空结果-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts",
+                        "column": 25,
+                        "line": 275
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-bbaf6e7b7139b3de7578",
+              "file": "report-panel.spec.ts",
+              "line": 261,
+              "column": 3
+            },
+            {
+              "title": "刷新按钮应该重新加载会话列表",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 5286,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m33\u001b[39m\nReceived: \u001b[31m133\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m33\u001b[39m\nReceived: \u001b[31m133\u001b[39m\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:298:31",
+                        "location": {
+                          "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts",
+                          "column": 31,
+                          "line": 298
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 296 |\u001b[39m\n \u001b[90m 297 |\u001b[39m     \u001b[90m// 数量应该保持一致\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 298 |\u001b[39m     expect(afterRefreshCount)\u001b[33m.\u001b[39mtoBe(initialCount)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                               \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 299 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 300 |\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 301 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts",
+                            "column": 31,
+                            "line": 298
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m33\u001b[39m\nReceived: \u001b[31m133\u001b[39m\n\n  296 |\n  297 |     // 数量应该保持一致\n> 298 |     expect(afterRefreshCount).toBe(initialCount);\n      |                               ^\n  299 |   });\n  300 | });\n  301 |\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:298:31"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "刷新前会话数量: 33\n"
+                        },
+                        {
+                          "text": "刷新后会话数量: 133\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-03T06:13:39.298Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---筛选功能-刷新按钮应该重新加载会话列表-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---筛选功能-刷新按钮应该重新加载会话列表-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---筛选功能-刷新按钮应该重新加载会话列表-chromium\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---筛选功能-刷新按钮应该重新加载会话列表-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts",
+                        "column": 31,
+                        "line": 298
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-c501ce68f0796b618dbe",
+              "file": "report-panel.spec.ts",
+              "line": 288,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "报告面板 - 批量操作",
+          "file": "report-panel.spec.ts",
+          "line": 302,
+          "column": 6,
+          "specs": [
+            {
+              "title": "应该能够全选所有会话",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3757,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m34\u001b[39m\nReceived: \u001b[31m1\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m34\u001b[39m\nReceived: \u001b[31m1\u001b[39m\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:330:27",
+                        "location": {
+                          "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts",
+                          "column": 27,
+                          "line": 330
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 328 |\u001b[39m\n \u001b[90m 329 |\u001b[39m     \u001b[90m// 验证选中的数量等于总会话数量\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 330 |\u001b[39m     expect(selectedCount)\u001b[33m.\u001b[39mtoBe(sessionCount \u001b[33m+\u001b[39m \u001b[35m1\u001b[39m)\u001b[33m;\u001b[39m \u001b[90m// +1 因为表头复选框也被计算\u001b[39m\n \u001b[90m     |\u001b[39m                           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 331 |\u001b[39m\n \u001b[90m 332 |\u001b[39m     \u001b[90m// 验证批量删除按钮出现\u001b[39m\n \u001b[90m 333 |\u001b[39m     \u001b[36mconst\u001b[39m isBatchDeleteVisible \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m reportPanel\u001b[33m.\u001b[39misBatchDeleteButtonVisible()\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts",
+                            "column": 27,
+                            "line": 330
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m34\u001b[39m\nReceived: \u001b[31m1\u001b[39m\n\n  328 |\n  329 |     // 验证选中的数量等于总会话数量\n> 330 |     expect(selectedCount).toBe(sessionCount + 1); // +1 因为表头复选框也被计算\n      |                           ^\n  331 |\n  332 |     // 验证批量删除按钮出现\n  333 |     const isBatchDeleteVisible = await reportPanel.isBatchDeleteButtonVisible();\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:330:27"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "会话数量: 33\n"
+                        },
+                        {
+                          "text": "选中的会话数量: 1\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-03T06:13:48.875Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---批量操作-应该能够全选所有会话-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---批量操作-应该能够全选所有会话-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---批量操作-应该能够全选所有会话-chromium\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---批量操作-应该能够全选所有会话-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts",
+                        "column": 27,
+                        "line": 330
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-e418dd51ebac0eed7565",
+              "file": "report-panel.spec.ts",
+              "line": 315,
+              "column": 3
+            },
+            {
+              "title": "应该能够选中单个会话复选框",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 4792,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "选中的会话数量: 1\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-03T06:13:56.958Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-10f77cb7cd0989fd2512",
+              "file": "report-panel.spec.ts",
+              "line": 343,
+              "column": 3
+            },
+            {
+              "title": "应该能够取消选择会话",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 4171,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mfalse\u001b[39m\nReceived: \u001b[31mtrue\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mfalse\u001b[39m\nReceived: \u001b[31mtrue\u001b[39m\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:389:34",
+                        "location": {
+                          "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts",
+                          "column": 34,
+                          "line": 389
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 387 |\u001b[39m     \u001b[90m// 验证批量删除按钮消失\u001b[39m\n \u001b[90m 388 |\u001b[39m     \u001b[36mconst\u001b[39m isBatchDeleteVisible \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m reportPanel\u001b[33m.\u001b[39misBatchDeleteButtonVisible()\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 389 |\u001b[39m     expect(isBatchDeleteVisible)\u001b[33m.\u001b[39mtoBe(\u001b[36mfalse\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                  \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 390 |\u001b[39m\n \u001b[90m 391 |\u001b[39m     \u001b[90m// 截图\u001b[39m\n \u001b[90m 392 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mscreenshot({\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts",
+                            "column": 34,
+                            "line": 389
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mfalse\u001b[39m\nReceived: \u001b[31mtrue\u001b[39m\n\n  387 |     // 验证批量删除按钮消失\n  388 |     const isBatchDeleteVisible = await reportPanel.isBatchDeleteButtonVisible();\n> 389 |     expect(isBatchDeleteVisible).toBe(false);\n      |                                  ^\n  390 |\n  391 |     // 截图\n  392 |     await page.screenshot({\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:389:34"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "选中后会话数量: 1\n"
+                        },
+                        {
+                          "text": "取消选择后会话数量: 26\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-03T06:14:02.108Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---批量操作-应该能够取消选择会话-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---批量操作-应该能够取消选择会话-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---批量操作-应该能够取消选择会话-chromium\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---批量操作-应该能够取消选择会话-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts",
+                        "column": 34,
+                        "line": 389
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-55fef7fd3843455c6dba",
+              "file": "report-panel.spec.ts",
+              "line": 369,
+              "column": 3
+            },
+            {
+              "title": "批量删除按钮应该可见且可点击",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3921,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-03T06:14:09.892Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-723906ddc7e993cae7cf",
+              "file": "report-panel.spec.ts",
+              "line": 398,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "报告面板 - 空状态处理",
+          "file": "report-panel.spec.ts",
+          "line": 420,
+          "column": 6,
+          "specs": [
+            {
+              "title": "没有会话时应该显示空状态",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "会话列表不为空，跳过空状态测试",
+                      "location": {
+                        "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts",
+                        "line": 436,
+                        "column": 10
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 0,
+                      "status": "skipped",
+                      "duration": 2763,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-03T06:14:14.340Z",
+                      "annotations": [
+                        {
+                          "type": "skip",
+                          "description": "会话列表不为空，跳过空状态测试",
+                          "location": {
+                            "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts",
+                            "line": 436,
+                            "column": 10
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-92175a7d36c0b1886169",
+              "file": "report-panel.spec.ts",
+              "line": 433,
+              "column": 3
+            },
+            {
+              "title": "空状态时控件仍然应该可用",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "会话列表不为空，跳过空状态测试",
+                      "location": {
+                        "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts",
+                        "line": 452,
+                        "column": 10
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 0,
+                      "status": "skipped",
+                      "duration": 2893,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-03T06:14:17.130Z",
+                      "annotations": [
+                        {
+                          "type": "skip",
+                          "description": "会话列表不为空，跳过空状态测试",
+                          "location": {
+                            "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.3\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts",
+                            "line": 452,
+                            "column": 10
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-7af3e460162f0d7ebc37",
+              "file": "report-panel.spec.ts",
+              "line": 449,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "报告面板 - 响应式布局",
+          "file": "report-panel.spec.ts",
+          "line": 481,
+          "column": 6,
+          "specs": [
+            {
+              "title": "在不同屏幕尺寸下布局应该正常",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 5545,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "测试视口: Desktop (1920x1080)\n"
+                        },
+                        {
+                          "text": "测试视口: Laptop (1366x768)\n"
+                        },
+                        {
+                          "text": "测试视口: Small Laptop (1280x720)\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-03T06:14:20.045Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-b52d3610465dd03ca679",
+              "file": "report-panel.spec.ts",
+              "line": 494,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "报告面板 - 综合测试",
+          "file": "report-panel.spec.ts",
+          "line": 522,
+          "column": 6,
+          "specs": [
+            {
+              "title": "完整的用户流程: 导航 -> 筛选 -> 选择会话 -> 查看详情",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 13601,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "=== 开始完整用户流程测试 ===\n"
+                        },
+                        {
+                          "text": "1. 当前会话数量: 33\n"
+                        },
+                        {
+                          "text": "2. 切换到 Android 筛选\n"
+                        },
+                        {
+                          "text": "   Android 会话数量: 33\n"
+                        },
+                        {
+                          "text": "3. 执行搜索\n"
+                        },
+                        {
+                          "text": "4. 选择第一个会话\n"
+                        },
+                        {
+                          "text": "   选中的会话ID: NaN\n"
+                        },
+                        {
+                          "text": "5. 验证详情显示\n"
+                        },
+                        {
+                          "text": "6. 清空筛选\n"
+                        },
+                        {
+                          "text": "7. 最终会话数量: 133\n"
+                        },
+                        {
+                          "text": "=== 完整用户流程测试完成 ===\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-03T06:14:25.614Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-b428d833b993933381b4",
+              "file": "report-panel.spec.ts",
+              "line": 535,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-02-03T06:12:17.930Z",
+    "duration": 141464.361,
+    "expected": 11,
+    "skipped": 2,
+    "unexpected": 7,
+    "flaky": 0
+  }
+}
