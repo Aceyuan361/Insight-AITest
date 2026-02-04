@@ -39,20 +39,23 @@ export default function SessionList({
       const data = await api.getSessions(100);
       setSessions(data);
 
-      // 加载设备信息
-      const deviceIds = [...new Set(data.map(s => s.device_id))];
-      const deviceMap: Record<string, Device> = {};
-      await Promise.all(
-        deviceIds.map(async (deviceId) => {
-          try {
-            const device = await api.getDevice(deviceId);
-            deviceMap[deviceId] = device;
-          } catch {
-            // 设备可能已断开连接，忽略错误
-          }
-        })
-      );
-      setDevices(deviceMap);
+      // 性能优化：延迟加载设备信息，优先显示会话列表
+      // 只在有筛选需求时才加载设备信息
+      if (platformFilter !== 'all') {
+        const deviceIds = [...new Set(data.map(s => s.device_id))];
+        const deviceMap: Record<string, Device> = {};
+        await Promise.all(
+          deviceIds.map(async (deviceId) => {
+            try {
+              const device = await api.getDevice(deviceId);
+              deviceMap[deviceId] = device;
+            } catch {
+              // 设备可能已断开连接，忽略错误
+            }
+          })
+        );
+        setDevices(deviceMap);
+      }
     } catch (error) {
       console.error('Failed to load sessions:', error);
     } finally {
@@ -63,6 +66,29 @@ export default function SessionList({
   useEffect(() => {
     loadSessions();
   }, []);
+
+  // 当平台筛选改变且需要设备信息时，加载设备数据
+  useEffect(() => {
+    const loadDeviceDataIfNeeded = async () => {
+      if (platformFilter !== 'all' && sessions.length > 0) {
+        const deviceIds = [...new Set(sessions.map(s => s.device_id))];
+        const deviceMap: Record<string, Device> = {};
+        await Promise.all(
+          deviceIds.map(async (deviceId) => {
+            try {
+              const device = await api.getDevice(deviceId);
+              deviceMap[deviceId] = device;
+            } catch {
+              // 设备可能已断开连接，忽略错误
+            }
+          })
+        );
+        setDevices(deviceMap);
+      }
+    };
+
+    loadDeviceDataIfNeeded();
+  }, [platformFilter, sessions]);
 
   // 格式化时间显示 (YYYY-MM-DD HH:mm:ss)
   const formatDate = (dateString: string): string => {
@@ -91,14 +117,20 @@ export default function SessionList({
   // 应用筛选
   const filteredSessions = useMemo(() => {
     return sessions.filter((session) => {
-      // 平台筛选 - 只有当设备已加载时才进行平台筛选
+      // 平台筛选 - 优先使用 session.platform（避免查询设备）
       if (platformFilter !== 'all') {
-        const device = devices[session.device_id];
-        // 如果设备未找到，可能是iOS设备（数据库type字段可能是ios）
-        // 检查session本身的platform字段作为fallback
-        const sessionPlatform = device?.type || session.platform?.toLowerCase();
-        if (!sessionPlatform || sessionPlatform !== platformFilter) {
+        const sessionPlatform = session.platform?.toLowerCase();
+        if (sessionPlatform && sessionPlatform !== platformFilter) {
+          // 如果 session 有明确的 platform 且不匹配，直接过滤掉
           return false;
+        }
+        // 如果 session.platform 不存在或为空，再尝试从设备信息获取
+        if (!sessionPlatform) {
+          const device = devices[session.device_id];
+          const devicePlatform = device?.type;
+          if (!devicePlatform || devicePlatform !== platformFilter) {
+            return false;
+          }
         }
       }
 
@@ -226,8 +258,9 @@ export default function SessionList({
             }}
           />
         </div>
-        <div className="col-span-6">时间</div>
-        <div className="col-span-5">会话ID</div>
+        <div className="col-span-1">序号</div>
+        <div className="col-span-5">时间</div>
+        <div className="col-span-5">应用名称</div>
       </div>
 
       {/* 批量操作栏 */}
@@ -270,7 +303,7 @@ export default function SessionList({
           </div>
         ) : (
           <div>
-            {filteredSessions.map((session) => {
+            {filteredSessions.map((session, index) => {
               const isSelected = selectedSessionId === session.id;
               const isRowSelected = selectedIds.has(session.id);
 
@@ -314,9 +347,20 @@ export default function SessionList({
                     />
                   </div>
 
+                  {/* 会话ID */}
+                  <div
+                    className="col-span-1 flex items-center text-xs"
+                    style={{
+                      color: isSelected ? '#0a0e17' : '#94a3b8',
+                      fontSize: '11px',
+                    }}
+                  >
+                    {session.id}
+                  </div>
+
                   {/* 时间 */}
                   <div
-                    className="col-span-6 flex items-center text-xs truncate"
+                    className="col-span-5 flex items-center text-xs truncate"
                     style={{
                       color: isSelected ? '#0a0e17' : '#e0e6ed',
                       fontSize: '11px',
@@ -327,25 +371,16 @@ export default function SessionList({
 
                   {/* 会话ID */}
                   <div
-                    className="col-span-5 flex items-center justify-between text-xs"
+                    className="col-span-5 flex items-center text-xs truncate"
                     style={{ fontSize: '11px' }}
                   >
                     <span
+                      className="truncate"
                       style={{
                         color: isSelected ? '#0a0e17' : '#e0e6ed',
                       }}
                     >
-                      #{session.id}
-                    </span>
-                    <span
-                      className="px-1 rounded text-xs"
-                      style={{
-                        backgroundColor: isSelected ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.1)',
-                        color: isSelected ? '#0a0e17' : getStatusColor(session.status),
-                        fontSize: '9px',
-                      }}
-                    >
-                      {session.status.toUpperCase().slice(0, 3)}
+                      {session.app_name || session.app_package || 'Unknown'}
                     </span>
                   </div>
                 </div>

@@ -4,6 +4,7 @@
 """
 from fastapi import APIRouter, HTTPException
 from logzero import logger
+import time
 
 from insight_eyes.core.device_manager import DeviceManager
 from insight_eyes.core.models.device import Device
@@ -11,39 +12,61 @@ from insight_eyes.core.models.device import Device
 
 router = APIRouter(prefix="/api/devices", tags=["devices"])
 
+# 设备缓存：避免频繁扫描设备
+_device_cache: list[Device] = []
+_cache_time: float = 0
+_CACHE_TTL: int = 30  # 缓存30秒
+
 
 @router.get("")
 async def list_devices():
-    """扫描并列出可用设备"""
-    try:
-        devices = DeviceManager.scan_devices()
-        logger.info(f"扫描到 {len(devices)} 个设备")
-        return devices
-    except Exception as e:
-        logger.error(f"设备扫描失败: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    """扫描并列出可用设备（使用缓存）"""
+    global _device_cache, _cache_time
+
+    # 检查缓存是否有效
+    current_time = time.time()
+    if current_time - _cache_time > _CACHE_TTL or not _device_cache:
+        # 缓存过期或为空，刷新设备列表
+        _device_cache = DeviceManager.scan_devices()
+        _cache_time = current_time
+        logger.info(f"扫描到 {len(_device_cache)} 个设备")
+    else:
+        logger.debug(f"使用设备缓存: {len(_device_cache)} 个设备")
+
+    return _device_cache
 
 
 @router.get("/{device_id}")
 async def get_device(device_id: str):
-    """获取指定设备信息"""
-    devices = DeviceManager.scan_devices()
-    for device in devices:
+    """获取指定设备信息（使用缓存，避免频繁扫描）"""
+    global _device_cache, _cache_time
+
+    # 检查缓存是否有效
+    current_time = time.time()
+    if current_time - _cache_time > _CACHE_TTL or not _device_cache:
+        # 缓存过期或为空，刷新设备列表
+        _device_cache = DeviceManager.scan_devices()
+        _cache_time = current_time
+        logger.debug(f"刷新设备缓存: {len(_device_cache)} 个设备")
+
+    # 从缓存中查找设备
+    for device in _device_cache:
         if device.device_id == device_id:
             return device
+
     raise HTTPException(status_code=404, detail="Device not found")
 
 
 @router.post("/{device_id}/connect")
 async def connect_device(device_id: str):
-    """连接指定设备"""
+    """连接指定设备（使用缓存的设备信息）"""
     try:
         from insight_eyes.desktop.core.device_adapters import DeviceAdapterFactory
         from insight_eyes.desktop.core.models import DeviceType
         from insight_eyes.public.common import Platform
 
-        devices = DeviceManager.scan_devices()
-        device = next((d for d in devices if d.device_id == device_id), None)
+        # 使用缓存的设备列表
+        device = next((d for d in _device_cache if d.device_id == device_id), None)
 
         if not device:
             raise HTTPException(status_code=404, detail="Device not found")
@@ -69,14 +92,14 @@ async def connect_device(device_id: str):
 
 @router.delete("/{device_id}")
 async def disconnect_device(device_id: str):
-    """断开设备连接"""
+    """断开设备连接（使用缓存的设备信息）"""
     try:
         from insight_eyes.desktop.core.device_adapters import DeviceAdapterFactory
         from insight_eyes.desktop.core.models import DeviceType
         from insight_eyes.public.common import Platform
 
-        devices = DeviceManager.scan_devices()
-        device = next((d for d in devices if d.device_id == device_id), None)
+        # 使用缓存的设备列表
+        device = next((d for d in _device_cache if d.device_id == device_id), None)
 
         if not device:
             raise HTTPException(status_code=404, detail="Device not found")
@@ -97,11 +120,15 @@ async def disconnect_device(device_id: str):
 
 @router.post("/refresh")
 async def refresh_devices():
-    """刷新设备列表（重新扫描）"""
+    """刷新设备列表（强制重新扫描）"""
+    global _device_cache, _cache_time
+
     try:
-        devices = DeviceManager.scan_devices()
-        logger.info(f"刷新设备列表: 发现 {len(devices)} 个设备")
-        return devices
+        # 强制刷新设备列表并更新缓存
+        _device_cache = DeviceManager.scan_devices()
+        _cache_time = time.time()
+        logger.info(f"刷新设备列表: 发现 {len(_device_cache)} 个设备")
+        return _device_cache
     except Exception as e:
         logger.error(f"刷新设备列表失败: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -109,14 +136,14 @@ async def refresh_devices():
 
 @router.get("/{device_id}/apps")
 async def get_device_apps(device_id: str, include_system: bool = False):
-    """获取设备应用列表"""
+    """获取设备应用列表（使用缓存的设备信息）"""
     try:
         from insight_eyes.desktop.core.app_enumerator import AppEnumeratorFactory
         from insight_eyes.core.models.device import DeviceType
         from insight_eyes.public.common import Platform
 
-        devices = DeviceManager.scan_devices()
-        device = next((d for d in devices if d.device_id == device_id), None)
+        # 使用缓存的设备列表
+        device = next((d for d in _device_cache if d.device_id == device_id), None)
 
         if not device:
             raise HTTPException(status_code=404, detail="Device not found")

@@ -3,7 +3,14 @@ import { useMonitoringStore } from '@/store/monitoringStore';
 import { deviceApi } from '@/services/api';
 import type { AppInfo } from '@/types';
 
-// 从包名获取应用名称的辅助函数
+// 从应用列表中获取应用友好名称的辅助函数
+function getAppNameFromList(apps: AppInfo[], packageName: string): string {
+  if (!packageName) return '';
+  const app = apps.find(a => a.package_name === packageName);
+  return app?.name || packageName;
+}
+
+// 从包名获取应用名称的辅助函数（作为后备）
 function getAppName(packageName: string): string {
   if (!packageName) return '';
   const parts = packageName.split('.');
@@ -29,7 +36,11 @@ export default function DeviceSelectionPanel() {
     setError(null);
     try {
       const deviceList = await deviceApi.getDevices();
-      setDevices(deviceList);
+      // 按 device_id 去重，保留第一次出现的设备
+      const uniqueDevices = deviceList.filter((device, index, self) =>
+        index === self.findIndex((d) => d.device_id === device.device_id)
+      );
+      setDevices(uniqueDevices);
     } catch (err) {
       console.error('Failed to load devices:', err);
       setError('无法加载设备列表，请检查后端服务是否正常运行');
@@ -58,9 +69,9 @@ export default function DeviceSelectionPanel() {
     loadApps();
   }, [selectedDevice]);
 
-  // 从会话中获取应用名称
+  // 从会话中获取应用名称（优先使用应用列表中的友好名称）
   const currentAppName = currentSession?.app_name ||
-    (selectedAppPackage ? getAppName(selectedAppPackage) : '');
+    (selectedAppPackage ? getAppNameFromList(apps, selectedAppPackage) : '');
   const currentDevice = devices.find(d => d.device_id === selectedDevice);
   const currentDeviceName = currentDevice?.name || currentSession && devices.find(d => d.device_id === currentSession.device_id)?.name || '';
 
@@ -137,7 +148,7 @@ export default function DeviceSelectionPanel() {
 
           // 应用正在前台运行，正常启动监控
           const platform = device?.type || 'android';
-          const appName = getAppName(selectedAppPackage);
+          const appName = getAppNameFromList(latestApps, selectedAppPackage);
           await useMonitoringStore.getState().startMonitoring(
             selectedDevice,
             selectedAppPackage,
@@ -169,7 +180,7 @@ export default function DeviceSelectionPanel() {
 
           const device = devices.find(d => d.device_id === selectedDevice);
           const platform = device?.type || 'android';
-          const appName = getAppName(selectedAppPackage);
+          const appName = getAppNameFromList(apps, selectedAppPackage);
           await useMonitoringStore.getState().startMonitoring(
             selectedDevice,
             selectedAppPackage,

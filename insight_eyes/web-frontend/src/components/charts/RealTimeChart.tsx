@@ -1,4 +1,4 @@
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo, useCallback, useState } from 'react';
 import * as echarts from 'echarts';
 import type { MetricCardConfig } from '@/types';
 
@@ -11,6 +11,12 @@ interface RealTimeChartProps {
 export default function RealTimeChart({ data, timestamps, config }: RealTimeChartProps) {
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
+  const prevDataLengthRef = useRef(0);
+  const updateTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 新增：用于平滑动画的插值数据状态
+  const [interpolatedData, setInterpolatedData] = useState<number[]>(data);
+  const animationFrameRef = useRef<number | null>(null);
 
   // 清理函数
   useEffect(() => {
@@ -28,6 +34,9 @@ export default function RealTimeChart({ data, timestamps, config }: RealTimeChar
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      if (updateTimerRef.current) {
+        clearTimeout(updateTimerRef.current);
+      }
       chartInstance.current?.dispose();
     };
   }, []);
@@ -41,19 +50,19 @@ export default function RealTimeChart({ data, timestamps, config }: RealTimeChar
   }, [data.length]);
 
   // 格式化时间戳（HH:mm:ss）
-  const formatTime = (date: Date): string => {
+  const formatTime = useCallback((date: Date): string => {
     return date.toLocaleTimeString('zh-CN', {
       hour12: false,
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit'
     });
-  };
+  }, []);
 
   // 解析ISO时间字符串
-  const parseTimestamp = (ts: string): Date => {
+  const parseTimestamp = useCallback((ts: string): Date => {
     return new Date(ts);
-  };
+  }, []);
 
   // 生成X轴刻度数据（动态间隔）
   const xAxisData = useMemo(() => {
@@ -72,7 +81,46 @@ export default function RealTimeChart({ data, timestamps, config }: RealTimeChar
       }
     }
     return result;
-  }, [timestamps, data.length, xAxisInterval]);
+  }, [timestamps, data.length, xAxisInterval, formatTime, parseTimestamp]);
+
+  // 计算Y轴自适应范围（根据实际数据范围调整，便于观察小波动）
+  const yAxisRange = useMemo(() => {
+    if (data.length === 0) {
+      return { min: 0, max: 100 };
+    }
+
+    const valid = data.filter(v => v != null && !isNaN(v));
+    if (valid.length === 0) {
+      return { min: 0, max: 100 };
+    }
+
+    const min = Math.min(...valid);
+    const max = Math.max(...valid);
+
+    // 如果配置了固定范围，使用配置值
+    if (config.yMin !== undefined && config.yMax !== undefined) {
+      // 对于固定范围（如CPU 0-100），检查是否需要自适应
+      // 如果数据范围小于配置范围的20%，启用自适应模式以便观察小波动
+      const range = config.yMax - config.yMin;
+      const dataRange = max - min;
+
+      if (dataRange < range * 0.2) {
+        // 数据范围太小，启用自适应（保留10%的边距）
+        const padding = dataRange * 0.1 || (max * 0.1);
+        return {
+          min: Math.max(0, Math.floor((min - padding) / 10) * 10), // 向下取整到10的倍数
+          max: Math.ceil((max + padding) / 10) * 10,  // 向上取整到10的倍数
+        };
+      }
+    }
+
+    // 没有固定范围，完全自适应（保留10%的边距）
+    const padding = (max - min) * 0.1 || 1;
+    return {
+      min: Math.floor((min - padding) / 10) * 10,
+      max: Math.ceil((max + padding) / 10) * 10,
+    };
+  }, [data, config.yMin, config.yMax]);
 
   // 计算统计数据（Max | Min | Avg）
   const statistics = useMemo(() => {
@@ -87,10 +135,21 @@ export default function RealTimeChart({ data, timestamps, config }: RealTimeChar
     return { max, min, avg };
   }, [data]);
 
+  // 优化：使用 throttle 避免频繁更新
   useEffect(() => {
-    if (!chartInstance.current) return;
+    // 清除之前的定时器
+    if (updateTimerRef.current) {
+      clearTimeout(updateTimerRef.current);
+    }
 
-    const option: echarts.EChartsOption = {
+    // 使用 throttle 控制更新频率（最多每50ms更新一次）
+    updateTimerRef.current = setTimeout(() => {
+      if (!chartInstance.current) return;
+
+      // 将所有时间戳格式化为X轴数据（完整数据，不稀疏）
+      const xAxisFullData = timestamps.map(ts => formatTime(parseTimestamp(ts)));
+
+      const option: echarts.EChartsOption = {
       // 网格布局（完全复刻桌面版）
       grid: {
         top: 35,
@@ -99,15 +158,15 @@ export default function RealTimeChart({ data, timestamps, config }: RealTimeChar
         bottom: 30,
       },
 
-      // X轴时间刻度（完全复刻桌面版）
+      // X轴时间刻度（完整数据）
       xAxis: {
         type: 'category',
-        data: xAxisData,
+        data: xAxisFullData,
         axisLabel: {
           color: '#888888',
           fontSize: 11,
           fontFamily: 'Arial, sans-serif',
-          interval: xAxisInterval - 1, // 动态间隔
+          interval: xAxisInterval - 1, // 动态间隔控制显示密度
         },
         axisLine: {
           lineStyle: { color: '#444' }
@@ -117,11 +176,11 @@ export default function RealTimeChart({ data, timestamps, config }: RealTimeChar
         },
       },
 
-      // Y轴配置
+      // Y轴配置（支持自适应范围，便于观察小波动）
       yAxis: {
         type: 'value',
-        min: config.yMin,
-        max: config.yMax,
+        min: yAxisRange.min,
+        max: yAxisRange.max,
         splitLine: {
           show: true,
           lineStyle: {
@@ -190,7 +249,7 @@ export default function RealTimeChart({ data, timestamps, config }: RealTimeChar
         },
       },
 
-      // 系列配置（添加数据点高亮效果）
+      // 系列配置（添加数据点高亮效果和流畅动画）
       series: [
         {
           type: 'line',
@@ -200,6 +259,11 @@ export default function RealTimeChart({ data, timestamps, config }: RealTimeChar
           symbol: 'none', // 默认不显示数据点
           sampling: 'lttb', // 降采样优化性能
           showSymbol: false, // 不显示普通数据点
+          animation: true, // 启用动画
+          animationDuration: 300, // 动画时长300ms
+          animationEasing: 'cubicOut', // 使用平滑的缓动函数
+          animationEasingUpdate: 'quarticInOut', // 更新动画缓动
+          animationDurationUpdate: 200, // 更新动画时长
 
           // 线条样式（完全复刻桌面版）
           lineStyle: {
@@ -248,14 +312,23 @@ export default function RealTimeChart({ data, timestamps, config }: RealTimeChar
         },
       ],
 
-      animation: false,
-    };
+      // 全局动画配置（流畅过渡效果）
+      animation: true,
+      animationThreshold: 8, // 超过8个数据点才启用动画优化
+      animationDuration: 300,
+      animationEasing: 'cubicOut',
+      animationEasingUpdate: 'quarticInOut',
+      animationDurationUpdate: 200,
 
-    chartInstance.current.setOption(option, true);
+      // 渐进式渲染（让大数据集更流畅）
+      progressive: 200,
+      progressiveThreshold: 1000,
+      };
 
-    // ECharts 的 emphasis 和 tooltip 会自动处理悬停效果
-    // 不需要额外的事件监听
-  }, [data, xAxisData, timestamps, config, xAxisInterval]);
+      // 使用 notMerge 模式更新配置
+      chartInstance.current.setOption(option, { notMerge: false, lazyUpdate: true });
+    }, 50); // 50ms throttle，避免过于频繁的更新
+  }, [data, timestamps, xAxisInterval, config, formatTime, parseTimestamp]);
 
   // 辅助函数：十六进制颜色转rgba
   function hexToRgba(hex: string, alpha: number): string {
@@ -268,21 +341,6 @@ export default function RealTimeChart({ data, timestamps, config }: RealTimeChar
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       <div ref={chartRef} style={{ width: '100%', height: '100%', minHeight: '80px' }} />
-
-      {/* 统计信息（可选显示） */}
-      {statistics && (
-        <div style={{
-          position: 'absolute',
-          top: 8,
-          right: 8,
-          fontSize: '11px',
-          color: config.color,
-          fontFamily: "'Roboto Mono', monospace",
-          opacity: 0.8,
-        }}>
-          Max: {statistics.max.toFixed(config.decimals)}{config.unit} | Min: {statistics.min.toFixed(config.decimals)}{config.unit} | Avg: {statistics.avg.toFixed(config.decimals)}{config.unit}
-        </div>
-      )}
     </div>
   );
 }

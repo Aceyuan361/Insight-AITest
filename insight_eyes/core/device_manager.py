@@ -9,6 +9,7 @@
 from typing import List, AsyncIterator
 from datetime import datetime
 from logzero import logger
+import asyncio
 
 from insight_eyes.core.models.device import Device, DeviceType, DeviceStatus
 from insight_eyes.core.models.session import Session, SessionStatus
@@ -23,6 +24,24 @@ class DeviceManager:
 
     注意：当前版本为简化实现，完整的设备管理功能将在后续任务中实现。
     """
+
+    # 类级别的取消令牌管理，用于停止正在运行的数据采集任务
+    _cancel_tokens: dict[int, asyncio.Event] = {}
+
+    # 设备适配器缓存（复用适配器实例，避免重复初始化APM）
+    _adapter_cache: dict[str, object] = {}
+
+    # 告警阈值配置（默认值）
+    _alert_thresholds = {
+        'fps_threshold': 50.0,          # FPS阈值（降低以便更容易触发）
+        'memory_threshold_mb': 100.0,   # 内存阈值(MB)（降低以便更容易触发）
+        'cpu_threshold_percent': 50.0,  # CPU阈值(%（降低以便更容易触发）)
+        'battery_threshold_temp': 35.0  # 电池温度阈值(°C)（降低以便更容易触发）
+    }
+
+    # 告警冷却期记录（避免重复告警）{alert_key: last_trigger_time}
+    _alert_cooldown: dict[str, float] = {}  # 存储上次触发时间戳
+    _alert_cooldown_seconds: int = 30  # 冷却期30秒 {}
 
     @staticmethod
     def scan_devices() -> List[Device]:
@@ -119,6 +138,9 @@ class DeviceManager:
         db = DatabaseManager(db_path)
         session = db.create_session(device_id, app_package, platform=platform, sampling_interval=sampling_interval)
 
+        # 创建取消令牌
+        DeviceManager._cancel_tokens[session.id] = asyncio.Event()
+
         logger.info(f"开始监控会话: {session.id}, 采样间隔: {sampling_interval}ms")
         return session
 
@@ -137,6 +159,12 @@ class DeviceManager:
             status="stopped",
             end_time=datetime.now().isoformat(),
         )
+
+        # 设置取消令牌，停止数据采集
+        if session_id in DeviceManager._cancel_tokens:
+            DeviceManager._cancel_tokens[session_id].set()
+            del DeviceManager._cancel_tokens[session_id]
+            logger.info(f"已设置取消令牌: session={session_id}")
 
         logger.info(f"停止监控会话: {session_id}")
 
@@ -171,84 +199,157 @@ class DeviceManager:
             logger.error(f"会话不存在: {session_id}")
             return
 
-        logger.info(f"开始流式推送监控数据: session={session_id}, device={session.device_id}, app={session.app_package}")
+        logger.info(f"开始流式推送监控数据: session={session_id}, device={session.device_id}, app={session.app_package}, sampling_interval={session.sampling_interval}ms")
 
         # 导入桌面层的设备适配器，直接使用采集方法
         from insight_eyes.desktop.core.device_adapters import DeviceAdapterFactory
 
+        # 生成适配器缓存键
+        adapter_key = f"{session.device_id}_{session.platform}"
+
         try:
-            # 创建设备适配器
-            platform = Platform.ANDROID if session.platform == 'android' else Platform.IOS
-            adapter = DeviceAdapterFactory.create_adapter(session.device_id, platform)
+            # 检查适配器缓存，复用已有实例
+            adapter = DeviceManager._adapter_cache.get(adapter_key)
 
-            if not adapter:
-                logger.error(f"无法创建设备适配器: {session.device_id}")
-                return
+            if adapter is None:
+                # 创建新的设备适配器
+                platform = Platform.ANDROID if session.platform == 'android' else Platform.IOS
+                adapter = DeviceAdapterFactory.create_adapter(session.device_id, platform)
 
-            # 确保设备已连接
-            if not adapter.is_connected():
-                logger.info(f"连接设备: {session.device_id}")
-                if not adapter.connect():
-                    logger.error(f"设备连接失败: {session.device_id}")
+                if not adapter:
+                    logger.error(f"无法创建设备适配器: {session.device_id}")
                     return
+
+                # 确保设备已连接
+                if not adapter.is_connected():
+                    logger.info(f"连接设备: {session.device_id}")
+                    if not adapter.connect():
+                        logger.error(f"设备连接失败: {session.device_id}")
+                        return
+
+                # 缓存适配器实例（供后续复用）
+                DeviceManager._adapter_cache[adapter_key] = adapter
+                logger.info(f"设备适配器已创建并缓存: {adapter_key}")
+            else:
+                logger.info(f"复用缓存的设备适配器: {adapter_key}")
 
             logger.info(f"设备适配器已就绪，开始数据采集")
 
+            # 获取取消令牌
+            cancel_event = DeviceManager._cancel_tokens.get(session_id)
+
             try:
                 while True:
+                    # 检查取消令牌，如果已设置则停止数据采集
+                    if cancel_event and cancel_event.is_set():
+                        logger.info(f"检测到停止信号，结束数据采集: session={session_id}")
+                        break
+
+                    # 检查会话状态，如果已停止则结束数据采集
+                    current_session = db.get_session(session_id)
+                    if current_session and current_session.status == SessionStatus.STOPPED:
+                        logger.info(f"会话已停止，结束数据采集: session={session_id}")
+                        break
+
                     try:
-                        # 直接使用适配器采集各项指标数据
-                        metrics_data = MetricsData(timestamp=datetime.now())
+                        # 计时开始：测量单次采集总耗时
+                        import time
+                        collection_start = time.time()
 
-                        # 采集 FPS
-                        try:
-                            fps_data = adapter.collect_fps(session.app_package)
-                            if fps_data:
-                                metrics_data.fps = float(fps_data.get('fps', 0))
-                        except Exception as e:
-                            logger.debug(f"FPS采集失败: {e}")
+                        # 并行采集所有指标（优化性能，避免串行等待）
+                        # 使用 asyncio.gather 并行执行独立的采集任务
+                        async def collect_all_metrics():
+                            """并行采集所有性能指标"""
+                            metrics_data = MetricsData(timestamp=datetime.now())
 
-                        # 采集内存
-                        try:
-                            memory_data = adapter.collect_memory(session.app_package)
-                            if memory_data:
-                                # iOS使用used_mb，Android使用totalPass
-                                if session.platform == 'ios':
-                                    metrics_data.memory = float(memory_data.get('used_mb', 0))
-                                else:
-                                    metrics_data.memory = float(memory_data.get('totalPass', 0))
-                        except Exception as e:
-                            logger.debug(f"内存采集失败: {e}")
+                            # 定义各个采集任务
+                            async def collect_fps_task():
+                                try:
+                                    fps_start = time.time()
+                                    # 在线程池中执行阻塞的采集操作
+                                    loop = asyncio.get_event_loop()
+                                    fps_data = await loop.run_in_executor(None, adapter.collect_fps, session.app_package)
+                                    if fps_data:
+                                        metrics_data.fps = float(fps_data.get('fps', 0))
+                                    fps_elapsed = (time.time() - fps_start) * 1000
+                                    logger.debug(f"[性能] FPS采集耗时: {fps_elapsed:.0f}ms")
+                                except Exception as e:
+                                    logger.debug(f"FPS采集失败: {e}")
 
-                        # 采集 CPU
-                        try:
-                            cpu_data = adapter.collect_cpu(session.app_package)
-                            if cpu_data:
-                                # iOS使用cpu_app，Android使用appCpuRate
-                                if session.platform == 'ios':
-                                    metrics_data.cpu = float(cpu_data.get('cpu_app', 0.0))
-                                else:
-                                    metrics_data.cpu = float(cpu_data.get('appCpuRate', 0.0))
-                        except Exception as e:
-                            logger.debug(f"CPU采集失败: {e}")
+                            async def collect_memory_task():
+                                try:
+                                    mem_start = time.time()
+                                    loop = asyncio.get_event_loop()
+                                    memory_data = await loop.run_in_executor(None, adapter.collect_memory, session.app_package)
+                                    if memory_data:
+                                        if session.platform == 'ios':
+                                            metrics_data.memory = float(memory_data.get('used_mb', 0))
+                                        else:
+                                            metrics_data.memory = float(memory_data.get('totalPass', 0))
+                                    mem_elapsed = (time.time() - mem_start) * 1000
+                                    logger.debug(f"[性能] 内存采集耗时: {mem_elapsed:.0f}ms")
+                                except Exception as e:
+                                    logger.debug(f"内存采集失败: {e}")
 
-                        # 采集网络
-                        try:
-                            network_data = adapter.collect_network(session.app_package)
-                            if network_data:
-                                metrics_data.network_up = float(network_data.get('upFlow', 0.0))
-                                metrics_data.network_down = float(network_data.get('downFlow', 0.0))
-                        except Exception as e:
-                            logger.debug(f"网络采集失败: {e}")
+                            async def collect_cpu_task():
+                                try:
+                                    cpu_start = time.time()
+                                    loop = asyncio.get_event_loop()
+                                    cpu_data = await loop.run_in_executor(None, adapter.collect_cpu, session.app_package)
+                                    if cpu_data:
+                                        if session.platform == 'ios':
+                                            metrics_data.cpu = float(cpu_data.get('cpu_app', 0.0))
+                                        else:
+                                            metrics_data.cpu = float(cpu_data.get('appCpuRate', 0.0))
+                                    cpu_elapsed = (time.time() - cpu_start) * 1000
+                                    logger.debug(f"[性能] CPU采集耗时: {cpu_elapsed:.0f}ms")
+                                except Exception as e:
+                                    logger.debug(f"CPU采集失败: {e}")
 
-                        # 采集电池
-                        try:
-                            battery_data = adapter.collect_battery()
-                            if battery_data:
-                                metrics_data.battery = float(battery_data.get('level', 0))
-                                metrics_data.temperature = float(battery_data.get('temperature', 0.0))
-                        except Exception as e:
-                            logger.debug(f"电池采集失败: {e}")
+                            async def collect_network_task():
+                                try:
+                                    net_start = time.time()
+                                    loop = asyncio.get_event_loop()
+                                    network_data = await loop.run_in_executor(None, adapter.collect_network, session.app_package)
+                                    if network_data:
+                                        metrics_data.network_up = float(network_data.get('upFlow', 0.0))
+                                        metrics_data.network_down = float(network_data.get('downFlow', 0.0))
+                                    net_elapsed = (time.time() - net_start) * 1000
+                                    logger.debug(f"[性能] 网络采集耗时: {net_elapsed:.0f}ms")
+                                except Exception as e:
+                                    logger.debug(f"网络采集失败: {e}")
+
+                            async def collect_battery_task():
+                                try:
+                                    bat_start = time.time()
+                                    loop = asyncio.get_event_loop()
+                                    battery_data = await loop.run_in_executor(None, adapter.collect_battery)
+                                    if battery_data:
+                                        metrics_data.battery = float(battery_data.get('level', 0))
+                                        metrics_data.temperature = float(battery_data.get('temperature', 0.0))
+                                    bat_elapsed = (time.time() - bat_start) * 1000
+                                    logger.debug(f"[性能] 电池采集耗时: {bat_elapsed:.0f}ms")
+                                except Exception as e:
+                                    logger.debug(f"电池采集失败: {e}")
+
+                            # 并行执行所有采集任务
+                            await asyncio.gather(
+                                collect_fps_task(),
+                                collect_memory_task(),
+                                collect_cpu_task(),
+                                collect_network_task(),
+                                collect_battery_task(),
+                                return_exceptions=True
+                            )
+
+                            return metrics_data
+
+                        # 执行并行采集
+                        metrics_data = await collect_all_metrics()
+
+                        # 计算总采集耗时
+                        total_elapsed = (time.time() - collection_start) * 1000
+                        logger.info(f"[性能] 并行采集总耗时: {total_elapsed:.0f}ms (目标: {session.sampling_interval}ms)")
 
                         # 检查是否至少有一个指标采集成功
                         has_data = any([
@@ -264,6 +365,20 @@ class DeviceManager:
                             logger.debug(f"数据采集成功: CPU={metrics_data.cpu:.1f}%, "
                                          f"Memory={metrics_data.memory:.1f}MB, "
                                          f"FPS={metrics_data.fps:.0f}")
+
+                            # 保存到数据库（修复测试报告无数据问题）
+                            try:
+                                db.save_metrics(session_id, metrics_data)
+                            except Exception as e:
+                                logger.error(f"保存指标数据失败: {e}")
+
+                            # 执行告警检测
+                            try:
+                                DeviceManager._check_and_save_alerts(db, session_id, session.device_id, session.app_package, metrics_data)
+                            except Exception as e:
+                                logger.error(f"告警检测失败: {e}")
+
+                            # 通过 WebSocket 推送给前端
                             yield metrics_data
                         else:
                             logger.warning(f"所有指标采集均失败: {session.device_id}/{session.app_package}")
@@ -273,6 +388,7 @@ class DeviceManager:
 
                     # 使用会话配置的采样间隔（毫秒转换为秒）
                     sleep_seconds = session.sampling_interval / 1000
+                    logger.debug(f"使用采样间隔: {session.sampling_interval}ms, sleep: {sleep_seconds}s")
                     await asyncio.sleep(sleep_seconds)
 
             except asyncio.CancelledError:
@@ -281,8 +397,116 @@ class DeviceManager:
                 # 清理适配器资源
                 if adapter:
                     adapter.cleanup()
+                # 从缓存中移除适配器
+                if adapter_key in DeviceManager._adapter_cache:
+                    del DeviceManager._adapter_cache[adapter_key]
+                    logger.info(f"已从缓存移除设备适配器: {adapter_key}")
                 logger.info(f"设备适配器资源已清理: session={session_id}")
 
         except Exception as e:
             logger.error(f"流式推送异常: {e}", exc_info=True)
             raise
+
+    @staticmethod
+    def _check_and_save_alerts(db: DatabaseManager, session_id: int, device_id: str, app_package: str, metrics: MetricsData) -> None:
+        """检查并保存告警
+
+        根据阈值配置检测性能异常，并保存告警到数据库。
+
+        Args:
+            db: 数据库管理器
+            session_id: 会话ID
+            device_id: 设备ID
+            app_package: 应用包名
+            metrics: 指标数据
+        """
+        import time
+        current_time = time.time()
+        cooldown_seconds = DeviceManager._alert_cooldown_seconds
+        thresholds = DeviceManager._alert_thresholds
+
+        # 调试日志：记录当前指标值和阈值
+        logger.debug(f"[告警检测] Session {session_id}: FPS={metrics.fps}, Memory={metrics.memory}MB, CPU={metrics.cpu}%, Temp={metrics.temperature}°C")
+        logger.debug(f"[告警检测] 阈值: FPS<{thresholds['fps_threshold']}, Memory>{thresholds['memory_threshold_mb']}MB, CPU>{thresholds['cpu_threshold_percent']}%, Temp>{thresholds['battery_threshold_temp']}°C")
+
+        alerts_to_save = []
+
+        # 检测 FPS 低
+        if metrics.fps is not None and metrics.fps < thresholds['fps_threshold']:
+            alert_key = f"low_fps_{session_id}"
+            last_trigger = DeviceManager._alert_cooldown.get(alert_key, 0)
+
+            if current_time - last_trigger >= cooldown_seconds:
+                alerts_to_save.append({
+                    'alert_type': 'low_fps',
+                    'metric_name': 'FPS',
+                    'current_value': metrics.fps,
+                    'threshold_value': thresholds['fps_threshold'],
+                    'severity': 'warning' if metrics.fps >= 20 else 'critical',
+                    'description': f'FPS过低: {metrics.fps:.1f} < {thresholds["fps_threshold"]}'
+                })
+                DeviceManager._alert_cooldown[alert_key] = current_time
+                logger.info(f"触发告警: FPS过低 {metrics.fps:.1f}")
+
+        # 检测内存高
+        if metrics.memory is not None and metrics.memory > thresholds['memory_threshold_mb']:
+            alert_key = f"high_memory_{session_id}"
+            last_trigger = DeviceManager._alert_cooldown.get(alert_key, 0)
+
+            if current_time - last_trigger >= cooldown_seconds:
+                alerts_to_save.append({
+                    'alert_type': 'high_memory',
+                    'metric_name': 'Memory',
+                    'current_value': metrics.memory,
+                    'threshold_value': thresholds['memory_threshold_mb'],
+                    'severity': 'warning',
+                    'description': f'内存过高: {metrics.memory:.1f}MB > {thresholds["memory_threshold_mb"]}MB'
+                })
+                DeviceManager._alert_cooldown[alert_key] = current_time
+                logger.info(f"触发告警: 内存过高 {metrics.memory:.1f}MB")
+
+        # 检测CPU高
+        if metrics.cpu is not None and metrics.cpu > thresholds['cpu_threshold_percent']:
+            alert_key = f"high_cpu_{session_id}"
+            last_trigger = DeviceManager._alert_cooldown.get(alert_key, 0)
+
+            if current_time - last_trigger >= cooldown_seconds:
+                alerts_to_save.append({
+                    'alert_type': 'high_cpu',
+                    'metric_name': 'CPU',
+                    'current_value': metrics.cpu,
+                    'threshold_value': thresholds['cpu_threshold_percent'],
+                    'severity': 'warning' if metrics.cpu < 90 else 'critical',
+                    'description': f'CPU过高: {metrics.cpu:.1f}% > {thresholds["cpu_threshold_percent"]}%'
+                })
+                DeviceManager._alert_cooldown[alert_key] = current_time
+                logger.info(f"触发告警: CPU过高 {metrics.cpu:.1f}%")
+
+        # 检测电池温度高
+        if metrics.temperature is not None and metrics.temperature > thresholds['battery_threshold_temp']:
+            alert_key = f"high_temp_{session_id}"
+            last_trigger = DeviceManager._alert_cooldown.get(alert_key, 0)
+
+            if current_time - last_trigger >= cooldown_seconds:
+                alerts_to_save.append({
+                    'alert_type': 'high_temperature',
+                    'metric_name': 'Temperature',
+                    'current_value': metrics.temperature,
+                    'threshold_value': thresholds['battery_threshold_temp'],
+                    'severity': 'warning',
+                    'description': f'电池温度过高: {metrics.temperature:.1f}°C > {thresholds["battery_threshold_temp"]}°C'
+                })
+                DeviceManager._alert_cooldown[alert_key] = current_time
+                logger.info(f"触发告警: 电池温度过高 {metrics.temperature:.1f}°C")
+
+        # 保存所有触发的告警
+        logger.debug(f"[告警检测] 本次检测到 {len(alerts_to_save)} 个告警需要保存")
+        for alert in alerts_to_save:
+            try:
+                alert_id = db.save_alert(session_id, alert)
+                logger.info(f"[告警保存] 成功保存告警 ID={alert_id}: {alert['description']}")
+            except Exception as e:
+                logger.error(f"[告警保存] 失败: {e}, 告警内容: {alert}")
+
+        if len(alerts_to_save) == 0:
+            logger.debug(f"[告警检测] 未触发任何告警")
