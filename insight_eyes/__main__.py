@@ -22,11 +22,12 @@ def open_browser():
     """延迟打开浏览器，等待服务器启动"""
     time.sleep(2)  # 等待服务器启动
     try:
-        webbrowser.open("http://localhost:8001")
-        print("✓ 浏览器已自动打开 / Browser opened automatically")
+        # 打开 API 文档页面
+        webbrowser.open("http://localhost:8001/docs")
+        print("OK Browser opened to API docs")
     except Exception as e:
-        print(f"⚠ 无法自动打开浏览器 / Failed to open browser: {e}")
-        print("  请手动访问 / Please visit: http://localhost:8001")
+        print(f"WARNING Failed to open browser: {e}")
+        print("  Please visit: http://localhost:8001/docs")
 
 
 def main():
