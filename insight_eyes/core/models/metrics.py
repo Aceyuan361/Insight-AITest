@@ -37,6 +37,8 @@ class MetricsData:
         network_down: 下行网络速度，单位为 KB/s（可选）
         battery: 电池电量，单位为百分比（可选）
         temperature: 设备温度，单位为摄氏度（可选）
+        is_alert: 是否为告警数据（可选）
+        alert_data: 告警数据，当is_alert为True时包含告警信息（可选）
     """
     timestamp: datetime
     cpu: Optional[float] = None  # 百分比
@@ -46,6 +48,8 @@ class MetricsData:
     network_down: Optional[float] = None  # KB/s
     battery: Optional[float] = None  # 百分比
     temperature: Optional[float] = None  # 摄氏度
+    is_alert: Optional[bool] = None  # 是否为告警
+    alert_data: Optional[Dict[str, Any]] = None  # 告警数据
 
     def to_dict(self) -> Dict[str, Any]:
         """将指标数据对象转换为字典
@@ -53,7 +57,7 @@ class MetricsData:
         Returns:
             Dict[str, Any]: 包含所有指标字段的字典，时间戳转换为 ISO 格式字符串
         """
-        return {
+        result = {
             "timestamp": self.timestamp.isoformat(),
             "cpu": self.cpu,
             "memory": self.memory,
@@ -63,6 +67,11 @@ class MetricsData:
             "battery": self.battery,
             "temperature": self.temperature,
         }
+        # 如果是告警数据，添加告警字段
+        if self.is_alert:
+            result["is_alert"] = True
+            result["alert_data"] = self.alert_data
+        return result
 
     def get_metric(self, metric_type: MetricType) -> Optional[float]:
         """获取指定类型的指标值

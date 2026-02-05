@@ -402,12 +402,35 @@ class DeviceManager:
                                 logger.error(f"保存指标数据失败: {e}")
 
                             # 执行告警检测
+                            triggered_alerts = []
                             try:
-                                DeviceManager._check_and_save_alerts(db, session_id, session.device_id, session.app_package, metrics_data)
+                                triggered_alerts = DeviceManager._check_and_save_alerts(db, session_id, session.device_id, session.app_package, metrics_data)
                             except Exception as e:
                                 logger.error(f"告警检测失败: {e}")
 
-                            # 通过 WebSocket 推送给前端
+                            # 先推送告警数据（如果有）
+                            if triggered_alerts:
+                                # 为每个告警创建一个特殊的MetricsData对象
+                                # 使用is_alert标志和alert_data字段
+                                for alert in triggered_alerts:
+                                    # 创建告警数据对象
+                                    alert_metrics = MetricsData(
+                                        timestamp=metrics_data.timestamp,
+                                        fps=metrics_data.fps,
+                                        cpu=metrics_data.cpu,
+                                        memory=metrics_data.memory,
+                                        network_up=metrics_data.network_up,
+                                        network_down=metrics_data.network_down,
+                                        battery=metrics_data.battery,
+                                        temperature=metrics_data.temperature,
+                                        # 添加告警相关字段
+                                        is_alert=True,
+                                        alert_data=alert
+                                    )
+                                    yield alert_metrics
+                                    logger.info(f"推送告警到前端: {alert['content']}")
+
+                            # 然后推送正常的指标数据
                             yield metrics_data
                         else:
                             logger.warning(f"所有指标采集均失败: {session.device_id}/{session.app_package}")
@@ -437,7 +460,7 @@ class DeviceManager:
             raise
 
     @staticmethod
-    def _check_and_save_alerts(db: DatabaseManager, session_id: int, device_id: str, app_package: str, metrics: MetricsData) -> None:
+    def _check_and_save_alerts(db: DatabaseManager, session_id: int, device_id: str, app_package: str, metrics: MetricsData) -> list:
         """检查并保存告警
 
         根据阈值配置检测性能异常，并保存告警到数据库。
@@ -449,6 +472,9 @@ class DeviceManager:
             device_id: 设备ID
             app_package: 应用包名
             metrics: 指标数据
+
+        Returns:
+            触发的告警列表，每个告警包含：id, time, level, content
         """
         import time
         current_time = time.time()
@@ -536,12 +562,29 @@ class DeviceManager:
 
         # 保存所有触发的告警
         logger.debug(f"[告警检测] 本次检测到 {len(alerts_to_save)} 个告警需要保存")
+
+        # 构建返回给前端的告警列表
+        triggered_alerts = []
+        import time
+        from datetime import datetime
+
         for alert in alerts_to_save:
             try:
                 alert_id = db.save_alert(session_id, alert)
                 logger.info(f"[告警保存] 成功保存告警 ID={alert_id}: {alert['description']}")
+
+                # 添加到返回列表，格式化为前端需要的格式
+                level = '严重' if alert['severity'] == 'critical' else '警告'
+                triggered_alerts.append({
+                    'id': alert_id,
+                    'time': datetime.now().strftime('%H:%M:%S'),
+                    'level': level,
+                    'content': alert['description']
+                })
             except Exception as e:
                 logger.error(f"[告警保存] 失败: {e}, 告警内容: {alert}")
 
         if len(alerts_to_save) == 0:
             logger.debug(f"[告警检测] 未触发任何告警")
+
+        return triggered_alerts

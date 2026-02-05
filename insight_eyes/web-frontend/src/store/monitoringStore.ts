@@ -118,7 +118,21 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
         try {
           const message = JSON.parse(event.data);
           if (message.type === 'metrics' && message.data) {
-            get().updateMetrics(message.data);
+            // 检查是否为告警数据
+            if (message.data.is_alert && message.data.alert_data) {
+              // 添加告警到列表
+              const alert = message.data.alert_data;
+              get().addAlarm({
+                id: String(alert.id),
+                time: alert.time,
+                level: alert.level,
+                content: alert.content,
+              });
+              console.log('收到告警:', alert);
+            } else {
+              // 正常指标数据
+              get().updateMetrics(message.data);
+            }
           }
         } catch (error) {
           console.error('Failed to parse WebSocket message:', error);
