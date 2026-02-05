@@ -306,9 +306,9 @@ export default {
       // 关于
       about: {
         version: '版本',
-        versionValue: '1.0.3',
+        versionValue: '1.0.0',
         author: '作者',
-        authorValue: 'Insight Eye Team',
+        authorValue: 'Aceyuan361',
         description: 'Insight Eye 是一款专业的移动设备性能监控工具',
         features: '监控能力',
         featuresList: '实时 CPU、内存、FPS、网络性能监控',

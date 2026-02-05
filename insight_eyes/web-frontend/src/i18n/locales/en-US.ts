@@ -306,9 +306,9 @@ export default {
       // About
       about: {
         version: 'Version',
-        versionValue: '1.0.3',
+        versionValue: '1.0.0',
         author: 'Author',
-        authorValue: 'Insight Eye Team',
+        authorValue: 'Aceyuan361',
         description: 'Insight Eye is a professional mobile device performance monitoring tool',
         features: 'Monitoring Capabilities',
         featuresList: 'Real-time CPU, Memory, FPS, Network performance monitoring',
