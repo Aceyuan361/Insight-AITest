@@ -526,6 +526,79 @@ class DatabaseManager:
         cursor = conn.execute(query, params)
         return [dict(row) for row in cursor.fetchall()]
 
+    def get_session_statistics(self, session_id: int) -> Dict[str, Any]:
+        """获取会话的统计数据
+
+        Args:
+            session_id: 会话ID
+
+        Returns:
+            包含各项指标统计数据的字典，格式为：
+            {
+                "fps": {"max": 60, "min": 30, "avg": 55.5, "median": 56.0},
+                "cpu_app": {"max": 80, "min": 5, "avg": 45.2, "median": 44.0},
+                "memory_pss": {"max": 500, "min": 100, "avg": 250.5, "median": 245.0},
+                "network_up": {"max": 1000, "min": 0, "avg": 125.5, "median": 100.0},
+                "network_down": {"max": 5000, "min": 0, "avg": 1500.5, "median": 1400.0}
+            }
+        """
+        conn = self.get_connection()
+
+        # 获取所有指标数据
+        metrics = self.get_metrics(session_id)
+        if not metrics:
+            return {}
+
+        # 计算统计的辅助函数
+        def calculate_stats(values: List[float]) -> Dict[str, float]:
+            """计算最大值、最小值、平均值、中位数"""
+            if not values:
+                return {}
+
+            sorted_values = sorted(values)
+            n = len(sorted_values)
+            mid = n // 2
+
+            if n % 2 == 0:
+                median = (sorted_values[mid - 1] + sorted_values[mid]) / 2
+            else:
+                median = sorted_values[mid]
+
+            return {
+                "max": max(values),
+                "min": min(values),
+                "avg": sum(values) / len(values),
+                "median": median,
+                "count": len(values)
+            }
+
+        # 收集各项指标的值
+        fps_values = [m["fps"] for m in metrics if m.get("fps") is not None]
+        cpu_app_values = [m["cpu_app"] for m in metrics if m.get("cpu_app") is not None]
+        memory_pss_values = [m["memory_pss"] for m in metrics if m.get("memory_pss") is not None]
+        network_up_values = [m["network_up_speed"] for m in metrics if m.get("network_up_speed") is not None]
+        network_down_values = [m["network_down_speed"] for m in metrics if m.get("network_down_speed") is not None]
+
+        # 构建结果
+        result = {}
+
+        if fps_values:
+            result["fps"] = calculate_stats(fps_values)
+
+        if cpu_app_values:
+            result["cpu_app"] = calculate_stats(cpu_app_values)
+
+        if memory_pss_values:
+            result["memory_pss"] = calculate_stats(memory_pss_values)
+
+        if network_up_values:
+            result["network_up"] = calculate_stats(network_up_values)
+
+        if network_down_values:
+            result["network_down"] = calculate_stats(network_down_values)
+
+        return result
+
     # ==================== 数据维护 ====================
 
     def close(self) -> None:
