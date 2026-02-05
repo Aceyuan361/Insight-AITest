@@ -248,20 +248,6 @@ iOS system API restrictions prevent third-party apps from accessing GPU usage da
 
 ---
 
-## Version History
-
-### v1.0.0 (2026-02-05)
-
-- ✅ Real-time alert push notifications
-- ✅ Fuzzy search for applications
-- ✅ GPU monitoring device restrictions
-- ✅ Dynamic monitoring panel layout
-- ✅ iOS startup delay fix
-- ✅ Test report statistics
-- ✅ Alert threshold persistence
-
----
-
 ## Contributing
 
 Issues and Pull Requests are welcome!

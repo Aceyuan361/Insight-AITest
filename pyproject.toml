@@ -62,7 +62,7 @@ Repository = "https://github.com/Aceyuan361/Insight_eye"
 Issues = "https://github.com/Aceyuan361/Insight_eye/issues"
 
 [project.scripts]
-insight-eye-web = "insight_eyes:main"
+insight-eye-web = "insight_eyes.__main__:main"
 
 [tool.setuptools]
 packages = ["insight_eyes"]
