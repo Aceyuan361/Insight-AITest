@@ -115,24 +115,44 @@ insight-eye-web
 ```
 insight-eye-web/
 ├── insight_eyes/
-│   ├── core/                 # Core - Device Management
-│   │   ├── device_manager.py
-│   │   ├── base_monitor.py
-│   │   └── models/
+│   ├── __main__.py           # Entry point
+│   ├── core/                 # Core - Device Management & Data Models
+│   │   ├── device_manager.py # Device management
+│   │   ├── base_monitor.py   # Base monitoring class
+│   │   ├── database.py       # SQLite database
+│   │   └── models/           # Data models
 │   ├── public/               # Platform Collectors
+│   │   ├── adb/              # ADB wrapper
 │   │   ├── android/          # Android APM
 │   │   ├── ios/              # iOS APM
-│   │   └── common.py
-│   ├── web/                  # Web Backend
-│   │   ├── api/              # FastAPI Service
-│   │   └── websocket/        # WebSocket Service
-│   └── web-frontend/         # Web Frontend
+│   │   └── common.py         # Common utilities
+│   ├── web/                  # Web Backend (FastAPI)
+│   │   ├── api/
+│   │   │   ├── main.py       # FastAPI application
+│   │   │   ├── devices.py    # Device management API
+│   │   │   ├── monitoring.py # Monitoring control API
+│   │   │   └── schemas.py    # Pydantic models
+│   │   └── websocket/        # WebSocket service
+│   └── web-frontend/         # Web Frontend (React)
 │       ├── src/
+│       │   ├── components/   # React components
+│       │   ├── config/       # Configuration
+│       │   ├── i18n/         # Internationalization
+│       │   ├── services/     # API services
+│       │   ├── store/        # Zustand state management
+│       │   ├── theme/        # Neon theme
+│       │   ├── types/        # TypeScript types
+│       │   └── utils/        # Utilities
+│       ├── public/           # Static assets
+│       ├── tests/            # E2E tests
 │       ├── package.json
-│       └── vite.config.ts
+│       ├── vite.config.ts
+│       └── tailwind.config.js
 ├── docs/                     # Documentation
-├── README.md
-└── requirements.txt
+├── README.md                 # English documentation
+├── README.zh-CN.md           # Chinese documentation
+├── pyproject.toml            # Package configuration
+└── requirements.txt          # Python dependencies
 ```
 
 ---

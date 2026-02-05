@@ -115,24 +115,44 @@ insight-eye-web
 ```
 insight-eye-web/
 ├── insight_eyes/
-│   ├── core/                 # 核心层 - 设备管理
-│   │   ├── device_manager.py
-│   │   ├── base_monitor.py
-│   │   └── models/
+│   ├── __main__.py           # 程序入口
+│   ├── core/                 # 核心层 - 设备管理和数据模型
+│   │   ├── device_manager.py # 设备管理器
+│   │   ├── base_monitor.py   # 监控基类
+│   │   ├── database.py       # SQLite 数据库
+│   │   └── models/           # 数据模型
 │   ├── public/               # 平台采集器
-│   │   ├── android/          # Android APM
-│   │   ├── ios/              # iOS APM
-│   │   └── common.py
-│   ├── web/                  # Web 后端
-│   │   ├── api/              # FastAPI 服务
+│   │   ├── adb/              # ADB 封装
+│   │   ├── android/          # Android 性能采集
+│   │   ├── ios/              # iOS 性能采集
+│   │   └── common.py         # 通用工具
+│   ├── web/                  # Web 后端 (FastAPI)
+│   │   ├── api/
+│   │   │   ├── main.py       # FastAPI 主应用
+│   │   │   ├── devices.py    # 设备管理 API
+│   │   │   ├── monitoring.py # 监控控制 API
+│   │   │   └── schemas.py    # Pydantic 数据模型
 │   │   └── websocket/        # WebSocket 服务
-│   └── web-frontend/         # Web 前端
+│   └── web-frontend/         # Web 前端 (React)
 │       ├── src/
+│       │   ├── components/   # React 组件
+│       │   ├── config/       # 配置文件
+│       │   ├── i18n/         # 国际化
+│       │   ├── services/     # API 服务
+│       │   ├── store/        # Zustand 状态管理
+│       │   ├── theme/        # 霓虹主题
+│       │   ├── types/        # TypeScript 类型
+│       │   └── utils/        # 工具函数
+│       ├── public/           # 静态资源
+│       ├── tests/            # E2E 测试
 │       ├── package.json
-│       └── vite.config.ts
+│       ├── vite.config.ts
+│       └── tailwind.config.js
 ├── docs/                     # 项目文档
-├── README.md
-└── requirements.txt
+├── README.md                 # 英文文档
+├── README.zh-CN.md           # 中文文档
+├── pyproject.toml            # 包配置
+└── requirements.txt          # Python 依赖
 ```
 
 ---
