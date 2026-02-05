@@ -4,6 +4,14 @@ All notable changes to the Insight-Eye Web project will be documented in this fi
 
 ## [1.0.0-web] - 2025-02-05
 
+### 🎉 首次开源发布
+
+项目从桌面版完全分离，专注于 Web 应用开发。
+
+### 重大变更
+- **项目架构重组**: 创建独立的 1.0.0 分支专注于 Web 应用
+- **代码分离**: 移除所有桌面端代码，保留核心层和平台采集器
+
 ### 重大变更 - 项目分离
 - **项目架构重组**: 将 Web 应用从桌面版中完全分离
   - 创建独立的 1.0.0 分支专注于 Web 应用开发
@@ -33,7 +41,27 @@ All notable changes to the Insight-Eye Web project will be documented in this fi
 - **本分支 (1.0.0)**: 专注 Web 应用，开源友好
 - **main 分支**: 保留桌面应用版本
 
-### 技术栈
+### 开源配置 ✨
+- **LICENSE**: 添加 MIT 开源协议
+- **贡献指南**: 完整的 CONTRIBUTING.md
+- **Issue 模板**: Bug 报告、功能请求、问题提问
+- **PR 模板**: 标准化的 Pull Request 模板
+- **行为准则**: 贡献者契约行为准则
+- **安全策略**: 漏洞报告和安全策略
+- **CI/CD**: GitHub Actions 自动化测试
+- **依赖更新**: Dependabot 自动更新配置
+
+### 文档完善 📚
+- **README.md**: 完整的项目说明和使用指南
+- **API.md**: 详细的 API 文档
+- **SUPPORT.md**: 帮助和支持文档
+- **应用截图**: 添加应用界面展示截图
+
+### Git 配置
+- 更新作者邮箱为 594902674@qq.com
+- 统一仓库链接为 Aceyuan361/Insight_eye
+
+---
 - 后端: FastAPI + WebSocket + SQLite
 - 前端: React 18 + TypeScript + Vite + ECharts
 - 平台: Android (ADB) + iOS (pymobiledevice3)

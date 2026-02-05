@@ -4,10 +4,11 @@
 
 **移动设备性能监控 Web 应用**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![React 18](https://img.shields.io/badge/react-18-61DAFB.svg)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6.svg)](https://www.typescriptlang.org/)
+[![CI](https://github.com/Aceyuan361/Insight_eye/actions/workflows/ci.yml/badge.svg?branch=1.0.0)](https://github.com/Aceyuan361/Insight_eye/actions/workflows/ci.yml)
 
 </div>
 
@@ -39,6 +40,25 @@ Insight-Eye Web 是一个跨平台的移动设备性能监控 Web 应用，支�
 
 ---
 
+## 应用截图
+
+### 实时监控面板
+实时监控设备性能数据，包括 CPU、内存、FPS、网络等关键指标。
+
+![Dashboard](docs/screenshots/01-dashboard.png)
+
+### 测试报告页
+查看历史监控会话，分析性能数据和趋势。
+
+![Reports](docs/screenshots/02-reports.png)
+
+### 详细数据展示
+深入分析各项性能指标，发现潜在问题。
+
+![Reports Detail](docs/screenshots/03-reports-detail.png)
+
+---
+
 ## 快速开始
 
 ### 环境要求
@@ -51,8 +71,8 @@ Insight-Eye Web 是一个跨平台的移动设备性能监控 Web 应用，支�
 ### 1. 克隆仓库
 
 ```bash
-git clone -b 1.0.0 https://github.com/your-org/insight-eye-web.git
-cd insight-eye-web
+git clone -b 1.0.0 https://github.com/Aceyuan361/Insight_eye.git
+cd Insight_eye
 ```
 
 ### 2. 启动后端服务
@@ -260,15 +280,15 @@ A: 检查网络连接和设备状态，确保 WebSocket 连接正常。
 
 ## 相关项目
 
-- **[Insight-Eye Desktop](https://github.com/your-org/insight-eye)** - PyQt6 桌面版
 - **[pymobiledevice3](https://github.com/doronz88/pymobiledevice3)** - iOS 设备通信库
+- **[FastAPI](https://github.com/tiangolo/fastapi)** - 现代 Python Web 框架
 
 ---
 
 ## 联系方式
 
-- Issue: [GitHub Issues](https://github.com/your-org/insight-eye-web/issues)
-- Email: your-email@example.com
+- Issue: [GitHub Issues](https://github.com/Aceyuan361/Insight_eye/issues)
+- Email: [594902674@qq.com](mailto:594902674@qq.com)
 
 ---
 
