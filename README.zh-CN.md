@@ -67,9 +67,8 @@ Insight-Eye Web 是一个跨平台的移动设备性能监控 Web 应用，支�
 ### 环境要求
 
 - **Python**: 3.10+
-- **Node.js**: 18+ (仅开发模式)
-- **ADB** (Android 调试桥)
-- **pymobiledevice3** >= 7.0.0 (iOS 支持)
+- **ADB** (Android 调试桥) - 用于 Android 设备
+- **pymobiledevice3** >= 7.0.0 - 用于 iOS 设备（可选）
 
 ### 安装
 
@@ -81,19 +80,19 @@ cd Insight_eye
 # 2. 安装 Python 依赖
 pip install -r requirements.txt
 
-# 3. 启动后端服务 (会自动打开浏览器)
+# 3. 启动应用（自动启动前后端服务并打开浏览器）
 python -m insight_eyes
 
-# 后端运行在: http://localhost:8001
-# API 文档: http://localhost:8001/docs
-
-# 4. 开发模式：启动前端服务
-cd insight_eyes/web-frontend
-npm install
-npm run dev
-
-# 前端运行在: http://localhost:80 (如果 :80 被占用则是 :81)
+# 服务将自动启动：
+# - 后端服务：http://localhost:8001
+# - 前端界面：http://localhost:80（浏览器自动打开）
+# - API 文档：http://localhost:8001/docs
 ```
+
+**说明**：启动命令会自动：
+- 启动 FastAPI 后端服务
+- 启动 React 前端开发服务器
+- 在浏览器中打开监控界面
 
 ---
 

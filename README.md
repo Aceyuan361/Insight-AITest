@@ -67,9 +67,8 @@ Deep dive into performance metrics to identify potential issues.
 ### Requirements
 
 - **Python**: 3.10+
-- **Node.js**: 18+ (Development mode only)
-- **ADB** (Android Debug Bridge)
-- **pymobiledevice3** >= 7.0.0 (For iOS support)
+- **ADB** (Android Debug Bridge) - for Android devices
+- **pymobiledevice3** >= 7.0.0 - for iOS devices (optional)
 
 ### Installation
 
@@ -81,19 +80,19 @@ cd Insight_eye
 # 2. Install Python dependencies
 pip install -r requirements.txt
 
-# 3. Start backend service (opens browser automatically)
+# 3. Start the application (starts both backend and frontend, opens browser automatically)
 python -m insight_eyes
 
-# Backend runs on: http://localhost:8001
-# API Docs: http://localhost:8001/docs
-
-# 4. Development: Start frontend service
-cd insight_eyes/web-frontend
-npm install
-npm run dev
-
-# Frontend runs on: http://localhost:80 (or :81 if :80 occupied)
+# Services will start automatically:
+# - Backend: http://localhost:8001
+# - Frontend: http://localhost:80 (browser opens automatically)
+# - API Docs: http://localhost:8001/docs
 ```
+
+**Note**: The startup command automatically:
+- Starts the FastAPI backend service
+- Starts the React frontend development server
+- Opens your browser to the monitoring interface
 
 ---
 
