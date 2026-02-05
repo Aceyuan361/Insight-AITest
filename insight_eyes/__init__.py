@@ -1,7 +1,13 @@
 """
-Insight-Eye - 移动设备性能监控工具
+Insight-Eye Web - 移动设备性能监控 Web 应用
 
-版本: v1.0.1
+版本: v1.0.0
+
+Web 应用特性:
+    - 基于 FastAPI 的 RESTful API 和 WebSocket 服务
+    - React + TypeScript + Vite 前端
+    - 实时性能监控和数据可视化
+    - 多设备并发监控支持
 
 支持平台:
     - Android (无需 ROOT)
@@ -61,4 +67,24 @@ Insight-Eye - 移动设备性能监控工具
     - iOS GPU 监控受系统限制暂不支持
     - iOS FPS 为系统刷新率参考值，非应用级数据
 """
-__version__ = '1.0.1'
+__version__ = '1.0.0-web'
+
+快速启动:
+    # 后端服务
+    cd insight_eyes/web
+    pip install -r requirements.txt
+    python -m api.main
+
+    # 前端服务
+    cd insight_eyes/web-frontend
+    npm install
+    npm run dev
+
+    访问 http://localhost:5173
+
+注意事项:
+    - Web 应用需要后端服务运行在 8000 端口
+    - 前端开发服务器运行在 5173 端口
+    - iOS 设备需要信任电脑并启用开发者模式
+    - iOS 需要 pymobiledevice3 >= 7.0.0
+"""

@@ -1,6 +1,44 @@
 # Changelog
 
-All notable changes to the Insight Eye project will be documented in this file.
+All notable changes to the Insight-Eye Web project will be documented in this file.
+
+## [1.0.0-web] - 2025-02-05
+
+### 重大变更 - 项目分离
+- **项目架构重组**: 将 Web 应用从桌面版中完全分离
+  - 创建独立的 1.0.0 分支专注于 Web 应用开发
+  - 移除所有桌面端代码 (desktop/)
+  - 保留核心层 (core/) 和平台采集器 (public/)
+
+### 代码变更
+- ✅ 保留模块:
+  - `core/` - 核心设备管理和监控基类
+  - `public/` - Android/iOS 平台采集器
+  - `web/` - Web 后端服务 (FastAPI + WebSocket)
+  - `web-frontend/` - Web 前端 (React + TypeScript)
+
+- ❌ 移除模块:
+  - `desktop/` - 完整桌面应用代码
+  - `tests/` - 桌面端测试代码
+  - `build.py` - 桌面端打包脚本
+  - `insight_eye.spec` - PyInstaller 配置
+
+### 配置更新
+- 更新 `__init__.py` 版本为 `1.0.0-web`
+- 更新 `__main__.py` 为 Web 服务入口
+- 创建 Web 版专用 `README.md`
+- 移除 PyQt6、PyInstaller 等桌面依赖
+
+### 项目定位
+- **本分支 (1.0.0)**: 专注 Web 应用，开源友好
+- **main 分支**: 保留桌面应用版本
+
+### 技术栈
+- 后端: FastAPI + WebSocket + SQLite
+- 前端: React 18 + TypeScript + Vite + ECharts
+- 平台: Android (ADB) + iOS (pymobiledevice3)
+
+---
 
 ## [1.0.3] - 2025-02-04
 
