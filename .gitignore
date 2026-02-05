@@ -84,6 +84,9 @@ playwright-results/
 CLAUDE.md
 EPISODIC-MEMORY-GUIDE.md
 
+# ==================== Changelog ====================
+CHANGELOG.md
+
 # ==================== Git Worktrees ====================
 .worktrees/
 
