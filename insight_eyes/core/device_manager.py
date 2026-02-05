@@ -201,7 +201,7 @@ class DeviceManager:
 
         logger.info(f"开始流式推送监控数据: session={session_id}, device={session.device_id}, app={session.app_package}, sampling_interval={session.sampling_interval}ms")
 
-        # 导入桌面层的设备适配器，直接使用采集方法
+        # 导入核心层的设备适配器，直接使用采集方法
         from insight_eyes.desktop.core.device_adapters import DeviceAdapterFactory
 
         # 生成适配器缓存键

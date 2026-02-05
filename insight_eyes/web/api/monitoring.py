@@ -19,6 +19,14 @@ db_module = sys.modules.get(DatabaseManager.__module__)
 logger.info(f"DEBUG STARTUP: DatabaseManager.__module__ = {DatabaseManager.__module__}")
 logger.info(f"DEBUG STARTUP: DatabaseManager.__file__ = {getattr(db_module, '__file__', 'N/A')}")
 logger.info(f"DEBUG STARTUP: hasattr(DatabaseManager, 'get_alerts') = {hasattr(DatabaseManager, 'get_alerts')}")
+
+# DEBUG: 检查 DeviceManager 类
+dm_module = sys.modules.get(DeviceManager.__module__)
+logger.info(f"DEBUG STARTUP: DeviceManager.__module__ = {DeviceManager.__module__}")
+logger.info(f"DEBUG STARTUP: DeviceManager.__file__ = {getattr(dm_module, '__file__', 'N/A')}")
+logger.info(f"DEBUG STARTUP: hasattr(DeviceManager, 'start_session') = {hasattr(DeviceManager, 'start_session')}")
+logger.info(f"DEBUG STARTUP: DeviceManager.__name__ = {DeviceManager.__name__}")
+
 logger.info(f"DEBUG STARTUP: sys.path[0:3] = {sys.path[0:3]}")
 
 
@@ -170,9 +178,13 @@ async def get_session_statistics(session_id: int):
             return {}
 
         # 计算统计
-        from insight_eyes.desktop.data.repository import MetricsRepository
-        repo = MetricsRepository(db)
-        return repo.get_statistics(session_id)
+        # 简化实现：从数据库获取基础统计
+        try:
+            stats = db.get_session_statistics(session_id)
+            return stats if stats else {}
+        except Exception as stats_error:
+            logger.debug(f"获取统计数据失败: {stats_error}，返回空统计")
+            return {}
     except Exception as e:
         logger.error(f"获取会话统计失败: {e}")
         raise HTTPException(status_code=500, detail=str(e))

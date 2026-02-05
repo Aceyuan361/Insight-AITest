@@ -67,24 +67,5 @@ Web 应用特性:
     - iOS GPU 监控受系统限制暂不支持
     - iOS FPS 为系统刷新率参考值，非应用级数据
 """
+
 __version__ = '1.0.0-web'
-
-快速启动:
-    # 后端服务
-    cd insight_eyes/web
-    pip install -r requirements.txt
-    python -m api.main
-
-    # 前端服务
-    cd insight_eyes/web-frontend
-    npm install
-    npm run dev
-
-    访问 http://localhost:5173
-
-注意事项:
-    - Web 应用需要后端服务运行在 8000 端口
-    - 前端开发服务器运行在 5173 端口
-    - iOS 设备需要信任电脑并启用开发者模式
-    - iOS 需要 pymobiledevice3 >= 7.0.0
-"""

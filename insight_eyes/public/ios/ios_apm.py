@@ -109,7 +109,7 @@ class IOSAPM:
         logger.info(f"启动 iOS APM: {self.bundle_name} @ {self.device_id}")
 
         # 导入并创建设备适配器
-        from insight_eyes.desktop.core.ios_device_adapter import IOSDeviceAdapter
+        from insight_eyes.public.ios.ios_device_adapter import IOSDeviceAdapter
         from insight_eyes.public.ios.sysmon_service import SysmonService
         from insight_eyes.public.ios.exceptions import ProcessNotFoundError
 

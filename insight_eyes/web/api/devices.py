@@ -19,7 +19,10 @@ import time
 import asyncio
 from typing import List, Optional, Dict
 
-from insight_eyes.core.device_manager import DeviceManager
+# 修复：使用核心层的 DeviceManager 来调用 scan_devices
+# 注意：DeviceManager 是 core.device_manager.DeviceManager，它有 scan_devices 方法
+# desktop.core.device_manager.DeviceManager 是 PyQt QObject 类，没有 scan_devices 方法
+from insight_eyes.core.device_manager import DeviceManager as CoreDeviceManager
 from insight_eyes.core.models.device import Device
 
 
@@ -56,7 +59,7 @@ class DeviceCache:
             if force_refresh or current_time - self._cache_time > self._ttl or not self._cache:
                 # 在线程池中执行同步扫描，避免阻塞事件循环
                 loop = asyncio.get_event_loop()
-                self._cache = await loop.run_in_executor(None, DeviceManager.scan_devices)
+                self._cache = await loop.run_in_executor(None, CoreDeviceManager.scan_devices)
 
                 # 构建设备索引，提高查询效率
                 self._cache_index = {d.device_id: d for d in self._cache}
@@ -128,7 +131,7 @@ async def connect_device(
     """连接指定设备（使用缓存的设备信息）"""
     try:
         from insight_eyes.desktop.core.device_adapters import DeviceAdapterFactory
-        from insight_eyes.desktop.core.models import DeviceType
+        from insight_eyes.core.models.device import DeviceType
         from insight_eyes.public.common import Platform
 
         device = await cache.get_device_by_id(device_id)
@@ -163,7 +166,7 @@ async def disconnect_device(
     """断开设备连接（使用缓存的设备信息）"""
     try:
         from insight_eyes.desktop.core.device_adapters import DeviceAdapterFactory
-        from insight_eyes.desktop.core.models import DeviceType
+        from insight_eyes.core.models.device import DeviceType
         from insight_eyes.public.common import Platform
 
         device = await cache.get_device_by_id(device_id)

@@ -25,15 +25,15 @@ def main():
 ║          Insight-Eye Web - 移动设备性能监控               ║
 ║                    版本: 1.0.0-web                         ║
 ╠════════════════════════════════════════════════════════════╣
-║  API 服务: http://localhost:8000                           ║
-║  API 文档: http://localhost:8000/docs                      ║
+║  API 服务: http://localhost:8001                           ║
+║  API 文档: http://localhost:8001/docs                      ║
 ╚════════════════════════════════════════════════════════════╝
     """)
 
     uvicorn.run(
         app,
         host="0.0.0.0",
-        port=8000,
+        port=8001,
         log_level="info"
     )
 
