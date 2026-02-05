@@ -35,7 +35,7 @@ python -m insight_eyes
 # Web 前端开发服务器
 cd insight_eyes/web-frontend
 npm run dev
-# 服务运行在 http://localhost:5173
+# 服务运行在 http://localhost:80 (见 vite.config.ts 配置)
 
 # 前端构建
 npm run build
