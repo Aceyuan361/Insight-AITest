@@ -1,4 +1,4 @@
-# Python
+# ==================== Python ====================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -20,27 +20,81 @@ wheels/
 .installed.cfg
 *.egg
 
-# PyInstaller 打包临时文件
-build/
-dist/
-*.manifest
+# ==================== Virtual Environment ====================
+venv/
+env/
+ENV/
+.venv/
 
-# 打包输出
-Insight-Eye-Portable/
-installer/
-
-# IDE
+# ==================== IDE ====================
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+*.sublime-project
+*.sublime-workspace
 
-# Logs
+# ==================== Logs ====================
 *.log
 app.log
+api.log
+frontend.log
+frontend_dev.log
+vite.log
+crash_log.txt
 
-# Test files (临时测试文件，排除 tests/ 目录)
+# ==================== OS ====================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==================== Database ====================
+*.db
+*.db-shm
+*.db-wal
+
+# ==================== Frontend (Node.js/Vite) ====================
+node_modules/
+dist/
+.nuxt/
+.cache/
+.parcel-cache/
+.next/
+out/
+coverage/
+.nyc_output/
+.playwright/
+test-results/
+playwright-report/
+playwright-results/
+
+# ==================== Environment Variables ====================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ==================== AI & Development Tools ====================
+.claude/
+.agents/
+.serena/
+.skills/
+CLAUDE.md
+EPISODIC-MEMORY-GUIDE.md
+
+# ==================== Git Worktrees ====================
+.worktrees/
+
+# ==================== Temporary Files ====================
+*.tmp
+*.temp
+nul
+analytics/
+test_results.txt
+
+# ==================== Test Files (临时) ====================
 /test_*.py
 /verify_*.py
 /fix_*.py
@@ -48,53 +102,33 @@ app.log
 /simple_test.py
 /final_test.py
 /quick_test*.py
-/nul
 
-# Claude
-.claude/
-.agents/
-
-# Documentation reports (临时报告)
+# ==================== Reports (临时) ====================
 *_SUMMARY.md
 *_REPORT.md
 Task-*-完成报告.md
+E2E-TEST-*.md
 
-# OS
-.DS_Store
-Thumbs.db
-
-# Temporary files
-analytics/
-test_results.txt
-
-# Database files (运行时生成)
-insight_eyes/data/*.db
-insight_eyes/data/*.db-shm
-insight_eyes/data/*.db-wal
-
-# Icon temporary files (保留 .ico)
+# ==================== Icons (临时文件) ====================
 *_icon.png
 
-# 开发工具配置
-.serena/
-.skills/
-.skills/
-agents/
-
-# AI 协作相关文件
-CLAUDE.md
-.claude/
-
-# 开发维护脚本
+# ==================== Development Scripts ====================
 scripts/
 *.sh
+*.bat
 
-# Claude Code 测试
-tests/claude-code/
+# ==================== Build Output ====================
+installer/
+Insight-Eye-Portable/
 
-# Git Worktrees (工作树隔离目录)
-.worktrees/
-
-# 崩溃日志
-crash_log.txt
-*.txt.log
+# ==================== Coverage ====================
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/

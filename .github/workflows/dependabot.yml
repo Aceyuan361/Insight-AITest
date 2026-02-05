@@ -1,0 +1,30 @@
+version: 2
+updates:
+  # GitHub Actions 的依赖更新
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+
+  # Node.js 的依赖更新
+  - package-ecosystem: "npm"
+    directory: "/insight_eyes/web-frontend"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "frontend"
+      include: "scope"
+    open-pull-requests-limit: 10
+
+  # Python 的依赖更新（如果有 requirements.txt）
+  - package-ecosystem: "pip"
+    directory: "/insight_eyes/web"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "backend"
+      include: "scope"
+    open-pull-requests-limit: 10
