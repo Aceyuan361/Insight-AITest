@@ -216,7 +216,7 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
 
     // 更新每个指标
     Object.entries(data).forEach(([key, value]) => {
-      if (key !== 'timestamp' && typeof value === 'number') {
+      if (key !== 'timestamp' && key !== 'battery' && key !== 'temperature' && typeof value === 'number') {
         if (!newMetricsData[key]) {
           newMetricsData[key] = [];
         }
@@ -239,9 +239,18 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
     // 保留最近100个时间戳
     const trimmedTimestamps = newTimestamps.slice(-100);
 
+    // 处理电池信息更新
+    const batteryInfo = state.batteryInfo;
+    if (data.battery !== undefined || data.temperature !== undefined) {
+      batteryInfo.level = data.battery !== undefined && data.battery !== null ? `${data.battery}%` : '--';
+      batteryInfo.temperature = data.temperature !== undefined && data.temperature !== null ? `${data.temperature}°C` : '--';
+      batteryInfo.capacity = '--';  // 容量信息暂未采集
+    }
+
     return {
       metricsData: newMetricsData,
       timestamps: trimmedTimestamps,
+      batteryInfo,
     };
   }),
 

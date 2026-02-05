@@ -169,6 +169,8 @@ async def get_session_metrics(session_id: int, limit: int = 1000):
                 "memory_pss": m.memory,  # memory -> memory_pss
                 "network_up_speed": m.network_up,  # network_up -> network_up_speed
                 "network_down_speed": m.network_down,  # network_down -> network_down_speed
+                "battery": m.battery,  # 电池电量百分比
+                "temperature": m.temperature,  # 电池温度（摄氏度）
             }
             formatted_metrics.append(formatted_metric)
 
