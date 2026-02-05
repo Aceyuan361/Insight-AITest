@@ -1,4 +1,5 @@
 import { useEffect, useRef, useMemo, useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import * as echarts from 'echarts';
 import type { MetricCardConfig } from '@/types';
 
@@ -9,6 +10,7 @@ interface RealTimeChartProps {
 }
 
 export default function RealTimeChart({ data, timestamps, config }: RealTimeChartProps) {
+  const { t } = useTranslation();
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
   const prevDataLengthRef = useRef(0);
@@ -237,11 +239,11 @@ export default function RealTimeChart({ data, timestamps, config }: RealTimeChar
             <div style="padding: 4px 0;">
               <div style="color: #94a3b8; font-size: 12px; margin-bottom: 6px;">${config.title}</div>
               <div style="margin: 4px 0;">
-                <span style="color: #64748b;">时间:</span>
+                <span style="color: #64748b;">${t('stats.time')}:</span>
                 <span style="color: #e0e6ed; margin-left: 8px; font-family: 'Roboto Mono', monospace;">${timeStr}</span>
               </div>
               <div>
-                <span style="color: #64748b;">数值:</span>
+                <span style="color: #64748b;">${t('stats.value')}:</span>
                 <span style="color: ${config.color}; margin-left: 8px; font-family: 'Roboto Mono', monospace; font-weight: 500;">${value.toFixed(config.decimals)}${unit}</span>
               </div>
             </div>

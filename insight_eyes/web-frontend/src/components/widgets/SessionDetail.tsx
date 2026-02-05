@@ -10,6 +10,7 @@
  * - 底部: 操作按钮
  */
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { api } from '@/services/api';
 import { exportHtmlReport } from '@/services/htmlExporter';
 import SessionInfoBar from './SessionInfoBar';
@@ -24,6 +25,7 @@ interface SessionDetailProps {
 }
 
 export default function SessionDetail({ sessionId, onClose, onDeleted }: SessionDetailProps) {
+  const { t } = useTranslation();
   const [exporting, setExporting] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -41,7 +43,7 @@ export default function SessionDetail({ sessionId, onClose, onDeleted }: Session
       await exportHtmlReport(session, metrics, device, alerts);
     } catch (error) {
       console.error('Failed to export HTML report:', error);
-      alert('导出报告失败: ' + (error as Error).message);
+      alert(t('report.exportFailed') + ': ' + (error as Error).message);
     } finally {
       setExporting(false);
     }
@@ -51,7 +53,7 @@ export default function SessionDetail({ sessionId, onClose, onDeleted }: Session
   const handleDelete = async () => {
     if (!sessionId) return;
 
-    if (!confirm(`确定要删除会话 ${sessionId} 吗？\n\n此操作不可撤销，将删除该会话的所有数据和告警记录。`)) {
+    if (!confirm(t('report.confirmDeleteMessage', { sessionId }))) {
       return;
     }
 
@@ -62,7 +64,7 @@ export default function SessionDetail({ sessionId, onClose, onDeleted }: Session
       onClose?.();
     } catch (error) {
       console.error('Failed to delete session:', error);
-      alert('删除会话失败: ' + (error as Error).message);
+      alert(t('report.deleteFailed') + ': ' + (error as Error).message);
     } finally {
       setDeleting(false);
     }
@@ -72,7 +74,7 @@ export default function SessionDetail({ sessionId, onClose, onDeleted }: Session
   if (!sessionId) {
     return (
       <div className="flex items-center justify-center h-full bg-dark-card rounded-lg border border-gray-800">
-        <p className="text-text-secondary">请选择一个会话查看详情</p>
+        <p className="text-text-secondary">{t('report.selectSessionPrompt')}</p>
       </div>
     );
   }
@@ -134,7 +136,7 @@ export default function SessionDetail({ sessionId, onClose, onDeleted }: Session
             e.currentTarget.style.color = '#00d4ff';
           }}
         >
-          {exporting ? '导出中...' : '导出 HTML 报告'}
+          {exporting ? t('report.exporting') : t('report.exportHtml')}
         </button>
 
         <button
@@ -159,7 +161,7 @@ export default function SessionDetail({ sessionId, onClose, onDeleted }: Session
             e.currentTarget.style.color = '#ef4444';
           }}
         >
-          {deleting ? '删除中...' : '删除会话'}
+          {deleting ? t('report.deleting') : t('report.deleteSession')}
         </button>
       </div>
     </div>

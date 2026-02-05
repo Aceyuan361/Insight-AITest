@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface TooltipData {
   title: string;
@@ -13,6 +14,8 @@ interface ChartTooltipProps {
 }
 
 export default function ChartTooltip({ data, position }: ChartTooltipProps) {
+  const { t } = useTranslation();
+  const tooltipRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -50,9 +53,9 @@ export default function ChartTooltip({ data, position }: ChartTooltipProps) {
         <div style={{ color: '#00d4ff', fontWeight: 'bold', marginBottom: '4px' }}>
           {data.title}
         </div>
-        <div>时间: {data.time}</div>
+        <div>{t('stats.time')}: {data.time}</div>
         <div>
-          数值:{' '}
+          {t('stats.value')}:{' '}
           <span style={{ color: '#00ff87', fontWeight: 'bold' }}>
             {data.value}{data.unit}
           </span>

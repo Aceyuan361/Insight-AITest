@@ -21,6 +21,7 @@ class SessionResponse(BaseModel):
     id: int
     device_id: str
     app_package: str
+    app_name: Optional[str] = None
     platform: str
     status: str
     start_time: str

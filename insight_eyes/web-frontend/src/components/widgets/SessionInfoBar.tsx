@@ -4,6 +4,7 @@
  * 完全复刻桌面版样式
  */
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { api } from '@/services/api';
 import type { Session, Device } from '@/types';
 
@@ -12,6 +13,8 @@ interface SessionInfoBarProps {
 }
 
 export default function SessionInfoBar({ sessionId }: SessionInfoBarProps) {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language === 'zh-CN' ? 'zh-CN' : 'en-US';
   const [session, setSession] = useState<Session | null>(null);
   const [device, setDevice] = useState<Device | null>(null);
   const [loading, setLoading] = useState(false);
@@ -62,19 +65,19 @@ export default function SessionInfoBar({ sessionId }: SessionInfoBarProps) {
     const totalSeconds = Math.floor(diff / 1000);
 
     if (totalSeconds < 60) {
-      return `${totalSeconds}秒`;
+      return t('sessionList.durationSeconds', { count: totalSeconds });
     }
 
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
 
     if (minutes < 60) {
-      return `${minutes}分${seconds}秒`;
+      return t('sessionList.durationMinutesSeconds', { minutes, seconds });
     }
 
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    return `${hours}小时${mins}分${seconds}秒`;
+    return t('sessionList.durationHoursMinutes', { hours, minutes: mins });
   };
 
   // 格式化时间显示
@@ -82,7 +85,7 @@ export default function SessionInfoBar({ sessionId }: SessionInfoBarProps) {
     if (!session) return '';
 
     const start = new Date(session.start_time);
-    const startTimeStr = start.toLocaleString('zh-CN', {
+    const startTimeStr = start.toLocaleString(locale, {
       month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
@@ -92,7 +95,7 @@ export default function SessionInfoBar({ sessionId }: SessionInfoBarProps) {
 
     if (session.end_time) {
       const end = new Date(session.end_time);
-      const endTimeStr = end.toLocaleTimeString('zh-CN', {
+      const endTimeStr = end.toLocaleTimeString(locale, {
         hour: '2-digit',
         minute: '2-digit',
         hour12: false,
@@ -113,12 +116,12 @@ export default function SessionInfoBar({ sessionId }: SessionInfoBarProps) {
           color: '#94a3b8',
         }}
       >
-        加载中...
+        {t('common.loading')}
       </div>
     );
   }
 
-  const deviceName = device?.name || `设备(${session.device_id.slice(0, 8)})`;
+  const deviceName = device?.name || t('sessionList.deviceId', { id: session.device_id.slice(0, 8) });
   const appName = session.app_name || session.app_package;
   const timeDisplay = formatTimeDisplay();
   const duration = calculateDuration();
@@ -133,7 +136,7 @@ export default function SessionInfoBar({ sessionId }: SessionInfoBarProps) {
         fontSize: '10pt',
       }}
     >
-      设备: {deviceName} | 应用: {appName} | 时间: {timeDisplay} | 时长: {duration}
+      {t('sessionList.device')}: {deviceName} | {t('sessionList.app')}: {appName} | {t('sessionList.time')}: {timeDisplay} | {t('sessionList.duration')}: {duration}
     </div>
   );
 }

@@ -32,6 +32,7 @@ class Session:
         platform: 平台类型 ('android' 或 'ios')
         status: 会话当前状态
         start_time: 会话开始时间
+        app_name: 应用友好名称（可选）
         end_time: 会话结束时间（可选）
         duration: 会话持续时间，单位为秒（可选）
         sampling_interval: 采样间隔，单位为毫秒（默认1000ms）
@@ -42,6 +43,7 @@ class Session:
     platform: str
     status: SessionStatus
     start_time: datetime
+    app_name: Optional[str] = None
     end_time: Optional[datetime] = None
     duration: Optional[int] = None  # 秒
     sampling_interval: int = 1000  # 毫秒，默认1秒
@@ -56,6 +58,7 @@ class Session:
             "id": self.id,
             "device_id": self.device_id,
             "app_package": self.app_package,
+            "app_name": self.app_name,
             "platform": self.platform,
             "status": self.status.value,
             "start_time": self.start_time.isoformat(),
@@ -78,6 +81,7 @@ class Session:
             id=data["id"],
             device_id=data["device_id"],
             app_package=data["app_package"],
+            app_name=data.get("app_name"),
             platform=data.get("platform", "android"),
             status=SessionStatus(data["status"]),
             start_time=datetime.fromisoformat(data["start_time"]),

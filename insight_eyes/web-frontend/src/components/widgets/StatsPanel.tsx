@@ -4,6 +4,7 @@
  * 完全复刻桌面版 StatsPanelWidget 样式
  */
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { api } from '@/services/api';
 import type { Statistics, AlertInfo } from '@/services/api';
 
@@ -45,6 +46,7 @@ const alertsContainerStyle: React.CSSProperties = {
 };
 
 export default function StatsPanel({ sessionId }: StatsPanelProps) {
+  const { t } = useTranslation();
   const [statistics, setStatistics] = useState<Statistics | null>(null);
   const [alerts, setAlerts] = useState<AlertInfo[]>([]);
   const [loading, setLoading] = useState(false);
@@ -78,7 +80,7 @@ export default function StatsPanel({ sessionId }: StatsPanelProps) {
   if (!sessionId) {
     return (
       <div className="flex items-center justify-center h-full" style={{ backgroundColor: '#0a0e17' }}>
-        <p className="text-sm" style={{ color: '#64748b' }}>请选择一个会话</p>
+        <p className="text-sm" style={{ color: '#64748b' }}>{t('stats.selectSession')}</p>
       </div>
     );
   }
@@ -86,7 +88,7 @@ export default function StatsPanel({ sessionId }: StatsPanelProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full" style={{ backgroundColor: '#0a0e17' }}>
-        <p className="text-sm" style={{ color: '#64748b' }}>加载统计中...</p>
+        <p className="text-sm" style={{ color: '#64748b' }}>{t('stats.loading')}</p>
       </div>
     );
   }
@@ -106,7 +108,7 @@ export default function StatsPanel({ sessionId }: StatsPanelProps) {
           className="text-base font-bold"
           style={{ color: '#00d4ff', fontSize: '14pt' }}
         >
-          性能统计
+          {t('stats.title')}
         </h3>
       </div>
 
@@ -117,10 +119,10 @@ export default function StatsPanel({ sessionId }: StatsPanelProps) {
           <div style={statCardStyle}>
             <div style={titleStyle}>FPS</div>
             <div style={avgStyle}>
-              avg: {statistics.fps.avg.toFixed(1)}fps
+              {t('stats.avg')}: {statistics.fps.avg.toFixed(1)}fps
             </div>
             <div style={rangeStyle}>
-              max: {statistics.fps.max}fps  min: {statistics.fps.min}fps
+              {t('stats.max')}: {statistics.fps.max}fps  {t('stats.min')}: {statistics.fps.min}fps
             </div>
           </div>
         )}
@@ -130,10 +132,10 @@ export default function StatsPanel({ sessionId }: StatsPanelProps) {
           <div style={statCardStyle}>
             <div style={titleStyle}>CPU</div>
             <div style={avgStyle}>
-              avg: {statistics.cpu_app.avg.toFixed(2)}%
+              {t('stats.avg')}: {statistics.cpu_app.avg.toFixed(2)}%
             </div>
             <div style={rangeStyle}>
-              max: {statistics.cpu_app.max}%  min: {statistics.cpu_app.min}%
+              {t('stats.max')}: {statistics.cpu_app.max}%  {t('stats.min')}: {statistics.cpu_app.min}%
             </div>
           </div>
         )}
@@ -141,12 +143,12 @@ export default function StatsPanel({ sessionId }: StatsPanelProps) {
         {/* 内存统计卡片 */}
         {statistics?.memory_pss && (
           <div style={statCardStyle}>
-            <div style={titleStyle}>内存</div>
+            <div style={titleStyle}>{t('config.metrics.memory')}</div>
             <div style={avgStyle}>
-              avg: {statistics.memory_pss.avg.toFixed(1)}MB
+              {t('stats.avg')}: {statistics.memory_pss.avg.toFixed(1)}MB
             </div>
             <div style={rangeStyle}>
-              max: {statistics.memory_pss.max}MB  min: {statistics.memory_pss.min}MB
+              {t('stats.max')}: {statistics.memory_pss.max}MB  {t('stats.min')}: {statistics.memory_pss.min}MB
             </div>
           </div>
         )}
@@ -154,15 +156,15 @@ export default function StatsPanel({ sessionId }: StatsPanelProps) {
         {/* 网络统计卡片（合并显示） */}
         {(statistics?.network_up || statistics?.network_down) && (
           <div style={statCardStyle}>
-            <div style={titleStyle}>网络</div>
+            <div style={titleStyle}>{t('stats.network')}</div>
             {statistics.network_up && (
               <div style={{ color: '#00ff87', fontSize: '9pt', marginBottom: '2px' }}>
-                ↑ avg: {statistics.network_up.avg.toFixed(2)}KB/s  max: {statistics.network_up.max.toFixed(2)}KB/s
+                ↑ {t('stats.avg')}: {statistics.network_up.avg.toFixed(2)}KB/s  {t('stats.max')}: {statistics.network_up.max.toFixed(2)}KB/s
               </div>
             )}
             {statistics.network_down && (
               <div style={{ color: '#0062ff', fontSize: '9pt' }}>
-                ↓ avg: {statistics.network_down.avg.toFixed(2)}KB/s  max: {statistics.network_down.max.toFixed(2)}KB/s
+                ↓ {t('stats.avg')}: {statistics.network_down.avg.toFixed(2)}KB/s  {t('stats.max')}: {statistics.network_down.max.toFixed(2)}KB/s
               </div>
             )}
           </div>
@@ -175,7 +177,7 @@ export default function StatsPanel({ sessionId }: StatsPanelProps) {
               className="text-sm font-bold mb-2"
               style={{ color: '#ef4444', fontSize: '10pt' }}
             >
-              告警 ({alerts.length})
+              {t('stats.alerts')} ({alerts.length})
             </div>
             <div className="space-y-2">
               {alerts.slice(0, 20).map((alert) => (
@@ -194,7 +196,7 @@ export default function StatsPanel({ sessionId }: StatsPanelProps) {
         {/* 无告警提示 */}
         {alerts.length === 0 && !loading && (
           <div className="text-center py-4" style={{ color: '#64748b', fontSize: '9pt' }}>
-            无告警记录
+            {t('stats.noAlerts')}
           </div>
         )}
       </div>

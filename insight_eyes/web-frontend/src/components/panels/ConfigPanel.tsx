@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useMonitoringStore } from '@/store/monitoringStore';
 import AlarmRecords from '@/components/widgets/AlarmRecords';
 import { configManager } from '@/utils/configManager';
 
 export default function ConfigPanel() {
+  const { t } = useTranslation();
   const { isMonitoring, selectedDevice, setEnabledMetrics, devices, setSamplingInterval: setStoreSamplingInterval, samplingInterval: storeSamplingInterval } = useMonitoringStore();
   const [samplingInterval, setSamplingInterval] = useState('1s');
   const [showGpuWarning, setShowGpuWarning] = useState(false);
@@ -44,12 +46,12 @@ export default function ConfigPanel() {
 
   // 监控指标配置 - 匹配桌面版
   const [metrics, setMetrics] = useState([
-    { key: 'cpu', label: 'CPU', color: '#00f2ff', enabled: true },
-    { key: 'memory', label: '内存', color: '#9370DB', enabled: true },
-    { key: 'fps', label: 'FPS', color: '#ffb400', enabled: true },
-    { key: 'network_up', label: '网络上行', color: '#00ff87', enabled: true },
-    { key: 'network_down', label: '网络下行', color: '#00BFFF', enabled: true },
-    { key: 'gpu', label: 'GPU', color: '#ff006e', enabled: false },
+    { key: 'cpu', label: t('config.metrics.cpu'), color: '#00f2ff', enabled: true },
+    { key: 'memory', label: t('config.metrics.memory'), color: '#9370DB', enabled: true },
+    { key: 'fps', label: t('config.metrics.fps'), color: '#ffb400', enabled: true },
+    { key: 'network_up', label: t('config.metrics.networkUp'), color: '#00ff87', enabled: true },
+    { key: 'network_down', label: t('config.metrics.networkDown'), color: '#00BFFF', enabled: true },
+    { key: 'gpu', label: t('config.metrics.gpu'), color: '#ff006e', enabled: false },
   ]);
 
   // 告警阈值配置 - 匹配桌面版
@@ -166,9 +168,9 @@ export default function ConfigPanel() {
           setThresholds(config.thresholds);
         }
 
-        alert('配置导入成功！');
+        alert(t('dialogs.operationSuccess'));
       } catch (error) {
-        alert('配置导入失败：无效的配置文件');
+        alert(t('dialogs.operationFailed'));
         console.error('Import config error:', error);
       }
     };
@@ -180,7 +182,7 @@ export default function ConfigPanel() {
 
   // 重置配置
   const handleResetConfig = () => {
-    if (!confirm('确定要重置为默认配置吗？')) {
+    if (!confirm(t('config.confirmReset'))) {
       return;
     }
 
@@ -209,12 +211,12 @@ export default function ConfigPanel() {
     // 更新store
     setEnabledMetrics(defaultMetrics.filter(m => m.enabled).map(m => m.key));
 
-    alert('配置已重置为默认值');
+    alert(t('config.resetSuccess'));
   };
 
   // 打开配置目录（Web版本不支持，提供说明）
   const handleOpenConfigDir = () => {
-    alert('配置存储在浏览器 localStorage 中。\n\n如需完全清除配置，请清除浏览器缓存。');
+    alert(t('config.storageLocation'));
   };
 
   return (
@@ -239,73 +241,8 @@ export default function ConfigPanel() {
         fontWeight: '700',
         color: '#00d4ff',
         padding: '4px 0px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
       }}>
-        <span>采集配置</span>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button
-            onClick={handleExportConfig}
-            style={{
-              backgroundColor: '#121824',
-              color: '#e0e6ed',
-              border: '1px solid #1a1f2e',
-              borderRadius: '6px',
-              padding: '6px 12px',
-              fontSize: '10pt',
-              cursor: 'pointer',
-            }}
-            title="导出配置到JSON文件"
-          >
-            导出配置
-          </button>
-          <button
-            onClick={handleImportConfig}
-            style={{
-              backgroundColor: '#121824',
-              color: '#e0e6ed',
-              border: '1px solid #1a1f2e',
-              borderRadius: '6px',
-              padding: '6px 12px',
-              fontSize: '10pt',
-              cursor: 'pointer',
-            }}
-            title="从JSON文件导入配置"
-          >
-            导入配置
-          </button>
-          <button
-            onClick={handleResetConfig}
-            style={{
-              backgroundColor: '#ef4444',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '6px',
-              padding: '6px 12px',
-              fontSize: '10pt',
-              cursor: 'pointer',
-            }}
-            title="重置为默认配置"
-          >
-            重置配置
-          </button>
-          <button
-            onClick={handleOpenConfigDir}
-            style={{
-              backgroundColor: '#121824',
-              color: '#e0e6ed',
-              border: '1px solid #1a1f2e',
-              borderRadius: '6px',
-              padding: '6px 12px',
-              fontSize: '10pt',
-              cursor: 'pointer',
-            }}
-            title="查看配置存储位置"
-          >
-            配置说明
-          </button>
-        </div>
+        {t('config.title')}
       </div>
 
       {/* === 采集配置 === */}
@@ -321,7 +258,7 @@ export default function ConfigPanel() {
           color: '#7dd3fc',
           marginBottom: '8px',
         }}>
-          采集配置
+          {t('config.title')}
         </div>
 
         {/* 采样频率 - 下拉选择（匹配桌面版） */}
@@ -333,7 +270,7 @@ export default function ConfigPanel() {
           justifyContent: 'space-between',
           alignItems: 'center',
         }}>
-          <span>采样频率</span>
+          <span>{t('config.samplingRate')}</span>
           <select
             value={samplingInterval}
             onChange={(e) => handleSamplingIntervalChange(e.target.value)}
@@ -370,7 +307,7 @@ export default function ConfigPanel() {
           color: '#7dd3fc',
           marginBottom: '8px',
         }}>
-          监控指标
+          {t('config.monitoringMetrics')}
         </div>
 
         {/* 复选框样式 - 匹配桌面版 */}
@@ -411,7 +348,7 @@ export default function ConfigPanel() {
                   {metric.label}
                   {isGpuOnIOS && (
                     <span style={{ fontSize: '9pt', color: '#94a3b8', marginLeft: '4px' }}>
-                      (iOS不支持)
+                      ({t('device.iosNotSupported')})
                     </span>
                   )}
                 </span>
@@ -434,7 +371,7 @@ export default function ConfigPanel() {
           color: '#7dd3fc',
           marginBottom: '8px',
         }}>
-          告警阈值
+          {t('config.alertThresholds')}
         </div>
 
         {/* 阈值输入 - 匹配桌面版 */}
@@ -448,7 +385,7 @@ export default function ConfigPanel() {
             justifyContent: 'space-between',
             alignItems: 'center',
           }}>
-            <span>FPS低于</span>
+            <span>{t('config.alerts.fpsBelow')}</span>
             <input
               type="number"
               value={thresholds.fps}
@@ -478,7 +415,7 @@ export default function ConfigPanel() {
             justifyContent: 'space-between',
             alignItems: 'center',
           }}>
-            <span>内存超过</span>
+            <span>{t('config.alerts.memoryAbove')}</span>
             <input
               type="number"
               value={thresholds.memory}
@@ -508,7 +445,7 @@ export default function ConfigPanel() {
             justifyContent: 'space-between',
             alignItems: 'center',
           }}>
-            <span>CPU超过</span>
+            <span>{t('config.alerts.cpuAbove')}</span>
             <input
               type="number"
               value={thresholds.cpu}
@@ -538,7 +475,7 @@ export default function ConfigPanel() {
             justifyContent: 'space-between',
             alignItems: 'center',
           }}>
-            <span>温度超过</span>
+            <span>{t('config.alerts.temperatureAbove')}</span>
             <input
               type="number"
               value={thresholds.temperature}
@@ -604,7 +541,7 @@ export default function ConfigPanel() {
               marginBottom: '16px',
               marginTop: 0,
             }}>
-              iOS GPU 监控限制
+              {t('device.iosGpuWarningTitle')}
             </h3>
             <p style={{
               color: '#e0e6ed',
@@ -612,7 +549,7 @@ export default function ConfigPanel() {
               lineHeight: '1.6',
               marginBottom: '16px',
             }}>
-              抱歉，iOS 设备暂不支持 GPU 监控。
+              {t('device.iosGpuWarningMessage')}
             </p>
             <div style={{
               backgroundColor: '#0a0e17',
@@ -621,7 +558,7 @@ export default function ConfigPanel() {
               marginBottom: '16px',
             }}>
               <div style={{ color: '#94a3b8', fontSize: '10pt', marginBottom: '8px' }}>
-                <strong>原因：</strong>
+                <strong>{t('device.iosGpuWarningReason')}</strong>
               </div>
               <ul style={{
                 color: '#e0e6ed',
@@ -629,12 +566,12 @@ export default function ConfigPanel() {
                 paddingLeft: '20px',
                 margin: 0,
               }}>
-                <li>iOS 系统 DVT 通道无法获取 GPU 能耗数据</li>
-                <li>CLI 能耗命令超时（20+ 秒），不适合实时监控</li>
+                <li>{t('device.iosGpuWarningReason1')}</li>
+                <li>{t('device.iosGpuWarningReason2')}</li>
               </ul>
             </div>
             <div style={{ color: '#94a3b8', fontSize: '10pt', marginBottom: '8px' }}>
-              <strong>已启用指标：</strong>
+              <strong>{t('device.iosGpuWarningAvailable')}</strong>
             </div>
             <ul style={{
               color: '#22c55e',
@@ -642,11 +579,11 @@ export default function ConfigPanel() {
               paddingLeft: '20px',
               margin: 0,
             }}>
-              <li>CPU 使用率 ✓</li>
-              <li>内存使用 ✓</li>
-              <li>FPS（系统刷新率参考）✓</li>
-              <li>网络流量（系统级）✓</li>
-              <li>电池状态 ✓</li>
+              <li>{t('device.iosGpuWarningFeature1')}</li>
+              <li>{t('device.iosGpuWarningFeature2')}</li>
+              <li>{t('device.iosGpuWarningFeature3')}</li>
+              <li>{t('device.iosGpuWarningFeature4')}</li>
+              <li>{t('device.iosGpuWarningFeature5')}</li>
             </ul>
             <button
               onClick={() => setShowGpuWarning(false)}
@@ -662,7 +599,7 @@ export default function ConfigPanel() {
                 width: '100%',
               }}
             >
-              我知道了
+              {t('device.iosGpuWarningButton')}
             </button>
           </div>
         </div>

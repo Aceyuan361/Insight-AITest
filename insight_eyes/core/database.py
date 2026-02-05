@@ -107,6 +107,7 @@ class DatabaseManager:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 device_id TEXT NOT NULL,
                 app_package TEXT NOT NULL,
+                app_name TEXT,
                 start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 end_time TIMESTAMP,
                 status TEXT NOT NULL DEFAULT 'running',
@@ -116,6 +117,12 @@ class DatabaseManager:
                 sampling_interval INTEGER DEFAULT 1000
             )
         ''')
+
+        # 如果 app_name 列不存在，添加该列（用于数据库升级）
+        try:
+            conn.execute('ALTER TABLE sessions ADD COLUMN app_name TEXT')
+        except Exception:
+            pass  # 列已存在
 
         # 创建性能指标表
         conn.execute('''
@@ -133,6 +140,23 @@ class DatabaseManager:
             )
         ''')
 
+        # 创建异常告警表
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS alerts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id INTEGER NOT NULL,
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                alert_type TEXT NOT NULL,
+                metric_name TEXT,
+                current_value REAL,
+                threshold_value REAL,
+                severity TEXT CHECK(severity IN ('warning', 'critical')),
+                description TEXT,
+                resolved BOOLEAN DEFAULT 0,
+                FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE
+            )
+        ''')
+
         # 创建索引
         conn.execute('''
             CREATE INDEX IF NOT EXISTS idx_metrics_session
@@ -142,6 +166,17 @@ class DatabaseManager:
         conn.execute('''
             CREATE INDEX IF NOT EXISTS idx_sessions_device
             ON sessions(device_id, start_time DESC)
+        ''')
+
+        # 告警表索引
+        conn.execute('''
+            CREATE INDEX IF NOT EXISTS idx_alerts_session_time
+            ON alerts(session_id, timestamp DESC)
+        ''')
+
+        conn.execute('''
+            CREATE INDEX IF NOT EXISTS idx_alerts_type
+            ON alerts(alert_type, timestamp DESC)
         ''')
 
         conn.commit()
@@ -184,17 +219,35 @@ class DatabaseManager:
         if platform not in ('android', 'ios'):
             raise ValueError(f"Invalid platform: {platform}. Must be 'android' or 'ios'")
 
+        # 获取应用友好名称（可选，如果获取失败则使用包名）
+        app_name = app_package  # 默认使用包名
+        try:
+            from insight_eyes.desktop.core.app_enumerator import AppEnumeratorFactory
+            from insight_eyes.public.common import Platform
+
+            platform_enum = Platform.ANDROID if platform == 'android' else Platform.IOS
+            enumerator = AppEnumeratorFactory.create_enumerator(device_id, platform_enum)
+            if enumerator:
+                apps = enumerator.enumerate_apps(include_system_apps=False)
+                for app in apps:
+                    if app.package_name == app_package:
+                        app_name = app.app_name
+                        break
+        except Exception as e:
+            logger.debug(f"获取应用名称失败: {e}，使用包名代替")
+
         with self.transaction() as conn:
             cursor = conn.execute('''
-                INSERT INTO sessions (device_id, app_package, platform, start_time, status, sampling_interval)
-                VALUES (?, ?, ?, ?, ?, ?)
-            ''', (device_id, app_package, platform, datetime.now().isoformat(), SessionStatus.RUNNING.value, sampling_interval))
+                INSERT INTO sessions (device_id, app_package, app_name, platform, start_time, status, sampling_interval)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', (device_id, app_package, app_name, platform, datetime.now().isoformat(), SessionStatus.RUNNING.value, sampling_interval))
             session_id = cursor.lastrowid
 
         return Session(
             id=session_id,
             device_id=device_id,
             app_package=app_package,
+            app_name=app_name,
             platform=platform,
             start_time=datetime.now(),
             status=SessionStatus.RUNNING,
@@ -301,14 +354,19 @@ class DatabaseManager:
 
         return sessions
 
-    def delete_session(self, session_id: int) -> None:
+    def delete_session(self, session_id: int) -> bool:
         """删除会话
 
         Args:
             session_id: 会话ID
+
+        Returns:
+            是否成功删除（如果会话不存在返回 False）
         """
         with self.transaction() as conn:
-            conn.execute('DELETE FROM sessions WHERE id = ?', (session_id,))
+            cursor = conn.execute('DELETE FROM sessions WHERE id = ?', (session_id,))
+            # 返回是否删除了行（rowcount > 0 表示找到了并删除了会话）
+            return cursor.rowcount > 0
 
     # ==================== 性能指标管理 ====================
 
@@ -383,6 +441,90 @@ class DatabaseManager:
             ))
 
         return metrics_list
+
+    # ==================== 告警管理 ====================
+
+    def save_alert(self, session_id: int, alert: Dict[str, Any]) -> int:
+        """保存告警记录
+
+        Args:
+            session_id: 会话ID
+            alert: 告警数据，包含:
+                - alert_type: 告警类型
+                - metric_name: 指标名称
+                - current_value: 当前值
+                - threshold_value: 阈值
+                - severity: 严重程度 ('warning' 或 'critical')
+                - description: 描述信息
+
+        Returns:
+            告警记录ID
+        """
+        with self.transaction() as conn:
+            cursor = conn.execute('''
+                INSERT INTO alerts (
+                    session_id, alert_type, metric_name,
+                    current_value, threshold_value, severity, description
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                session_id,
+                alert.get('alert_type'),
+                alert.get('metric_name'),
+                alert.get('current_value'),
+                alert.get('threshold_value'),
+                alert.get('severity'),
+                alert.get('description')
+            ))
+            return cursor.lastrowid
+
+    def get_alerts(
+        self,
+        session_id: int = None,
+        alert_type: str = None,
+        severity: str = None,
+        resolved: bool = None,
+        limit: int = None
+    ) -> List[Dict[str, Any]]:
+        """查询告警记录
+
+        Args:
+            session_id: 会话ID过滤
+            alert_type: 告警类型过滤
+            severity: 严重程度过滤
+            resolved: 是否已解决过滤
+            limit: 返回数量限制
+
+        Returns:
+            告警记录列表
+        """
+        conn = self.get_connection()
+        query = 'SELECT * FROM alerts WHERE 1=1'
+        params = []
+
+        if session_id:
+            query += ' AND session_id = ?'
+            params.append(session_id)
+
+        if alert_type:
+            query += ' AND alert_type = ?'
+            params.append(alert_type)
+
+        if severity:
+            query += ' AND severity = ?'
+            params.append(severity)
+
+        if resolved is not None:
+            query += ' AND resolved = ?'
+            params.append(1 if resolved else 0)
+
+        query += ' ORDER BY timestamp DESC'
+
+        if limit:
+            query += ' LIMIT ?'
+            params.append(limit)
+
+        cursor = conn.execute(query, params)
+        return [dict(row) for row in cursor.fetchall()]
 
     # ==================== 数据维护 ====================
 

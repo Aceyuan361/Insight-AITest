@@ -9,6 +9,18 @@ from insight_eyes.core.device_manager import DeviceManager
 from insight_eyes.core.database import DatabaseManager
 from insight_eyes.web.api.schemas import StartMonitoringRequest, StopMonitoringRequest, SessionResponse
 
+# 清除单例缓存以确保使用新代码
+DatabaseManager._instance = None
+
+# DEBUG: 检查 DatabaseManager 类
+import sys
+import inspect
+db_module = sys.modules.get(DatabaseManager.__module__)
+logger.info(f"DEBUG STARTUP: DatabaseManager.__module__ = {DatabaseManager.__module__}")
+logger.info(f"DEBUG STARTUP: DatabaseManager.__file__ = {getattr(db_module, '__file__', 'N/A')}")
+logger.info(f"DEBUG STARTUP: hasattr(DatabaseManager, 'get_alerts') = {hasattr(DatabaseManager, 'get_alerts')}")
+logger.info(f"DEBUG STARTUP: sys.path[0:3] = {sys.path[0:3]}")
+
 
 router = APIRouter(prefix="/api/monitoring", tags=["monitoring"])
 
@@ -30,6 +42,7 @@ async def start_monitoring(request: StartMonitoringRequest):
             id=session.id,
             device_id=session.device_id,
             app_package=session.app_package,
+            app_name=session.app_name,
             platform=getattr(session, 'platform', 'android'),
             status=session.status.value,
             start_time=session.start_time.isoformat(),
@@ -96,6 +109,7 @@ async def get_session(session_id: int):
             id=session.id,
             device_id=session.device_id,
             app_package=session.app_package,
+            app_name=session.app_name,
             platform=getattr(session, 'platform', 'android'),
             status=session.status.value,
             start_time=session.start_time.isoformat(),
@@ -122,7 +136,21 @@ async def get_session_metrics(session_id: int, limit: int = 1000):
         if limit and len(metrics) > limit:
             metrics = metrics[:limit]
 
-        return metrics
+        # 映射字段名以匹配前端期望的格式
+        # MetricsData是dataclass，需要使用属性访问而不是字典访问
+        formatted_metrics = []
+        for m in metrics:
+            formatted_metric = {
+                "timestamp": m.timestamp.isoformat() if m.timestamp else None,
+                "fps": m.fps,
+                "cpu_app": m.cpu,  # cpu -> cpu_app
+                "memory_pss": m.memory,  # memory -> memory_pss
+                "network_up_speed": m.network_up,  # network_up -> network_up_speed
+                "network_down_speed": m.network_down,  # network_down -> network_down_speed
+            }
+            formatted_metrics.append(formatted_metric)
+
+        return formatted_metrics
     except Exception as e:
         logger.error(f"获取会话指标失败: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -155,11 +183,32 @@ async def get_session_alerts(session_id: int):
     """获取会话的告警记录"""
     try:
         import os
+        # 在函数内动态导入以避免单例缓存问题
+        from insight_eyes.core.database import DatabaseManager
+
         db_path = os.path.join(os.path.expanduser("~"), ".insight_eye", "monitoring.db")
+
+        # 强制清除单例缓存并创建新实例
+        DatabaseManager._instance = None
         db = DatabaseManager(db_path)
+
         alerts = db.get_alerts(session_id=session_id)
 
-        return alerts
+        # 转换字段名以匹配前端期望的格式
+        formatted_alerts = []
+        for alert in alerts:
+            formatted_alerts.append({
+                "id": alert.get("id"),
+                "session_id": alert.get("session_id"),
+                "timestamp": alert.get("timestamp"),
+                "metric_type": alert.get("alert_type", "unknown"),
+                "severity": alert.get("severity", "warning"),
+                "description": alert.get("description", ""),
+                "threshold": alert.get("threshold_value"),
+                "current_value": alert.get("current_value"),
+            })
+
+        return formatted_alerts
     except Exception as e:
         logger.error(f"获取会话告警失败: {e}")
         raise HTTPException(status_code=500, detail=str(e))

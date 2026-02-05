@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useMonitoringStore } from '@/store/monitoringStore';
 import { deviceApi } from '@/services/api';
 import type { AppInfo } from '@/types';
@@ -19,6 +20,7 @@ function getAppName(packageName: string): string {
 }
 
 export default function DeviceSelectionPanel() {
+  const { t } = useTranslation();
   const { devices, selectedDevice, selectDevice, isMonitoring, currentSession, batteryInfo, setDevices } = useMonitoringStore();
   const [apps, setApps] = useState<AppInfo[]>([]);
   const [selectedAppPackage, setSelectedAppPackage] = useState<string>('');
@@ -43,7 +45,7 @@ export default function DeviceSelectionPanel() {
       setDevices(uniqueDevices);
     } catch (err) {
       console.error('Failed to load devices:', err);
-      setError('无法加载设备列表，请检查后端服务是否正常运行');
+      setError(t('device.selectDeviceFirst'));
     } finally {
       setLoading(false);
     }
@@ -92,7 +94,7 @@ export default function DeviceSelectionPanel() {
       }
     } catch (err) {
       console.error('Failed to refresh devices:', err);
-      setError('刷新设备列表失败');
+      setError(t('device.refreshDevices'));
     } finally {
       setLoading(false);
     }
@@ -218,7 +220,7 @@ export default function DeviceSelectionPanel() {
           useMonitoringStore.getState().currentSession!.app_name = pendingAppName;
         }
       } catch (error) {
-        console.error('启动监控失败:', error);
+        console.error(t('dialogs.operationFailed'), error);
       } finally {
         setPendingAppPackage(null);
         setPendingAppName('');
@@ -241,9 +243,9 @@ export default function DeviceSelectionPanel() {
 
   const getStatusText = (status: string) => {
     const statusMap: Record<string, string> = {
-      'online': '在线',
-      'offline': '离线',
-      'unauthorized': '未授权',
+      'online': t('device.deviceOnline'),
+      'offline': t('device.deviceOffline'),
+      'unauthorized': t('device.deviceUnauthorized'),
     };
     return statusMap[status] || status;
   };
@@ -264,7 +266,7 @@ export default function DeviceSelectionPanel() {
         color: '#00d4ff',
         padding: '4px 0px',
       }}>
-        监控目标
+        {t('device.currentTarget')}
       </div>
 
       {/* 错误提示 */}
@@ -290,7 +292,7 @@ export default function DeviceSelectionPanel() {
           display: 'block',
           marginBottom: '8px',
         }}>
-          设备
+          {t('device.title')}
         </label>
         {isMonitoring && currentDevice ? (
           // 监控中显示设备信息
@@ -320,7 +322,7 @@ export default function DeviceSelectionPanel() {
               fontSize: '10pt',
             }}
           >
-            <option value="">选择设备...</option>
+            <option value="">{t('device.selectDeviceFirst')}</option>
             {devices.map((device) => (
               <option key={device.device_id} value={device.device_id}>
                 {getPlatformIcon(device.type)} {device.name} ({getStatusText(device.status)})
@@ -339,7 +341,7 @@ export default function DeviceSelectionPanel() {
           display: 'block',
           marginBottom: '8px',
         }}>
-          应用
+          {t('device.app')}
         </label>
         {isMonitoring && currentAppName ? (
           // 监控中显示应用名称
@@ -371,7 +373,7 @@ export default function DeviceSelectionPanel() {
               opacity: !selectedDevice ? 0.6 : 1,
             }}
           >
-            <option value="">选择应用...</option>
+            <option value="">{t('device.selectAppFirst')}</option>
             {apps.map((app) => (
               <option key={app.package_name} value={app.package_name}>
                 {app.name}
@@ -394,21 +396,21 @@ export default function DeviceSelectionPanel() {
           color: '#7dd3fc',
           marginBottom: '8px',
         }}>
-          当前目标
+          {t('device.currentTarget')}
         </div>
         <div style={{
           fontSize: '10pt',
           color: currentDeviceName ? '#e0e6ed' : '#94a3b8',
           padding: '4px 8px',
         }}>
-          设备: {currentDeviceName || '未选择'}
+          {t('device.title')}: {currentDeviceName || t('device.selectDeviceFirst')}
         </div>
         <div style={{
           fontSize: '10pt',
           color: currentAppName ? '#e0e6ed' : '#94a3b8',
           padding: '4px 8px',
         }}>
-          应用: {currentAppName || '未选择'}
+          {t('device.app')}: {currentAppName || t('device.selectAppFirst')}
         </div>
       </div>
 
@@ -429,7 +431,7 @@ export default function DeviceSelectionPanel() {
             cursor: canStart || isMonitoring ? 'pointer' : 'not-allowed',
           }}
         >
-          {isMonitoring ? '停止监控' : '开始监控'}
+          {isMonitoring ? t('device.stopMonitor') : t('device.startMonitor')}
         </button>
         <button
           onClick={handleRefresh}
@@ -446,7 +448,7 @@ export default function DeviceSelectionPanel() {
             opacity: loading ? 0.5 : 1,
           }}
         >
-          {loading ? '刷新中...' : '刷新设备'}
+          {loading ? t('common.loading') : t('device.refreshDevices')}
         </button>
       </div>
 
@@ -459,7 +461,7 @@ export default function DeviceSelectionPanel() {
         borderRadius: '6px',
         textAlign: 'center',
       }}>
-        {isMonitoring ? '● 监控中' : '● 未监控'}
+        {isMonitoring ? `● ${t('menu.monitoring')}` : `● ${t('menu.notMonitoring')}`}
       </div>
 
       {/* === 电池信息 === */}
@@ -475,28 +477,28 @@ export default function DeviceSelectionPanel() {
           color: '#00ff87',
           marginBottom: '8px',
         }}>
-          电池信息
+          {t('device.battery')}
         </div>
         <div style={{
           fontSize: '10pt',
           color: '#94a3b8',
           padding: '4px 8px',
         }}>
-          电量: {batteryInfo.level}%
+          {t('device.batteryLevel')}: {batteryInfo.level}%
         </div>
         <div style={{
           fontSize: '10pt',
           color: '#94a3b8',
           padding: '4px 8px',
         }}>
-          温度: {batteryInfo.temperature}°C
+          {t('device.temperature')}: {batteryInfo.temperature}°C
         </div>
         <div style={{
           fontSize: '10pt',
           color: '#94a3b8',
           padding: '4px 8px',
         }}>
-          容量: {batteryInfo.capacity}
+          {t('device.capacity')}: {batteryInfo.capacity}
         </div>
       </div>
 
@@ -529,7 +531,7 @@ export default function DeviceSelectionPanel() {
               marginBottom: '16px',
               marginTop: 0,
             }}>
-              应用未运行
+              {t('device.appNotRunning')}
             </h3>
             <p style={{
               color: '#e0e6ed',
@@ -537,7 +539,7 @@ export default function DeviceSelectionPanel() {
               lineHeight: '1.6',
               marginBottom: '16px',
             }}>
-              没有找到应用正在运行的进程
+              {t('device.appNotRunningMessage')}
             </p>
             <div style={{
               backgroundColor: '#0a0e17',
@@ -546,7 +548,7 @@ export default function DeviceSelectionPanel() {
               marginBottom: '16px',
             }}>
               <div style={{ color: '#94a3b8', fontSize: '10pt', marginBottom: '4px' }}>
-                应用包名:
+                {t('dialogs.confirmDelete')}:
               </div>
               <div style={{ color: '#e0e6ed', fontSize: '10pt', fontWeight: '500', wordBreak: 'break-all' }}>
                 {pendingAppPackage}
@@ -560,7 +562,7 @@ export default function DeviceSelectionPanel() {
               backgroundColor: 'rgba(255, 180, 0, 0.1)',
               borderRadius: '6px',
             }}>
-              <strong>提示：</strong>请检查应用是否在运行中，然后重试。
+              <strong>{t('dialogs.confirmDelete')}：</strong>{t('device.appNotRunningMessage')}
             </div>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
               <button
@@ -576,7 +578,7 @@ export default function DeviceSelectionPanel() {
                   cursor: 'pointer',
                 }}
               >
-                我知道了
+                {t('common.ok')}
               </button>
             </div>
           </div>
@@ -599,20 +601,20 @@ export default function DeviceSelectionPanel() {
         }}>
           <div style={{
             backgroundColor: '#121824',
-            border: '2px solid #9370DB',  // 紫色边框（区别于未运行警告）
+            border: '2px solid #9370DB',
             borderRadius: '12px',
             padding: '24px',
             maxWidth: '500px',
             boxShadow: '0 8px 32px rgba(147, 112, 219, 0.3)',
           }}>
             <h3 style={{
-              color: '#9370DB',  // 紫色标题
+              color: '#9370DB',
               fontSize: '16pt',
               fontWeight: '700',
               marginBottom: '16px',
               marginTop: 0,
             }}>
-              应用在后台运行
+              {t('device.appInBackground')}
             </h3>
             <p style={{
               color: '#e0e6ed',
@@ -620,7 +622,7 @@ export default function DeviceSelectionPanel() {
               lineHeight: '1.6',
               marginBottom: '16px',
             }}>
-              应用正在后台运行（非前台）
+              {t('device.appInBackgroundMessage')}
             </p>
             <div style={{
               backgroundColor: '#0a0e17',
@@ -629,7 +631,7 @@ export default function DeviceSelectionPanel() {
               marginBottom: '16px',
             }}>
               <div style={{ color: '#94a3b8', fontSize: '10pt', marginBottom: '4px' }}>
-                应用名称:
+                {t('device.app')}:
               </div>
               <div style={{ color: '#e0e6ed', fontSize: '10pt', fontWeight: '500' }}>
                 {pendingAppName}
@@ -649,7 +651,7 @@ export default function DeviceSelectionPanel() {
               backgroundColor: 'rgba(147, 112, 219, 0.1)',
               borderRadius: '6px',
             }}>
-              <strong>提示：</strong>后台运行时可能无法采集到完整的性能数据。
+              <strong>{t('dialogs.confirmDelete')}：</strong>{t('device.appInBackgroundMessage')}
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
               <button
@@ -666,13 +668,13 @@ export default function DeviceSelectionPanel() {
                   cursor: 'pointer',
                 }}
               >
-                取消
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleConfirmStartBackground}
                 style={{
                   flex: 1,
-                  backgroundColor: '#9370DB',  // 紫色按钮
+                  backgroundColor: '#9370DB',
                   color: '#ffffff',
                   border: 'none',
                   borderRadius: '6px',
@@ -682,7 +684,7 @@ export default function DeviceSelectionPanel() {
                   cursor: 'pointer',
                 }}
               >
-                继续监控
+                {t('dialogs.confirm')}
               </button>
             </div>
           </div>

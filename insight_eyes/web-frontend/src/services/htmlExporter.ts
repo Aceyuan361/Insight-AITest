@@ -2,9 +2,11 @@
  * HTML 报告导出服务
  * 生成包含 ECharts 图表的交互式 HTML 报告
  * 完全复刻桌面版 html_exporter.py 的功能
+ * 支持 i18n 国际化
  */
 
 import type { Session, Device } from '@/types';
+import i18n from '@/i18n';
 
 // 后端 API 返回的 MetricsData 类型
 export interface ApiMetricsData {
@@ -102,12 +104,15 @@ function calculateStatistics(metrics: ApiMetricsData[]): Statistics {
 }
 
 /**
- * 构建 ECharts 图表配置
+ * 构建 ECharts 图表配置（支持 i18n）
  */
 function buildChartConfigs(metrics: ApiMetricsData[]): Record<string, any> {
+  const t = i18n.t;
+  const locale = i18n.language === 'en' ? 'en-US' : 'zh-CN';
+
   const timestamps = metrics.map(m => {
     const date = new Date(m.timestamp);
-    return date.toLocaleTimeString('zh-CN', {
+    return date.toLocaleTimeString(locale, {
       hour12: false,
       hour: '2-digit',
       minute: '2-digit',
@@ -121,7 +126,7 @@ function buildChartConfigs(metrics: ApiMetricsData[]): Record<string, any> {
   const fpsData = metrics.map(m => m.fps);
   if (fpsData.some(v => v != null)) {
     charts.fps = buildEchartsConfig(
-      'FPS',
+      t('config.metrics.fps'),
       timestamps,
       fpsData,
       '#ffb400',
@@ -133,7 +138,7 @@ function buildChartConfigs(metrics: ApiMetricsData[]): Record<string, any> {
   const cpuData = metrics.map(m => m.cpu_app);
   if (cpuData.some(v => v != null)) {
     charts.cpu = buildEchartsConfig(
-      'CPU Usage',
+      t('config.metrics.cpu'),
       timestamps,
       cpuData,
       '#00f2ff',
@@ -145,7 +150,7 @@ function buildChartConfigs(metrics: ApiMetricsData[]): Record<string, any> {
   const memData = metrics.map(m => m.memory_pss);
   if (memData.some(v => v != null)) {
     charts.memory = buildEchartsConfig(
-      'Memory Usage',
+      t('config.metrics.memory'),
       timestamps,
       memData,
       '#7000ff',
@@ -157,7 +162,7 @@ function buildChartConfigs(metrics: ApiMetricsData[]): Record<string, any> {
   const upData = metrics.map(m => m.network_up_speed);
   if (upData.some(v => v != null)) {
     charts.network_up = buildEchartsConfig(
-      'Network Upload',
+      t('config.metrics.networkUp'),
       timestamps,
       upData,
       '#00ff87',
@@ -169,7 +174,7 @@ function buildChartConfigs(metrics: ApiMetricsData[]): Record<string, any> {
   const downData = metrics.map(m => m.network_down_speed);
   if (downData.some(v => v != null)) {
     charts.network_down = buildEchartsConfig(
-      'Network Download',
+      t('config.metrics.networkDown'),
       timestamps,
       downData,
       '#0062ff',
@@ -267,28 +272,30 @@ function hexToRgba(hex: string, alpha: number): string {
 }
 
 /**
- * 格式化时长
+ * 格式化时长（支持 i18n）
  */
 function formatDuration(seconds: number): string {
+  const t = i18n.t;
   if (seconds < 60) {
-    return `${Math.floor(seconds)}秒`;
+    return t('sessionList.durationSeconds', { count: Math.floor(seconds) });
   }
   const minutes = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   if (minutes < 60) {
-    return `${minutes}分${secs}秒`;
+    return t('sessionList.durationMinutesSeconds', { minutes, seconds: secs });
   }
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
-  return `${hours}小时${mins}分${secs}秒`;
+  return t('sessionList.durationHoursMinutes', { hours, minutes: mins, seconds: secs });
 }
 
 /**
- * 格式化时间戳
+ * 格式化时间戳（支持 i18n）
  */
 function formatTimestamp(ts: string): string {
   const date = new Date(ts);
-  return date.toLocaleString('zh-CN', {
+  const locale = i18n.language === 'en' ? 'en-US' : 'zh-CN';
+  return date.toLocaleString(locale, {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -308,13 +315,37 @@ export async function exportHtmlReport(
   device: Device | null,
   alerts: any[] = []
 ): Promise<void> {
+  // 0. 根据会话时间过滤数据（与SessionCharts保持一致）
+  const startTime = new Date(session.start_time).getTime();
+  const endTime = session.end_time ? new Date(session.end_time).getTime() : Date.now();
+
+  const filteredMetrics = metrics.filter(item => {
+    const itemTime = new Date(item.timestamp).getTime();
+    return itemTime >= startTime && itemTime <= endTime;
+  });
+
+  console.log('[exportHtmlReport] 原始数据:', metrics.length, '条');
+  console.log('[exportHtmlReport] 过滤后数据:', filteredMetrics.length, '条');
+  console.log('[exportHtmlReport] 时间范围:', new Date(startTime).toLocaleTimeString(), '-', new Date(endTime).toLocaleTimeString());
+
+  // 使用过滤后的数据
+  const data = filteredMetrics;
+
   // 1. 计算统计数据
-  const statistics = calculateStatistics(metrics);
+  const statistics = calculateStatistics(data);
 
   // 2. 构建图表配置
-  const charts = buildChartConfigs(metrics);
+  const charts = buildChartConfigs(data);
 
-  // 3. 准备会话信息
+  // 3. 计算实际监控时长（使用实际数据的时间范围）
+  let duration_seconds = 0;
+  if (data.length > 0) {
+    const firstTime = new Date(data[0].timestamp).getTime();
+    const lastTime = new Date(data[data.length - 1].timestamp).getTime();
+    duration_seconds = Math.floor((lastTime - firstTime) / 1000);
+  }
+
+  // 4. 准备会话信息
   const sessionInfo: SessionInfo = {
     id: session.id,
     device_id: session.device_id,
@@ -323,7 +354,7 @@ export async function exportHtmlReport(
     platform: session.platform,
     start_time: formatTimestamp(session.start_time),
     end_time: session.end_time ? formatTimestamp(session.end_time) : undefined,
-    duration_seconds: Math.floor((Date.now() - new Date(session.start_time).getTime()) / 1000),
+    duration_seconds,
     sample_interval: 1000, // TODO: 从 API 获取
   };
 
@@ -338,15 +369,18 @@ export async function exportHtmlReport(
   }));
 
   // 5. 准备模板上下文
+  const t = i18n.t;
+  const locale = i18n.language === 'en' ? 'en-US' : 'zh-CN';
+
   const context: HtmlExportContext = {
-    title: `性能测试报告 - ${session.app_package}`,
+    title: `${t('help.about.projectName')} ${t('report.title')} - ${session.app_package}`,
     session: sessionInfo,
     device,
     statistics,
     alerts: formattedAlerts,
     charts,
     duration: formatDuration(sessionInfo.duration_seconds),
-    export_time: new Date().toLocaleString('zh-CN'),
+    export_time: new Date().toLocaleString(locale),
   };
 
   // 6. 生成 HTML 内容
@@ -358,13 +392,14 @@ export async function exportHtmlReport(
 }
 
 /**
- * 渲染 HTML 模板（完全复刻桌面版）
+ * 渲染 HTML 模板（支持 i18n）
  */
 function renderHtmlTemplate(context: HtmlExportContext): string {
+  const t = i18n.t;
   const { title, session, device, statistics, alerts, charts, duration, export_time } = context;
 
   return `<!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="${i18n.language}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -481,12 +516,12 @@ function renderHtmlTemplate(context: HtmlExportContext): string {
         <div class="header">
             <h1>${title}</h1>
             <div class="session-info">
-                ${device ? `📱 设备: ${device.name}<br>` : ''}
-                📱 应用: ${session.app_name || session.package_name}<br>
-                ⏰ 时间: ${session.start_time}
+                ${device ? `📱 ${t('sessionList.device')}: ${device.name}<br>` : ''}
+                📱 ${t('sessionList.app')}: ${session.app_name || session.package_name}<br>
+                ⏰ ${t('sessionList.time')}: ${session.start_time}
                 ${session.end_time ? `- ${session.end_time}` : ''}<br>
-                ⏱️ 监控时长: ${duration}<br>
-                📊 采样间隔: ${session.sample_interval}ms
+                ⏱️ ${t('sessionList.duration')}: ${duration}<br>
+                📊 Sample Interval: ${session.sample_interval}ms
             </div>
         </div>
 
@@ -503,7 +538,7 @@ function renderHtmlTemplate(context: HtmlExportContext): string {
         ${alerts.length > 0 ? renderAlertsSection(alerts) : ''}
 
         <div class="footer">
-            导出时间: ${export_time} | Insight Eye v1.0.3
+            ${t('stats.time')}: ${export_time} | ${t('help.about.projectName')} v${t('help.about.versionValue')}
         </div>
     </div>
 
@@ -515,18 +550,19 @@ function renderHtmlTemplate(context: HtmlExportContext): string {
 }
 
 /**
- * 渲染统计区域
+ * 渲染统计区域（支持 i18n）
  */
 function renderStatisticsSection(statistics: Statistics): string {
+  const t = i18n.t;
   return `
         <div class="stats-section">
-            <h2>📊 性能统计</h2>
+            <h2>📊 ${t('stats.title')}</h2>
             <div class="stats-grid">
-                ${statistics.fps ? renderStatCard('FPS', statistics.fps.avg.toFixed(1), `max: ${statistics.fps.max} min: ${statistics.fps.min}`, '#ffb400') : ''}
-                ${statistics.cpu_app ? renderStatCard('CPU (应用)', statistics.cpu_app.avg.toFixed(2) + '%', `max: ${statistics.cpu_app.max}% min: ${statistics.cpu_app.min}%`, '#00f2ff') : ''}
-                ${statistics.memory_pss ? renderStatCard('内存', statistics.memory_pss.avg.toFixed(1) + ' MB', `max: ${statistics.memory_pss.max} MB min: ${statistics.memory_pss.min} MB`, '#7000ff') : ''}
-                ${statistics.network_up ? renderStatCard('网络上行', statistics.network_up.avg.toFixed(2) + ' KB/s', `max: ${statistics.network_up.max} KB/s`, '#00ff87') : ''}
-                ${statistics.network_down ? renderStatCard('网络下行', statistics.network_down.avg.toFixed(2) + ' KB/s', `max: ${statistics.network_down.max} KB/s`, '#0062ff') : ''}
+                ${statistics.fps ? renderStatCard(t('config.metrics.fps'), statistics.fps.avg.toFixed(1), `${t('stats.max')}: ${statistics.fps.max} ${t('stats.min')}: ${statistics.fps.min}`, '#ffb400') : ''}
+                ${statistics.cpu_app ? renderStatCard(t('config.metrics.cpu'), statistics.cpu_app.avg.toFixed(2) + '%', `${t('stats.max')}: ${statistics.cpu_app.max}% ${t('stats.min')}: ${statistics.cpu_app.min}%`, '#00f2ff') : ''}
+                ${statistics.memory_pss ? renderStatCard(t('config.metrics.memory'), statistics.memory_pss.avg.toFixed(1) + ' MB', `${t('stats.max')}: ${statistics.memory_pss.max} MB ${t('stats.min')}: ${statistics.memory_pss.min} MB`, '#7000ff') : ''}
+                ${statistics.network_up ? renderStatCard(t('config.metrics.networkUp'), statistics.network_up.avg.toFixed(2) + ' KB/s', `${t('stats.max')}: ${statistics.network_up.max} KB/s`, '#00ff87') : ''}
+                ${statistics.network_down ? renderStatCard(t('config.metrics.networkDown'), statistics.network_down.avg.toFixed(2) + ' KB/s', `${t('stats.max')}: ${statistics.network_down.max} KB/s`, '#0062ff') : ''}
             </div>
         </div>
     `;
@@ -546,17 +582,18 @@ function renderStatCard(title: string, value: string, detail: string, color: str
 }
 
 /**
- * 渲染告警区域
+ * 渲染告警区域（支持 i18n）
  */
 function renderAlertsSection(alerts: AlertInfo[]): string {
+  const t = i18n.t;
   return `
         <div class="alerts-section">
-            <h2>⚠️ 告警记录 (${alerts.length})</h2>
+            <h2>⚠️ ${t('alerts.title')} (${alerts.length})</h2>
             ${alerts.map(alert => `
                 <div class="alert-item">
                     <strong>${alert.timestamp}</strong>
                     ${alert.description}
-                    ${alert.threshold ? ` (阈值: ${alert.threshold}, 当前: ${alert.current_value})` : ''}
+                    ${alert.threshold ? ` (${t('alerts.severity')}: ${alert.threshold}, ${t('stats.current')}: ${alert.current_value})` : ''}
                 </div>
             `).join('')}
         </div>

@@ -34,8 +34,8 @@ class MetricsRepository:
         """
         metrics = self.db.get_metrics(session_id)
         return [
-            (datetime.fromisoformat(m['timestamp']), m['fps'] or 0)
-            for m in metrics if m['fps'] is not None
+            (m.timestamp, m.fps or 0)
+            for m in metrics if m.fps is not None
         ]
 
     def get_memory_trend(self, session_id: int) -> List[Tuple[datetime, float]]:
@@ -50,8 +50,8 @@ class MetricsRepository:
         """
         metrics = self.db.get_metrics(session_id)
         return [
-            (datetime.fromisoformat(m['timestamp']), m['memory_pss'] or 0)
-            for m in metrics if m['memory_pss'] is not None
+            (m.timestamp, m.memory or 0)
+            for m in metrics if m.memory is not None
         ]
 
     def get_cpu_trend(self, session_id: int) -> List[Tuple[datetime, float, float]]:
@@ -67,11 +67,11 @@ class MetricsRepository:
         metrics = self.db.get_metrics(session_id)
         return [
             (
-                datetime.fromisoformat(m['timestamp']),
-                m['cpu_app'] or 0,
-                m['cpu_system'] or 0
+                m.timestamp,
+                m.cpu or 0,
+                0  # cpu_system not available in current MetricsData
             )
-            for m in metrics if m['cpu_app'] is not None
+            for m in metrics if m.cpu is not None
         ]
 
     def get_network_trend(self, session_id: int) -> List[Tuple[datetime, float, float]]:
@@ -87,11 +87,11 @@ class MetricsRepository:
         metrics = self.db.get_metrics(session_id)
         return [
             (
-                datetime.fromisoformat(m['timestamp']),
-                m['network_up_speed'] or 0,
-                m['network_down_speed'] or 0
+                m.timestamp,
+                m.network_up or 0,
+                m.network_down or 0
             )
-            for m in metrics if m['network_up_speed'] is not None
+            for m in metrics if m.network_up is not None
         ]
 
     def get_battery_trend(self, session_id: int) -> List[Tuple[datetime, float, float]]:
@@ -107,11 +107,11 @@ class MetricsRepository:
         metrics = self.db.get_metrics(session_id)
         return [
             (
-                datetime.fromisoformat(m['timestamp']),
-                m['battery_level'] or 0,
-                m['battery_temp'] or 0
+                m.timestamp,
+                m.battery or 0,
+                m.temperature or 0
             )
-            for m in metrics if m['battery_level'] is not None
+            for m in metrics if m.battery is not None
         ]
 
     def get_statistics(self, session_id: int) -> Dict:
@@ -131,8 +131,8 @@ class MetricsRepository:
 
         stats = {}
 
-        # FPS统计
-        fps_values = [m['fps'] for m in metrics if m['fps'] is not None and m['fps'] > 0]
+        # FPS统计 - 使用dataclass属性访问
+        fps_values = [m.fps for m in metrics if m.fps is not None and m.fps > 0]
         if fps_values:
             stats['fps'] = {
                 'avg': round(statistics.mean(fps_values), 2),
@@ -142,29 +142,29 @@ class MetricsRepository:
                 'stdev': round(statistics.stdev(fps_values), 2) if len(fps_values) > 1 else 0
             }
 
-        # CPU统计
-        cpu_app_values = [m['cpu_app'] for m in metrics if m['cpu_app'] is not None]
-        if cpu_app_values:
+        # CPU统计 - 使用dataclass属性访问
+        cpu_values = [m.cpu for m in metrics if m.cpu is not None]
+        if cpu_values:
             stats['cpu_app'] = {
-                'avg': round(statistics.mean(cpu_app_values), 2),
-                'max': round(max(cpu_app_values), 2),
-                'min': round(min(cpu_app_values), 2),
-                'median': round(statistics.median(cpu_app_values), 2)
+                'avg': round(statistics.mean(cpu_values), 2),
+                'max': round(max(cpu_values), 2),
+                'min': round(min(cpu_values), 2),
+                'median': round(statistics.median(cpu_values), 2)
             }
 
-        # 内存统计
-        memory_pss_values = [m['memory_pss'] for m in metrics if m['memory_pss'] is not None]
-        if memory_pss_values:
+        # 内存统计 - 使用dataclass属性访问
+        memory_values = [m.memory for m in metrics if m.memory is not None]
+        if memory_values:
             stats['memory_pss'] = {
-                'avg': round(statistics.mean(memory_pss_values), 2),
-                'max': round(max(memory_pss_values), 2),
-                'min': round(min(memory_pss_values), 2),
-                'median': round(statistics.median(memory_pss_values), 2)
+                'avg': round(statistics.mean(memory_values), 2),
+                'max': round(max(memory_values), 2),
+                'min': round(min(memory_values), 2),
+                'median': round(statistics.median(memory_values), 2)
             }
 
-        # 网络统计
-        network_up_values = [m['network_up_speed'] for m in metrics if m['network_up_speed'] is not None]
-        network_down_values = [m['network_down_speed'] for m in metrics if m['network_down_speed'] is not None]
+        # 网络统计 - 使用dataclass属性访问
+        network_up_values = [m.network_up for m in metrics if m.network_up is not None]
+        network_down_values = [m.network_down for m in metrics if m.network_down is not None]
 
         if network_up_values:
             stats['network_up'] = {
@@ -178,14 +178,6 @@ class MetricsRepository:
                 'avg': round(statistics.mean(network_down_values), 2),
                 'max': round(max(network_down_values), 2),
                 'total_mb': round(sum(network_down_values) / 1024, 2)
-            }
-
-        # 卡顿统计
-        jank_counts = [m['fps_jank_count'] for m in metrics if m['fps_jank_count'] is not None]
-        if jank_counts:
-            stats['jank'] = {
-                'total': sum(jank_counts),
-                'avg_per_sample': round(statistics.mean(jank_counts), 2)
             }
 
         return stats

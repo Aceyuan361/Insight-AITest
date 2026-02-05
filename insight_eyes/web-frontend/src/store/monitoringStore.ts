@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import type { Device, Session, MetricsData } from '@/types';
 import { api } from '@/services/api';
-import { exportHtmlReport } from '@/services/htmlExporter';
 
 interface BatteryInfo {
   level: string;
@@ -29,6 +28,8 @@ interface MonitoringState {
   alarms: AlarmRecord[];
   enabledMetricIds: string[];  // 启用的指标ID列表
   samplingInterval: number;  // 采样间隔（毫秒）
+  activeTab: 'monitor' | 'report';  // 当前激活的标签页
+  lastStoppedSessionId: number | null;  // 最近停止的会话ID
 
   // Actions
   setDevices: (devices: Device[]) => void;
@@ -42,6 +43,8 @@ interface MonitoringState {
   clearAlarms: () => void;
   setEnabledMetrics: (metricIds: string[]) => void;  // 新增
   setSamplingInterval: (interval: number) => void;  // 新增
+  setActiveTab: (tab: 'monitor' | 'report') => void;  // 新增
+  clearLastStoppedSessionId: () => void;  // 清除最近停止的会话ID
 }
 
 export const useMonitoringStore = create<MonitoringState>((set, get) => ({
@@ -68,6 +71,8 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
   alarms: [],
   enabledMetricIds: ['cpu', 'memory', 'fps', 'network_up', 'network_down'],  // 默认启用前5个
   samplingInterval: 1000,  // 默认1秒
+  activeTab: 'monitor' as 'monitor' | 'report',  // 当前激活的标签页
+  lastStoppedSessionId: null,  // 最近停止的会话ID
 
   // 设置设备列表
   setDevices: (devices) => set({ devices }),
@@ -142,52 +147,35 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
     }
   },
 
-  // 停止监控（带数据统计和 HTML 导出）
-  stopMonitoring: async (autoExport = true) => {
-    const { currentSession, wsConnection, timestamps } = get();
+  // 停止监控（保存数据，跳转到测试报告）
+  stopMonitoring: async () => {
+    const { currentSession, wsConnection } = get();
 
     // 关闭 WebSocket
     if (wsConnection) {
       wsConnection.close();
     }
 
-    // I2: 调用 API 停止监控，只有在成功后才清除状态
+    // 调用 API 停止监控
     if (currentSession) {
       try {
-        // 1. 停止监控
+        // 停止监控并保存数据到数据库
         await api.stopMonitoring(currentSession.id);
 
-        // 2. 获取统计数据和导出 HTML 报告（桌面版功能）
-        if (autoExport && timestamps.length > 0) {
-          try {
-            // 获取会话详情、指标数据和设备信息
-            const [sessionDetail, metrics, device, alerts] = await Promise.all([
-              api.getSession(currentSession.id),
-              api.getSessionMetrics(currentSession.id),
-              api.getDevice(currentSession.device_id).catch(() => null),
-              api.getSessionAlerts(currentSession.id).catch(() => []),
-            ]);
-
-            // 导出 HTML 报告
-            await exportHtmlReport(sessionDetail, metrics, device, alerts);
-            console.log('HTML report exported successfully');
-          } catch (exportError) {
-            console.warn('Failed to export HTML report:', exportError);
-            // 导出失败不影响停止监控流程
-          }
-        }
-
-        // 只有在 API 调用成功后才清除状态
+        // 跳转到测试报告页面（选中当前会话）
         set({
           isMonitoring: false,
           currentSession: null,
           wsConnection: null,
           metricsData: {},
           timestamps: [],
+          activeTab: 'report',  // 切换到测试报告标签页
+          lastStoppedSessionId: currentSession.id,  // 记录刚停止的会话ID
         });
+
+        console.log(`监控已停止，会话ID: ${currentSession.id}`);
       } catch (error) {
         console.error('Error stopping monitoring:', error);
-        // API 调用失败时重新抛出错误，不清除状态
         throw error;
       }
     } else {
@@ -243,4 +231,10 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
 
   // 设置启用的指标列表
   setEnabledMetrics: (metricIds) => set({ enabledMetricIds: metricIds }),
+
+  // 设置当前激活的标签页
+  setActiveTab: (tab) => set({ activeTab: tab }),
+
+  // 清除最近停止的会话ID
+  clearLastStoppedSessionId: () => set({ lastStoppedSessionId: null }),
 }));

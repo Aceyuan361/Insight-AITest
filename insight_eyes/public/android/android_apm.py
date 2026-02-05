@@ -146,10 +146,9 @@ class AndroidAPM:
                 **self.kwargs
             )
             self.fps_monitor.start()
-            # 等待 FPS 后台线程初始化完成
-            logger.info("等待 FPS 后台线程初始化...")
-            time.sleep(1.0)  # 给后台线程一些时间来采集第一批数据
-            logger.info("FPS 后台线程初始化完成")
+            # 性能优化：移除阻塞等待，让 FPS 监控在后台异步初始化
+            # 首次采集可能返回默认值(0)，但后续采集会获取真实数据
+            logger.info("FPS 监控已在后台启动，异步初始化中...")
 
         # 重置网络流量统计
         self.network_collector.reset(self.package_name)
@@ -222,35 +221,20 @@ class AndroidAPM:
             self.fps_monitor.start()
             # 等待初始数据积累（只等待一次）
             logger.info("[collectFps] 等待 FPS 初始数据积累...")
-            time.sleep(2.0)  # 增加到2秒，确保计算线程有足够时间处理第一批数据
+            time.sleep(1.0)  # 减少到1秒，避免首次采集延迟过长
             logger.info("[collectFps] FPS 初始数据积累完成")
 
         # 从 fpscollector 的内部状态读取最新数据（不停止监控）
         try:
-            logger.info(f"[collectFps] 准备从缓存读取 FPS 数据...")
-            # 轮询等待 FPS 数据准备好（最多等待 2 秒）
-            max_wait = 2.0
-            wait_interval = 0.1
-            total_wait = 0.0
-
-            while total_wait < max_wait:
-                fps_data = self.fps_monitor.fpscollector.get_latest_fps_data()
-                current_fps = fps_data.get('fps', 0) if fps_data else 0
-                logger.info(f"[collectFps] 轮询读取 FPS ({total_wait:.1f}s): fps={current_fps}")
-                if fps_data and current_fps > 0:
-                    logger.info(f"[collectFps] ✓ 成功从缓存读取 FPS: {fps_data.get('fps', 0)}")
-                    return fps_data
-                # 数据还没准备好，继续等待
-                time.sleep(wait_interval)
-                total_wait += wait_interval
-
-            # 超时后返回最后一次读取的数据（可能是 0）
+            # 直接读取缓存数据，不等待（避免阻塞数据采集循环）
             fps_data = self.fps_monitor.fpscollector.get_latest_fps_data()
             if fps_data:
-                logger.warning(f"[collectFps] FPS 数据等待超时，返回当前值: fps={fps_data.get('fps', 0)}")
+                current_fps = fps_data.get('fps', 0)
+                logger.debug(f"[collectFps] 从缓存读取 FPS: {current_fps}")
                 return fps_data
             else:
-                logger.warning("[collectFps] FPS 缓存无数据，返回默认值")
+                # 缓存无数据，返回默认值（不阻塞等待）
+                logger.debug("[collectFps] FPS 缓存暂无数据，返回默认值")
                 return {
                     'fps': 0,
                     'jank': 0,

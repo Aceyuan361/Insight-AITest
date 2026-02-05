@@ -3,7 +3,8 @@
  * 2×3 网格布局，最多显示 6 个图表
  * 按优先级排序: cpu > fps > memory > network_down > network_up > gpu
  */
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import * as echarts from 'echarts';
 import { api } from '@/services/api';
 import type { MetricsData } from '@/services/api';
@@ -38,12 +39,13 @@ const METRIC_PRIORITY: (keyof MetricsData)[] = [
 ];
 
 export default function SessionCharts({ sessionId }: SessionChartsProps) {
+  const { t } = useTranslation();
   const [metrics, setMetrics] = useState<MetricsData[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // 图表容器引用
-  const chartRefs = useState<Record<string, HTMLDivElement>>({} as Record<string, HTMLDivElement>)[0];
-  const chartInstances = useState<Record<string, echarts.ECharts>>({} as Record<string, echarts.ECharts>)[0];
+  // 图表容器引用 - 使用 useRef 而不是 useState
+  const chartRefs = useRef<Record<string, HTMLDivElement>>({} as Record<string, HTMLDivElement>);
+  const chartInstances = useRef<Record<string, echarts.ECharts>>({} as Record<string, echarts.ECharts>);
 
   // 加载指标数据
   useEffect(() => {
@@ -55,9 +57,31 @@ export default function SessionCharts({ sessionId }: SessionChartsProps) {
     const loadData = async () => {
       setLoading(true);
       try {
-        // 获取足够多的数据点用于显示完整趋势
-        const data = await api.getSessionMetrics(sessionId, 10000);
-        setMetrics(data);
+        // 并行获取会话信息和指标数据
+        const [session, data] = await Promise.all([
+          api.getSession(sessionId),
+          api.getSessionMetrics(sessionId, 10000)
+        ]);
+
+        console.log('[SessionCharts] 加载原始数据:', data.length, '条');
+        console.log('[SessionCharts] 会话时间:', session.start_time, '-', session.end_time);
+
+        // 后端已经返回正确的字段名（cpu_app, memory_pss, network_up_speed, network_down_speed）
+        // 不需要字段名映射
+
+        // 根据会话时间过滤数据，只显示监控期间的数据
+        const startTime = new Date(session.start_time).getTime();
+        const endTime = session.end_time ? new Date(session.end_time).getTime() : Date.now();
+
+        const filteredData = data.filter(item => {
+          const itemTime = new Date(item.timestamp).getTime();
+          return itemTime >= startTime && itemTime <= endTime;
+        });
+
+        console.log('[SessionCharts] 过滤后数据:', filteredData.length, '条');
+        console.log('[SessionCharts] 时间范围:', new Date(startTime).toLocaleTimeString(), '-', new Date(endTime).toLocaleTimeString());
+
+        setMetrics(filteredData);
       } catch (error) {
         console.error('Failed to load session metrics:', error);
       } finally {
@@ -68,16 +92,37 @@ export default function SessionCharts({ sessionId }: SessionChartsProps) {
     loadData();
   }, [sessionId]);
 
-  // 清理图表实例
+  // 清理图表实例（组件卸载时）
   useEffect(() => {
     return () => {
-      Object.values(chartInstances).forEach(chart => chart.dispose());
+      Object.values(chartInstances.current).forEach(chart => {
+        if (chart && typeof chart.dispose === 'function') {
+          chart.dispose();
+        }
+      });
+      chartInstances.current = {};
     };
   }, []);
 
+  // 当 sessionId 变化时清理旧的图表实例
+  useEffect(() => {
+    console.log('[SessionCharts] sessionId 变化，清理旧图表:', sessionId);
+    // 清理所有旧的图表实例
+    Object.values(chartInstances.current).forEach(chart => {
+      if (chart && typeof chart.dispose === 'function') {
+        chart.dispose();
+      }
+    });
+    chartInstances.current = {};
+    chartRefs.current = {};
+  }, [sessionId]);
+
   // 分析哪些指标有数据
   const availableMetrics = useMemo(() => {
-    if (metrics.length === 0) return [];
+    if (metrics.length === 0) {
+      console.log('[SessionCharts] availableMetrics: 无数据');
+      return [];
+    }
 
     const available = new Set<keyof MetricsData>();
     for (const metric of metrics) {
@@ -88,11 +133,37 @@ export default function SessionCharts({ sessionId }: SessionChartsProps) {
       }
     }
     // 按优先级排序
-    return METRIC_PRIORITY.filter(k => available.has(k));
+    const result = METRIC_PRIORITY.filter(k => available.has(k));
+    console.log('[SessionCharts] availableMetrics:', result);
+    console.log('[SessionCharts] 可用指标数量:', result.length);
+    return result;
   }, [metrics]);
 
   // 最多显示 6 个图表
   const displayMetrics = availableMetrics.slice(0, 6);
+
+  // 计算每个指标的统计数据（max, min, avg）
+  const metricsStatistics = useMemo(() => {
+    const stats: Record<string, { max: number; min: number; avg: number } | null> = {};
+
+    for (const metricKey of displayMetrics) {
+      const values = metrics
+        .map(m => m[metricKey] as number)
+        .filter(v => v !== null && v !== undefined && !isNaN(v));
+
+      if (values.length > 0) {
+        stats[metricKey] = {
+          max: Math.max(...values),
+          min: Math.min(...values),
+          avg: values.reduce((a, b) => a + b, 0) / values.length,
+        };
+      } else {
+        stats[metricKey] = null;
+      }
+    }
+
+    return stats;
+  }, [metrics, displayMetrics]);
 
   // 格式化时间戳（HH:mm:ss）
   const formatTime = (date: Date): string => {
@@ -106,109 +177,148 @@ export default function SessionCharts({ sessionId }: SessionChartsProps) {
 
   // 初始化和更新图表
   useEffect(() => {
-    if (metrics.length === 0 || displayMetrics.length === 0) return;
+    console.log('[SessionCharts] 图表 useEffect 触发');
+    console.log('[SessionCharts] metrics.length:', metrics.length);
+    console.log('[SessionCharts] displayMetrics:', displayMetrics);
 
-    // 为每个指标创建/更新图表
-    displayMetrics.forEach((metricKey) => {
-      const config = CHART_CONFIGS.find(c => c.metricId === metricKey);
-      if (!config) return;
+    if (metrics.length === 0 || displayMetrics.length === 0) {
+      console.log('[SessionCharts] 跳过图表初始化：无数据或无可显示指标');
+      return;
+    }
 
-      const chartId = `chart-${metricKey}`;
-      const container = chartRefs[chartId];
-      if (!container) return;
+    // 使用 setTimeout 确保DOM已经渲染
+    const timer = setTimeout(() => {
+      console.log('[SessionCharts] 开始创建/更新图表，指标数量:', displayMetrics.length);
 
-      // 提取数据
-      const timestamps = metrics.map(m => {
-        const date = new Date(m.timestamp);
-        return formatTime(date);
-      });
+      // 为每个指标创建/更新图表
+      displayMetrics.forEach((metricKey, index) => {
+        const config = CHART_CONFIGS.find(c => c.metricId === metricKey);
+        if (!config) {
+          console.warn('[SessionCharts] 未找到配置:', metricKey);
+          return;
+        }
 
-      const data = metrics.map(m => m[metricKey] as number);
+        const chartId = `chart-${metricKey}`;
+        const container = chartRefs.current[chartId];
 
-      // 过滤空值
-      const cleanData = data.filter(v => v !== null && v !== undefined && !isNaN(v));
-      if (cleanData.length === 0) return;
+        console.log(`[SessionCharts] 图表 ${index} [${chartId}]:`, {
+          hasContainer: !!container,
+          metricKey,
+          config: config.title
+        });
 
-      // 创建或获取图表实例
-      let chart = chartInstances[chartId];
-      if (!chart) {
-        chart = echarts.init(container);
-        chartInstances[chartId] = chart;
+        if (!container) {
+          console.warn(`[SessionCharts] 容器未找到: ${chartId}`);
+          return;
+        }
 
-        // 添加 resize 监听
-        const handleResize = () => chart?.resize();
-        window.addEventListener('resize', handleResize);
-        container.addEventListener('resize', handleResize);
-      }
+        // 提取数据
+        const timestamps = metrics.map(m => {
+          const date = new Date(m.timestamp);
+          return formatTime(date);
+        });
 
-      // 构建 ECharts 配置（完全复刻桌面版样式）
-      const option: echarts.EChartsOption = {
-        title: {
-          text: config.title,
-          left: 'center',
-          top: 10,
-          textStyle: {
-            color: '#e0e6ed',
-            fontSize: 14,
-          },
-        },
-        grid: {
-          top: 40,
-          left: 60,
-          right: 30,
-          bottom: 30,
-        },
-        tooltip: {
-          trigger: 'axis',
-          axisPointer: {
-            type: 'line',
-            lineStyle: { color: '#444', type: 'dashed' },
-          },
-        },
-        xAxis: {
-          type: 'category',
-          data: timestamps,
-          axisLabel: {
-            color: '#888888',
-            fontSize: 11,
-          },
-          axisLine: { lineStyle: { color: '#444' } },
-        },
-        yAxis: {
-          type: 'value',
-          min: config.yMin,
-          max: config.yMax,
-          axisLabel: {
-            color: '#888888',
-            formatter: `{value} ${config.unit}`,
-          },
-          splitLine: {
-            lineStyle: { color: 'rgba(255, 255, 255, 0.08)' },
-          },
-          axisLine: { lineStyle: { color: '#444' } },
-        },
-        series: [{
-          type: 'line',
-          data: data,
-          smooth: true,
-          symbol: 'none',
-          lineStyle: { color: config.color, width: 2 },
-          areaStyle: {
-            color: {
-              type: 'linear',
-              x: 0, y: 0, x2: 0, y2: 1,
-              colorStops: [
-                { offset: 0, color: hexToRgba(config.color, 0.35) },
-                { offset: 1, color: hexToRgba(config.color, 0) },
-              ],
+        const data = metrics.map(m => m[metricKey] as number);
+
+        console.log(`[SessionCharts] ${metricKey} 数据点数量:`, data.length);
+        console.log(`[SessionCharts] ${metricKey} 数据样本:`, data.slice(0, 3));
+
+        // 过滤空值
+        const cleanData = data.filter(v => v !== null && v !== undefined && !isNaN(v));
+        if (cleanData.length === 0) {
+          console.warn(`[SessionCharts] ${metricKey} 无有效数据`);
+          return;
+        }
+
+        // 创建或获取图表实例
+        let chart = chartInstances.current[chartId];
+        if (!chart) {
+          console.log(`[SessionCharts] 创建新图表实例: ${chartId}`);
+          chart = echarts.init(container);
+          chartInstances.current[chartId] = chart;
+
+          // 添加 resize 监听
+          const handleResize = () => chart?.resize();
+          window.addEventListener('resize', handleResize);
+          container.addEventListener('resize', handleResize);
+        } else {
+          console.log(`[SessionCharts] 使用已存在的图表实例: ${chartId}`);
+        }
+
+        // 构建 ECharts 配置（完全复刻桌面版样式）
+        const option: echarts.EChartsOption = {
+          title: {
+            text: config.title,
+            left: 12,
+            top: 10,
+            textStyle: {
+              color: '#e0e6ed',
+              fontSize: 14,
             },
           },
-        }],
-      };
+          grid: {
+            top: 40,
+            left: 60,
+            right: 30,
+            bottom: 30,
+          },
+          tooltip: {
+            trigger: 'axis',
+            axisPointer: {
+              type: 'line',
+              lineStyle: { color: '#444', type: 'dashed' },
+            },
+          },
+          xAxis: {
+            type: 'category',
+            data: timestamps,
+            axisLabel: {
+              color: '#888888',
+              fontSize: 11,
+            },
+            axisLine: { lineStyle: { color: '#444' } },
+          },
+          yAxis: {
+            type: 'value',
+            min: config.yMin,
+            max: config.yMax,
+            axisLabel: {
+              color: '#888888',
+              formatter: `{value} ${config.unit}`,
+            },
+            splitLine: {
+              lineStyle: { color: 'rgba(255, 255, 255, 0.08)' },
+            },
+            axisLine: { lineStyle: { color: '#444' } },
+          },
+          series: [{
+            type: 'line',
+            data: data,
+            smooth: true,
+            symbol: 'none',
+            lineStyle: { color: config.color, width: 2 },
+            areaStyle: {
+              color: {
+                type: 'linear',
+                x: 0, y: 0, x2: 0, y2: 1,
+                colorStops: [
+                  { offset: 0, color: hexToRgba(config.color, 0.35) },
+                  { offset: 1, color: hexToRgba(config.color, 0) },
+                ],
+              },
+            },
+          }],
+        };
 
-      chart.setOption(option, true);
-    });
-  }, [metrics, displayMetrics, chartRefs, chartInstances]);
+        chart.setOption(option, true);
+        console.log(`[SessionCharts] ${chartId} 图表配置已应用`);
+      });
+
+      console.log('[SessionCharts] 所有图表创建/更新完成');
+    }, 100); // 延迟100ms确保DOM渲染完成
+
+    return () => clearTimeout(timer);
+  }, [metrics, displayMetrics]); // 移除 chartRefs 和 chartInstances 依赖
 
   // 辅助函数：十六进制颜色转 rgba
   function hexToRgba(hex: string, alpha: number): string {
@@ -221,7 +331,7 @@ export default function SessionCharts({ sessionId }: SessionChartsProps) {
   if (!sessionId) {
     return (
       <div className="flex items-center justify-center h-full bg-dark-card rounded-lg border border-gray-800">
-        <p className="text-text-secondary">请选择一个会话查看图表</p>
+        <p className="text-text-secondary">{t('sessionList.selectSession')}</p>
       </div>
     );
   }
@@ -229,7 +339,7 @@ export default function SessionCharts({ sessionId }: SessionChartsProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full bg-dark-card rounded-lg border border-gray-800">
-        <p className="text-text-secondary">加载图表数据中...</p>
+        <p className="text-text-secondary">{t('sessionList.loadingCharts')}</p>
       </div>
     );
   }
@@ -237,7 +347,7 @@ export default function SessionCharts({ sessionId }: SessionChartsProps) {
   if (metrics.length === 0) {
     return (
       <div className="flex items-center justify-center h-full bg-dark-card rounded-lg border border-gray-800">
-        <p className="text-text-secondary">该会话暂无指标数据</p>
+        <p className="text-text-secondary">{t('sessionList.noData')}</p>
       </div>
     );
   }
@@ -245,35 +355,70 @@ export default function SessionCharts({ sessionId }: SessionChartsProps) {
   if (displayMetrics.length === 0) {
     return (
       <div className="flex items-center justify-center h-full bg-dark-card rounded-lg border border-gray-800">
-        <p className="text-text-secondary">暂无可显示的图表数据</p>
+        <p className="text-text-secondary">{t('sessionList.noDisplayableData')}</p>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4 p-4 bg-dark-card rounded-lg border border-gray-800">
-      {displayMetrics.map((metricKey) => {
-        const config = CHART_CONFIGS.find(c => c.metricId === metricKey);
-        if (!config) return null;
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', height: '100%' }}>
+      {/* 2列 × 3行布局 */}
+      {displayMetrics.length > 0 && (
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, 1fr)',
+          gridTemplateRows: 'repeat(3, 1fr)',
+          gap: '8px',
+          flex: 1,
+          minHeight: 0,
+        }}>
+          {displayMetrics.slice(0, 6).map((metricKey) => {
+            const config = CHART_CONFIGS.find(c => c.metricId === metricKey);
+            if (!config) return null;
 
-        const chartId = `chart-${metricKey}`;
+            const chartId = `chart-${metricKey}`;
 
-        return (
-          <div
-            key={metricKey}
-            className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden"
-            style={{ minHeight: '200px' }}
-          >
-            <div
-              ref={(el) => {
-                if (el) chartRefs[chartId] = el;
-              }}
-              className="w-full"
-              style={{ height: '200px' }}
-            />
-          </div>
-        );
-      })}
+            return (
+              <div
+                key={metricKey}
+                style={{
+                  backgroundColor: '#121824',
+                  border: '1px solid #1a1f2e',
+                  borderRadius: '8px',
+                  overflow: 'hidden',
+                  minHeight: '200px',
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  position: 'relative',
+                }}
+              >
+                {/* 统计信息 - 右上角 */}
+                {metricsStatistics[metricKey] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: 8,
+                    right: 8,
+                    fontSize: '11px',
+                    color: config.color,
+                    fontFamily: "'Roboto Mono', monospace",
+                    opacity: 0.8,
+                    zIndex: 10,
+                  }}>
+                    Max: {metricsStatistics[metricKey]!.max.toFixed(config.decimals)}{config.unit} | Min: {metricsStatistics[metricKey]!.min.toFixed(config.decimals)}{config.unit} | Avg: {metricsStatistics[metricKey]!.avg.toFixed(config.decimals)}{config.unit}
+                  </div>
+                )}
+                <div
+                  ref={(el) => {
+                    if (el) chartRefs.current[chartId] = el;
+                  }}
+                  style={{ width: '100%', flex: 1, minHeight: 0 }}
+                />
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

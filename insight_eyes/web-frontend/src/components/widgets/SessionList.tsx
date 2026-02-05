@@ -7,6 +7,7 @@
  * 支持多选和批量删除
  */
 import { useEffect, useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { api } from '@/services/api';
 import type { Session, Device } from '@/types';
 
@@ -23,6 +24,7 @@ export default function SessionList({
   platformFilter = 'all',
   searchText = '',
 }: SessionListProps) {
+  const { t } = useTranslation();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [devices, setDevices] = useState<Record<string, Device>>({});
   const [loading, setLoading] = useState(false);
@@ -180,11 +182,11 @@ export default function SessionList({
   const handleBatchDelete = async () => {
     const ids = Array.from(selectedIds);
     if (ids.length === 0) {
-      alert('请先选择要删除的会话');
+      alert(t('sessionList.selectSessionsFirst'));
       return;
     }
 
-    if (!confirm(`确定要删除选中的 ${ids.length} 个会话吗？\n\n此操作不可撤销，将删除这些会话的所有数据和告警记录。`)) {
+    if (!confirm(t('sessionList.confirmBatchDelete', { count: ids.length }))) {
       return;
     }
 
@@ -206,13 +208,13 @@ export default function SessionList({
 
       // 显示结果
       if (failed === 0) {
-        alert(`成功删除 ${success} 个会话`);
+        alert(t('sessionList.deleteSuccess', { count: success }));
       } else {
-        alert(`批量删除完成\n成功: ${success} 个\n失败: ${failed} 个\n\n失败的会话ID: ${failed_ids.join(', ')}`);
+        alert(t('sessionList.deletePartialSuccess', { success, failed, ids: failed_ids.join(', ') }));
       }
     } catch (error) {
       console.error('Failed to batch delete sessions:', error);
-      alert('批量删除会话失败: ' + (error as Error).message);
+      alert(t('sessionList.deleteFailed') + ': ' + (error as Error).message);
     }
   };
 
@@ -258,9 +260,9 @@ export default function SessionList({
             }}
           />
         </div>
-        <div className="col-span-1">序号</div>
-        <div className="col-span-5">时间</div>
-        <div className="col-span-5">应用名称</div>
+        <div className="col-span-1">{t('report.table.index')}</div>
+        <div className="col-span-5">{t('report.table.time')}</div>
+        <div className="col-span-5">{t('report.table.appName')}</div>
       </div>
 
       {/* 批量操作栏 */}
@@ -270,7 +272,7 @@ export default function SessionList({
           style={{ borderColor: '#1a1f2e' }}
         >
           <span className="text-xs" style={{ color: '#94a3b8' }}>
-            已选 {selectedIds.size} 项
+            {t('report.selectedCount', { count: selectedIds.size })}
           </span>
           <button
             onClick={handleBatchDelete}
@@ -286,7 +288,7 @@ export default function SessionList({
               e.currentTarget.style.backgroundColor = '#ef4444';
             }}
           >
-            批量删除
+            {t('report.batchDelete')}
           </button>
         </div>
       )}
@@ -295,11 +297,11 @@ export default function SessionList({
       <div className="flex-1 overflow-y-auto">
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <span style={{ color: '#64748b', fontSize: '12px' }}>加载中...</span>
+            <span style={{ color: '#64748b', fontSize: '12px' }}>{t('common.loading')}</span>
           </div>
         ) : filteredSessions.length === 0 ? (
           <div className="flex items-center justify-center py-8">
-            <span style={{ color: '#64748b', fontSize: '12px' }}>暂无会话记录</span>
+            <span style={{ color: '#64748b', fontSize: '12px' }}>{t('report.noSessions')}</span>
           </div>
         ) : (
           <div>

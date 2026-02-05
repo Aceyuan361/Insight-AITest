@@ -19,8 +19,10 @@
     "axios": "^1.13.4",
     "dayjs": "^1.11.19",
     "echarts": "^6.0.0",
+    "i18next": "^25.8.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-i18next": "^16.5.4",
     "zustand": "^5.0.10"
   },
   "devDependencies": {

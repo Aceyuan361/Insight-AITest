@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useMonitoringStore } from '@/store/monitoringStore';
 
 export default function StatusBar() {
+  const { t } = useTranslation();
   const { isMonitoring, currentSession } = useMonitoringStore();
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -24,13 +26,13 @@ export default function StatusBar() {
               <>
                 <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                 <span className="ml-2 text-text-secondary">
-                  监控中 - Session #{currentSession?.id}
+                  {t('menu.monitoring')} - Session #{currentSession?.id}
                 </span>
               </>
             ) : (
               <>
                 <span className="w-2 h-2 bg-gray-500 rounded-full"></span>
-                <span className="ml-2 text-text-secondary">未监控</span>
+                <span className="ml-2 text-text-secondary">{t('menu.notMonitoring')}</span>
               </>
             )}
           </div>
@@ -44,7 +46,7 @@ export default function StatusBar() {
                 <span>{currentSession.app_package}</span>
               </>
             ) : (
-              <span>未选择设备</span>
+              <span>{t('statusBar.noDevice')}</span>
             )}
           </div>
 

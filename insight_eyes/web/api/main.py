@@ -10,10 +10,16 @@ from logzero import logger
 import sys
 import os
 
-# 添加项目根目录到路径
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..'))
+# 添加项目路径
+# 确保 worktree 目录的代码优先，避免使用根目录的旧版本
+worktree_insight_eyes = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..'))  # .worktrees/1.0.3
+if worktree_insight_eyes not in sys.path:
+    sys.path.insert(0, worktree_insight_eyes)
+
+# 同时添加根目录作为备用
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../..'))  # insight_eye-1.0.0
 if project_root not in sys.path:
-    sys.path.insert(0, project_root)
+    sys.path.append(project_root)
 
 # API 路由
 from insight_eyes.web.api.devices import router as devices_router
@@ -80,4 +86,11 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Insight-Eye Web API Server")
+    parser.add_argument("--port", type=int, default=8000, help="Port to run the server on (default: 8000)")
+    parser.add_argument("--host", type=str, default="0.0.0.0", help="Host to bind to (default: 0.0.0.0)")
+    args = parser.parse_args()
+
+    uvicorn.run(app, host=args.host, port=args.port)

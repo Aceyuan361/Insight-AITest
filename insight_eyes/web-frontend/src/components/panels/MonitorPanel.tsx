@@ -1,8 +1,10 @@
 import { useMonitoringStore } from '@/store/monitoringStore';
+import { useTranslation } from 'react-i18next';
 import { ALL_METRIC_CARDS } from '@/config/metricCards';
 import NeonChartCard from '@/components/charts/NeonChartCard';
 
 export default function MonitorPanel() {
+  const { t } = useTranslation();
   const { metricsData, timestamps, isMonitoring, currentSession, enabledMetricIds } = useMonitoringStore();
 
   // 获取应用名称用于标题显示
@@ -14,25 +16,11 @@ export default function MonitorPanel() {
     .sort((a, b) => a.priority - b.priority);
 
   return (
-    <div className="space-y-6">
-      {/* 主标题栏 - 始终显示，与桌面版一致 */}
-      <div
-        className="text-center mb-6"
-        style={{
-          fontFamily: '"Microsoft YaHei UI", "Segoe UI", Arial, sans-serif',
-          fontSize: '16px',
-          fontWeight: '600',
-          color: '#ffffff',
-          textTransform: 'uppercase',
-        }}
-      >
-        {isMonitoring && appName ? `MONITORING: ${appName}` : 'REAL-TIME SYSTEM MONITOR'}
-      </div>
-
-      {/* 图表网格 - 始终显示5个卡片，未监控时显示空状态 */}
+    <div>
+      {/* 图表网格 - 直接置顶 */}
       <div>
         {/* 第一行：2个卡片 (CPU, Memory) */}
-        <div className="grid grid-cols-2" style={{ columnGap: '15px', marginBottom: '12px' }}>
+        <div className="grid grid-cols-2" style={{ columnGap: '8px', marginBottom: '4px' }}>
           {enabledCards.slice(0, 2).map((card) => (
             <NeonChartCard
               key={card.metricId}
@@ -44,7 +32,7 @@ export default function MonitorPanel() {
         </div>
 
         {/* 第二行：2个卡片 (FPS, Network Upload) */}
-        <div className="grid grid-cols-2" style={{ columnGap: '15px', marginBottom: '12px' }}>
+        <div className="grid grid-cols-2" style={{ columnGap: '8px', marginBottom: '4px' }}>
           {enabledCards.slice(2, 4).map((card) => (
             <NeonChartCard
               key={card.metricId}
@@ -57,7 +45,7 @@ export default function MonitorPanel() {
 
         {/* 第三行：第5个卡片 (Network Download) */}
         {enabledCards.length >= 5 && (
-          <div className="grid grid-cols-2" style={{ columnGap: '15px' }}>
+          <div className="grid grid-cols-2" style={{ columnGap: '8px' }}>
             {enabledCards.slice(4, 5).map((card) => (
               <NeonChartCard
                 key={card.metricId}
@@ -70,11 +58,11 @@ export default function MonitorPanel() {
         )}
       </div>
 
-      {/* 未监控时的提示 - 移到图表下方 */}
+      {/* 未监控时的提示 */}
       {!isMonitoring && (
-        <div className="text-center py-4 text-text-secondary">
-          <p className="text-sm" style={{ color: '#64748b' }}>
-            选择设备并点击"开始监控"开始性能监控
+        <div className="text-center text-text-secondary" style={{ paddingTop: '4px' }}>
+          <p className="text-xs" style={{ color: '#64748b', fontSize: '10px', margin: 0 }}>
+            {t('device.startMonitorHint')}
           </p>
         </div>
       )}

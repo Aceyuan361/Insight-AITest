@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useMonitoringStore } from '@/store/monitoringStore';
 
 export default function MonitoringControls() {
+  const { t } = useTranslation();
   const {
     selectedDevice,
     isMonitoring,
@@ -15,7 +17,7 @@ export default function MonitoringControls() {
 
   const handleStart = async () => {
     if (!selectedDevice) {
-      alert('请先选择设备');
+      alert(t('device.selectDeviceFirst'));
       return;
     }
 
@@ -23,7 +25,7 @@ export default function MonitoringControls() {
     try {
       await startMonitoring(selectedDevice, appPackage, 'android', samplingInterval);
     } catch (error) {
-      alert('启动监控失败: ' + error);
+      alert(t('device.startMonitorFailed') + ': ' + error);
     } finally {
       setLoading(false);
     }
@@ -34,7 +36,7 @@ export default function MonitoringControls() {
     try {
       await stopMonitoring();
     } catch (error) {
-      alert('停止监控失败: ' + error);
+      alert(t('device.stopMonitorFailed') + ': ' + error);
     } finally {
       setLoading(false);
     }
@@ -47,7 +49,7 @@ export default function MonitoringControls() {
           type="text"
           value={appPackage}
           onChange={(e) => setAppPackage(e.target.value)}
-          placeholder="应用包名 (如: com.example.app)"
+          placeholder={t('device.appPackagePlaceholder')}
           disabled={isMonitoring}
           className="w-full px-4 py-2 border rounded-lg focus:outline-none disabled:opacity-50 transition-colors"
           style={{
@@ -71,7 +73,7 @@ export default function MonitoringControls() {
               color: '#0a0e17',
             }}
           >
-            {loading ? '启动中...' : '开始监控'}
+            {loading ? t('device.starting') : t('device.startMonitor')}
           </button>
         ) : (
           <button
@@ -79,7 +81,7 @@ export default function MonitoringControls() {
             disabled={loading}
             className="px-6 py-2 bg-red-500 text-white font-bold rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
           >
-            {loading ? '停止中...' : '停止监控'}
+            {loading ? t('device.stopping') : t('device.stopMonitor')}
           </button>
         )}
       </div>

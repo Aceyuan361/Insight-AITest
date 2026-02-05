@@ -2,10 +2,22 @@
  * 告警记录列表组件
  * 显示格式：[时间] [严重程度] 内容
  */
+import { useTranslation } from 'react-i18next';
 import { useMonitoringStore } from '@/store/monitoringStore';
 
 export default function AlarmRecords() {
+  const { t } = useTranslation();
   const { alarms } = useMonitoringStore();
+
+  // 获取告警严重程度的翻译
+  const getSeverityLabel = (level: string): string => {
+    const severityMap: Record<string, string> = {
+      '严重': t('alerts.severityCritical'),
+      '警告': t('alerts.severityWarning'),
+      '信息': t('alerts.severityInfo'),
+    };
+    return severityMap[level] || level;
+  };
 
   return (
     <div>
@@ -15,7 +27,7 @@ export default function AlarmRecords() {
         color: '#7dd3fc',
         marginBottom: '12px',
       }}>
-        告警记录
+        {t('alerts.title')}
       </div>
       <div style={{
         backgroundColor: '#121824',
@@ -32,7 +44,7 @@ export default function AlarmRecords() {
             textAlign: 'center',
             padding: '12px',
           }}>
-            暂无告警记录
+            {t('alerts.noAlerts')}
           </div>
         ) : (
           alarms.map((alarm) => (
@@ -51,7 +63,7 @@ export default function AlarmRecords() {
                 color: alarm.level === '严重' ? '#ef4444' : '#f59e0b',
                 marginLeft: '8px',
               }}>
-                [{alarm.level}]
+                [{getSeverityLabel(alarm.level)}]
               </span>
               <span style={{ marginLeft: '8px' }}>{alarm.content}</span>
             </div>

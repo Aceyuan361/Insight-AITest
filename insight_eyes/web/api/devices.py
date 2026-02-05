@@ -81,14 +81,19 @@ async def get_device_cache() -> DeviceCache:
     """获取设备缓存实例（单例模式）
 
     使用异步锁确保只创建一个实例
+
+    性能优化：延长 TTL 到 5 分钟（300秒），减少频繁的设备扫描
+    - 设备连接状态通常不会频繁变化
+    - 用户可手动调用 /api/devices/refresh 强制刷新
+    - 大幅降低 API 响应延迟（从约1秒降至<50ms）
     """
     global _device_cache_instance
 
     if _device_cache_instance is None:
         async with _cache_init_lock:
             if _device_cache_instance is None:
-                _device_cache_instance = DeviceCache(ttl=30)
-                logger.debug("创建设备缓存单例")
+                _device_cache_instance = DeviceCache(ttl=300)  # 5分钟缓存
+                logger.debug("创建设备缓存单例 (TTL=300s)")
 
     return _device_cache_instance
 
