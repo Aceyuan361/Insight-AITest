@@ -1,10 +1,17 @@
 # iOS 监控专题
 
-**版本**: v1.0.1
+**版本**: v1.0.0
+**作者**: Aceyuan361
 
 ## 概述
 
 iOS 监控受限于 pymobiledevice3 的 API 能力，部分指标需要使用降级方案或估算值。
+
+## 支持的系统版本
+
+- **最低版本**: iOS 11.0
+- **最高版本**: iOS 16.x
+- **不支持**: iOS 17+
 
 ## 技术栈
 
@@ -49,9 +56,9 @@ iOS 设备 --[持续推送]--> SysmonStreamService --[按频率聚合]--> Metric
 | Memory | sysmon memory | diagnostics | 中 | ✅ 完整支持 |
 | Energy | sysmon energy | diagnostics | 中 | ✅ 完整支持 |
 | Battery | diagnostics | - | 高 | ✅ 完整支持 |
-| FPS | - | - | - | ⚠️ 计划中 |
-| Network | - | - | - | ⚠️ 计划中 |
-| GPU | - | - | - | ❌ 不支持（API 限制） |
+| FPS | 系统刷新率参考 | - | 低 | ⚠️ 参考值 |
+| Network | 系统级统计 | - | 低 | ⚠️ 系统级 |
+| GPU | - | - | - | ❌ 不支持（系统 API 限制） |
 
 ## 核心类
 

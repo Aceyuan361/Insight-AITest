@@ -2,17 +2,18 @@
 
 ## 基础信息
 
-- **Base URL**: `http://localhost:8000`
+- **Base URL**: `http://localhost:8001`
 - **API 版本**: v1.0.0
 - **认证方式**: 无需认证（开发环境）
 - **数据格式**: JSON
+- **作者**: Aceyuan361
 
 ## 自动生成的 API 文档
 
 启动后端服务后，可以通过以下地址查看完整的交互式 API 文档：
 
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
+- **Swagger UI**: http://localhost:8001/docs
+- **ReDoc**: http://localhost:8001/redoc
 
 ## API 端点概览
 
@@ -25,28 +26,28 @@
 | POST | `/api/devices/{device_id}/connect` | 连接指定设备 |
 | DELETE | `/api/devices/{device_id}` | 断开设备连接 |
 | GET | `/api/devices/{device_id}/apps` | 获取设备应用列表 |
-| GET | `/api/devices/refresh` | 刷新设备列表 |
+| POST | `/api/devices/refresh` | 刷新设备列表 |
 
 ### 监控会话
 
 | 方法 | 端点 | 描述 |
 |------|------|------|
-| POST | `/api/sessions` | 创建新的监控会话 |
-| GET | `/api/sessions` | 获取所有会话列表 |
-| GET | `/api/sessions/{session_id}` | 获取指定会话信息 |
-| DELETE | `/api/sessions/{session_id}` | 停止并删除会话 |
-| GET | `/api/sessions/{session_id}/data` | 获取会话历史数据 |
-| WS | `/api/sessions/{session_id}/stream` | 实时数据流 |
+| POST | `/api/monitoring/start` | 开始监控 |
+| POST | `/api/monitoring/stop` | 停止监控 |
+| GET | `/api/monitoring/sessions` | 获取所有会话列表 |
+| GET | `/api/monitoring/sessions/{session_id}` | 获取指定会话信息 |
+| DELETE | `/api/monitoring/sessions/{session_id}` | 删除会话 |
+| GET | `/api/monitoring/sessions/{session_id}/metrics` | 获取会话指标数据 |
+| GET | `/api/monitoring/sessions/{session_id}/statistics` | 获取会话统计数据 |
+| GET | `/api/monitoring/sessions/{session_id}/alerts` | 获取会话告警记录 |
+| POST | `/api/monitoring/sessions/batch-delete` | 批量删除会话 |
+| WS | `/ws/monitoring/{session_id}` | 实时数据流（WebSocket） |
 
-### 告警管理
+### 健康检查
 
 | 方法 | 端点 | 描述 |
 |------|------|------|
-| GET | `/api/alerts/rules` | 获取所有告警规则 |
-| POST | `/api/alerts/rules` | 创建告警规则 |
-| PUT | `/api/alerts/rules/{rule_id}` | 更新告警规则 |
-| DELETE | `/api/alerts/rules/{rule_id}` | 删除告警规则 |
-| GET | `/api/alerts/session/{session_id}` | 获取会话告警历史 |
+| GET | `/health` | 服务健康检查 |
 
 ## WebSocket 消息格式
 

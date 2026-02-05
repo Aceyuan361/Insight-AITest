@@ -2,9 +2,10 @@
 
 ## Insight-Eye
 
-**版本**: v1.0.3
+**版本**: v1.0.0
+**作者**: Aceyuan361
 
-**Insight-Eye** 是一个跨平台设备性能监控工具，支持 Android 和 iOS 平台，提供：
+**Insight-Eye** 是一个跨平台移动设备性能监控工具，支持 Android 和 iOS 平台，提供：
 - Python API
 - PyQt6 桌面 GUI 应用（赛博朋克霓虹风格）
 - FastAPI Web 后端
@@ -115,20 +116,23 @@ insight_eyes/
 - **FPS** - 帧率、卡顿次数、大卡顿次数
 - **Network** - 上行/下行流量
 - **Battery** - 电量、温度
+- **GPU** - GPU 使用率（部分设备支持）
 
 ### iOS 平台
 - **CPU** - 应用 CPU 使用率（通过 sysmon 流式监听）
 - **Memory** - 已用内存、总内存（通过 sysmon）
 - **Battery** - 电量、温度、充电状态
-- **Energy** - 能耗数据（总能耗、CPU、GPU、网络）
-- **FPS** - 帧率（计划中）
-- **Network** - 网络流量（计划中）
+- **Energy** - 能耗数据（总能耗、CPU、网络）
+- **FPS** - 系统刷新率参考
+- **Network** - 网络流量（系统级）
 
 **注意**：
 - iOS 监控需要 pymobiledevice3 >= 7.0.0
+- 支持系统：iOS 11.0 - 16.x（不支持 iOS 17+）
 - 设备需要信任电脑并开启开发者模式
 - 采 用流式监听架构，解决 sysmon 数据推送频率不固定问题
 - 部分功能受 pymobiledevice3 API 限制
+- **GPU 监控**：iOS 不支持（系统 API 限制），Android 部分设备支持
 
 ## 导出格式
 
