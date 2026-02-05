@@ -271,7 +271,7 @@ export default {
         },
         ios: {
           title: 'iOS Platform',
-          osVersion: 'Supported OS: iOS 16.x only (iOS 17+ not supported)',
+          osVersion: 'Supported OS: iOS 11.0 - 16.x only (iOS 17+ not supported)',
           features: 'Supported Metrics: CPU, Memory, FPS, Network (System-level), Battery',
           gpuStatus: 'GPU Status: Not supported',
           gpuReason: 'Reason:',
@@ -325,7 +325,7 @@ export default {
         androidFeatures: 'Metrics: CPU, Memory, FPS, Network (Up/Down), Battery',
         androidGpu: 'GPU: Not supported yet (In development)',
         iosSection: 'iOS Platform',
-        iosVersion: 'Supported OS: iOS 16.3.1+',
+        iosVersion: 'Supported OS: iOS 11.0 - 16.x',
         iosFeatures: 'Metrics: CPU, Memory, FPS, Network (System-level), Battery',
         iosGpu: 'GPU: Not supported',
         iosGpuReason: 'Reason: iOS DVT limitation, cannot access GPU energy data',

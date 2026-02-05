@@ -271,7 +271,7 @@ export default {
         },
         ios: {
           title: 'iOS 平台',
-          osVersion: '支持系统：iOS 16.x 版本（不支持 iOS 17+）',
+          osVersion: '支持系统：iOS 11.0 - 16.x 版本（不支持 iOS 17+）',
           features: '支持指标：CPU、内存、FPS、网络（系统级）、电池',
           gpuStatus: 'GPU 状态：不支持',
           gpuReason: '不支持原因：',
@@ -325,7 +325,7 @@ export default {
         androidFeatures: '监控指标：CPU、内存、FPS、网络（上行/下行）、电池',
         androidGpu: 'GPU：暂不支持（开发中）',
         iosSection: 'iOS 平台',
-        iosVersion: '支持系统：iOS 16.3.1+',
+        iosVersion: '支持系统：iOS 11.0 - 16.x',
         iosFeatures: '监控指标：CPU、内存、FPS、网络（系统级）、电池',
         iosGpu: 'GPU：不支持',
         iosGpuReason: '原因：iOS 系统 DVT 限制，无法获取 GPU 能耗数据',
