@@ -29,34 +29,10 @@ export default function MonitorPanel() {
     <div>
       {/* 图表网格 - 直接置顶 */}
       <div>
-        {/* 第一行：2个卡片 (CPU, Memory) */}
-        <div className="grid grid-cols-2" style={{ columnGap: '8px', marginBottom: '4px' }}>
-          {enabledCards.slice(0, 2).map((card) => (
-            <NeonChartCard
-              key={card.metricId}
-              config={card}
-              data={metricsData[card.metricId] || []}
-              timestamps={timestamps}
-            />
-          ))}
-        </div>
-
-        {/* 第二行：2个卡片 (FPS, Network Upload) */}
-        <div className="grid grid-cols-2" style={{ columnGap: '8px', marginBottom: '4px' }}>
-          {enabledCards.slice(2, 4).map((card) => (
-            <NeonChartCard
-              key={card.metricId}
-              config={card}
-              data={metricsData[card.metricId] || []}
-              timestamps={timestamps}
-            />
-          ))}
-        </div>
-
-        {/* 第三行：第5个卡片 (Network Download) */}
-        {enabledCards.length >= 5 && (
-          <div className="grid grid-cols-2" style={{ columnGap: '8px' }}>
-            {enabledCards.slice(4, 5).map((card) => (
+        {/* 动态布局：每行2个卡片，支持任意数量的卡片 */}
+        {Array.from({ length: Math.ceil(enabledCards.length / 2) }, (_, rowIndex) => (
+          <div key={rowIndex} className="grid grid-cols-2" style={{ columnGap: '8px', marginBottom: '4px' }}>
+            {enabledCards.slice(rowIndex * 2, rowIndex * 2 + 2).map((card) => (
               <NeonChartCard
                 key={card.metricId}
                 config={card}
@@ -65,7 +41,7 @@ export default function MonitorPanel() {
               />
             ))}
           </div>
-        )}
+        ))}
       </div>
 
       {/* 未监控时的提示 */}
