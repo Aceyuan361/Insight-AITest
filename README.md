@@ -79,7 +79,7 @@ git clone -b 1.0.0 https://github.com/Aceyuan361/Insight_eye.git
 cd Insight_eye
 
 # 2. Install Python dependencies
-pip install -r insight_eyes/web/requirements.txt
+pip install -r requirements.txt
 
 # 3. Start backend service (opens browser automatically)
 python -m insight_eyes

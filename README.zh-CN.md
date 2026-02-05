@@ -79,7 +79,7 @@ git clone -b 1.0.0 https://github.com/Aceyuan361/Insight_eye.git
 cd Insight_eye
 
 # 2. 安装 Python 依赖
-pip install -r insight_eyes/web/requirements.txt
+pip install -r requirements.txt
 
 # 3. 启动后端服务 (会自动打开浏览器)
 python -m insight_eyes

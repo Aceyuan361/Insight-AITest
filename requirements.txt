@@ -1,0 +1,21 @@
+# Insight-Eye 移动设备性能监控工具 - Python 依赖
+# Mobile Device Performance Monitoring Tool - Python Dependencies
+
+# ==================== Web 框架 / Web Framework ====================
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+websockets>=14.0
+python-multipart>=0.0.6
+python-json-logger>=2.9.0
+
+# ==================== 数据验证 / Data Validation ====================
+pydantic>=2.5.0
+
+# ==================== 数据库 / Database ====================
+sqlalchemy>=2.0.0
+
+# ==================== iOS 支持 / iOS Support ====================
+pymobiledevice3>=7.0.0
+
+# ==================== 系统监控 / System Monitoring ====================
+psutil>=6.0.0
