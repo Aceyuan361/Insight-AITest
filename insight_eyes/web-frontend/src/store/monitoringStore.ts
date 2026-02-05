@@ -84,7 +84,7 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
   setSamplingInterval: (interval) => set({ samplingInterval: interval }),
 
   // 开始监控
-  startMonitoring: async (deviceId, appPackage, platform = 'android', samplingIntervalParam) => {
+  startMonitoring: async (deviceId, appPackage, platform = 'android', samplingIntervalParam, alertThresholdsParam) => {
     // C1: 防止重复启动监控
     const currentState = get();
     if (currentState.isMonitoring) {
@@ -95,7 +95,14 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
     try {
       // 使用传入的采样间隔参数，如果没有则使用store中的默认值
       const interval = samplingIntervalParam ?? currentState.samplingInterval;
-      const session: Session = await api.startMonitoring(deviceId, appPackage, platform, interval);
+
+      // 获取告警阈值（从 configManager 加载用户配置的阈值）
+      const { configManager } = await import('@/utils/configManager');
+      const thresholds = configManager.getAlertThresholds();
+
+      console.log('启动监控，使用告警阈值:', thresholds);
+
+      const session: Session = await api.startMonitoring(deviceId, appPackage, platform, interval, thresholds);
 
       // I1: 使用环境变量配置 WebSocket URL，否则使用相对路径通过代理
       const wsUrl = import.meta.env.VITE_WS_URL || '';
@@ -199,7 +206,19 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
         if (!newMetricsData[key]) {
           newMetricsData[key] = [];
         }
-        newMetricsData[key] = [...newMetricsData[key], value].slice(-100); // 保留最近100个数据点
+
+        // 问题1修复：过滤iOS启动时的初始0值数据
+        // 对于CPU和内存指标，只有当有非0数据时才开始记录
+        // 这避免了iOS sysmon启动延迟（约2秒）导致的曲线异常
+        const shouldSkip = (
+          (key === 'cpu_app' || key === 'cpu' || key === 'memory_pss' || key === 'memory') &&
+          value === 0 &&
+          newMetricsData[key].length === 0
+        );
+
+        if (!shouldSkip) {
+          newMetricsData[key] = [...newMetricsData[key], value].slice(-100); // 保留最近100个数据点
+        }
       }
     });
 

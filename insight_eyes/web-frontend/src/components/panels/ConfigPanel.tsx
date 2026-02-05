@@ -55,12 +55,18 @@ export default function ConfigPanel() {
   ]);
 
   // 告警阈值配置 - 匹配桌面版
-  const [thresholds, setThresholds] = useState({
-    fps: 30,
-    memory: 500,
-    cpu: 80,
-    temperature: 45.0,
+  const [thresholds, setThresholds] = useState(() => {
+    // 从 localStorage 加载保存的阈值
+    return configManager.getAlertThresholds();
   });
+
+  // 处理阈值变化
+  const handleThresholdChange = (key: string, value: number) => {
+    const newThresholds = { ...thresholds, [key]: value };
+    setThresholds(newThresholds);
+    // 保存到 localStorage
+    configManager.saveAlertThresholds(newThresholds);
+  };
 
   // 检测是否为iOS设备（匹配桌面版逻辑）
   const isIOSDevice = () => {
@@ -68,6 +74,37 @@ export default function ConfigPanel() {
     const device = devices.find(d => d.device_id === selectedDevice);
     return device?.type === 'ios';
   };
+
+  // 当切换设备时，动态更新 GPU 选项的状态
+  // 如果切换到 iOS 设备且 GPU 已启用，则自动禁用
+  // 如果切换到 Android 设备且 GPU 被禁用，则自动启用（恢复之前的状态）
+  useEffect(() => {
+    if (!selectedDevice) return;
+
+    const isIOS = isIOSDevice();
+    const gpuMetric = metrics.find(m => m.key === 'gpu');
+
+    if (isIOS && gpuMetric?.enabled) {
+      // 切换到 iOS 设备，禁用 GPU
+      const updatedMetrics = metrics.map(m =>
+        m.key === 'gpu' ? { ...m, enabled: false } : m
+      );
+      setMetrics(updatedMetrics);
+      const enabledIds = updatedMetrics.filter(m => m.enabled).map(m => m.key);
+      setEnabledMetrics(enabledIds);
+      configManager.saveEnabledMetrics(enabledIds);
+    } else if (!isIOS && gpuMetric && !gpuMetric.enabled) {
+      // 切换到 Android 设备，如果 GPU 之前被禁用，则恢复启用（可选）
+      // 这里我们保持用户的配置，只移除 iOS 的限制
+      const updatedMetrics = metrics.map(m =>
+        m.key === 'gpu' ? { ...m, enabled: true } : m
+      );
+      setMetrics(updatedMetrics);
+      const enabledIds = updatedMetrics.filter(m => m.enabled).map(m => m.key);
+      setEnabledMetrics(enabledIds);
+      configManager.saveEnabledMetrics(enabledIds);
+    }
+  }, [selectedDevice]); // 监听设备切换
 
   // 初始化：从localStorage加载保存的配置
   useEffect(() => {
@@ -389,7 +426,7 @@ export default function ConfigPanel() {
             <input
               type="number"
               value={thresholds.fps}
-              onChange={(e) => setThresholds({ ...thresholds, fps: parseInt(e.target.value) })}
+              onChange={(e) => handleThresholdChange('fps', parseInt(e.target.value))}
               disabled={isMonitoring}
               min={10}
               max={60}
@@ -419,7 +456,7 @@ export default function ConfigPanel() {
             <input
               type="number"
               value={thresholds.memory}
-              onChange={(e) => setThresholds({ ...thresholds, memory: parseInt(e.target.value) })}
+              onChange={(e) => handleThresholdChange('memory', parseInt(e.target.value))}
               disabled={isMonitoring}
               min={100}
               max={2000}
@@ -449,7 +486,7 @@ export default function ConfigPanel() {
             <input
               type="number"
               value={thresholds.cpu}
-              onChange={(e) => setThresholds({ ...thresholds, cpu: parseInt(e.target.value) })}
+              onChange={(e) => handleThresholdChange('cpu', parseInt(e.target.value))}
               disabled={isMonitoring}
               min={50}
               max={100}
@@ -479,7 +516,7 @@ export default function ConfigPanel() {
             <input
               type="number"
               value={thresholds.temperature}
-              onChange={(e) => setThresholds({ ...thresholds, temperature: parseFloat(e.target.value) })}
+              onChange={(e) => handleThresholdChange('temperature', parseFloat(e.target.value))}
               disabled={isMonitoring}
               min={30}
               max={60}

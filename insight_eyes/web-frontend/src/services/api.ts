@@ -103,12 +103,24 @@ export const api = {
   },
 
   // 开始监控
-  async startMonitoring(deviceId: string, appPackage: string, platform: string = 'android', samplingInterval: number = 1000): Promise<Session> {
+  async startMonitoring(
+    deviceId: string,
+    appPackage: string,
+    platform: string = 'android',
+    samplingInterval: number = 1000,
+    alertThresholds?: { fps: number; memory: number; cpu: number; temperature: number }
+  ): Promise<Session> {
     const response = await axios.post(`${API_BASE_URL}/monitoring/start`, {
       device_id: deviceId,
       app_package: appPackage,
       platform,
       sampling_interval: samplingInterval,
+      alert_thresholds: alertThresholds ? {
+        fps: alertThresholds.fps,
+        memory: alertThresholds.memory,
+        cpu: alertThresholds.cpu,
+        temperature: alertThresholds.temperature,
+      } : undefined,
     });
     return response.data;
   },

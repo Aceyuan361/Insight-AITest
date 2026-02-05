@@ -43,6 +43,9 @@ class DeviceManager:
     _alert_cooldown: dict[str, float] = {}  # 存储上次触发时间戳
     _alert_cooldown_seconds: int = 30  # 冷却期30秒 {}
 
+    # 每个会话的告警阈值配置 {session_id: {threshold_key: value}}
+    _session_alert_thresholds: dict[int, dict[str, float]] = {}
+
     @staticmethod
     def scan_devices() -> List[Device]:
         """扫描可用设备
@@ -121,7 +124,13 @@ class DeviceManager:
         return devices
 
     @staticmethod
-    async def start_session(device_id: str, app_package: str, platform: str = "android", sampling_interval: int = 1000) -> Session:
+    async def start_session(
+        device_id: str,
+        app_package: str,
+        platform: str = "android",
+        sampling_interval: int = 1000,
+        alert_thresholds: dict = None
+    ) -> Session:
         """开始监控会话
 
         Args:
@@ -129,6 +138,7 @@ class DeviceManager:
             app_package: 应用包名
             platform: 平台类型 ('android' 或 'ios')
             sampling_interval: 采样间隔（毫秒），默认1000ms
+            alert_thresholds: 告警阈值配置，格式：{fps: float, memory: float, cpu: float, temperature: float}
 
         Returns:
             创建的会话对象
@@ -137,6 +147,25 @@ class DeviceManager:
         db_path = os.path.join(os.path.expanduser("~"), ".insight_eye", "monitoring.db")
         db = DatabaseManager(db_path)
         session = db.create_session(device_id, app_package, platform=platform, sampling_interval=sampling_interval)
+
+        # 存储会话的告警阈值配置
+        if alert_thresholds:
+            DeviceManager._session_alert_thresholds[session.id] = {
+                'fps_threshold': alert_thresholds.get('fps', 50.0),
+                'memory_threshold_mb': alert_thresholds.get('memory', 500.0),
+                'cpu_threshold_percent': alert_thresholds.get('cpu', 80.0),
+                'battery_threshold_temp': alert_thresholds.get('temperature', 45.0),
+            }
+            logger.info(f"会话 {session.id} 使用自定义告警阈值: {DeviceManager._session_alert_thresholds[session.id]}")
+        else:
+            # 使用默认阈值
+            DeviceManager._session_alert_thresholds[session.id] = {
+                'fps_threshold': 50.0,
+                'memory_threshold_mb': 100.0,
+                'cpu_threshold_percent': 50.0,
+                'battery_threshold_temp': 35.0,
+            }
+            logger.info(f"会话 {session.id} 使用默认告警阈值: {DeviceManager._session_alert_thresholds[session.id]}")
 
         # 创建取消令牌
         DeviceManager._cancel_tokens[session.id] = asyncio.Event()
@@ -412,6 +441,7 @@ class DeviceManager:
         """检查并保存告警
 
         根据阈值配置检测性能异常，并保存告警到数据库。
+        使用会话级别的告警阈值配置，而不是全局默认值。
 
         Args:
             db: 数据库管理器
@@ -423,7 +453,12 @@ class DeviceManager:
         import time
         current_time = time.time()
         cooldown_seconds = DeviceManager._alert_cooldown_seconds
-        thresholds = DeviceManager._alert_thresholds
+
+        # 获取会话级别的告警阈值（优先使用自定义阈值，否则使用默认值）
+        thresholds = DeviceManager._session_alert_thresholds.get(
+            session_id,
+            DeviceManager._alert_thresholds
+        )
 
         # 调试日志：记录当前指标值和阈值
         logger.debug(f"[告警检测] Session {session_id}: FPS={metrics.fps}, Memory={metrics.memory}MB, CPU={metrics.cpu}%, Temp={metrics.temperature}°C")

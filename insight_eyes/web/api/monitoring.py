@@ -37,12 +37,26 @@ router = APIRouter(prefix="/api/monitoring", tags=["monitoring"])
 async def start_monitoring(request: StartMonitoringRequest):
     """开始监控"""
     try:
-        # 传递采样间隔和平台到核心层
+        # 将告警阈值转换为字典格式
+        alert_thresholds_dict = None
+        if request.alert_thresholds:
+            alert_thresholds_dict = {
+                'fps': request.alert_thresholds.fps,
+                'memory': request.alert_thresholds.memory,
+                'cpu': request.alert_thresholds.cpu,
+                'temperature': request.alert_thresholds.temperature,
+            }
+            logger.info(f"使用自定义告警阈值: {alert_thresholds_dict}")
+        else:
+            logger.info("使用默认告警阈值")
+
+        # 传递采样间隔、平台和告警阈值到核心层
         session = await DeviceManager.start_session(
             request.device_id,
             request.app_package,
             platform=request.platform,  # 添加平台参数
-            sampling_interval=request.sampling_interval
+            sampling_interval=request.sampling_interval,
+            alert_thresholds=alert_thresholds_dict  # 添加告警阈值参数
         )
         logger.info(f"启动监控会话: {session.id}, 平台: {request.platform}, 采样间隔: {request.sampling_interval}ms")
 

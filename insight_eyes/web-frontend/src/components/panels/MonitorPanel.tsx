@@ -5,14 +5,24 @@ import NeonChartCard from '@/components/charts/NeonChartCard';
 
 export default function MonitorPanel() {
   const { t } = useTranslation();
-  const { metricsData, timestamps, isMonitoring, currentSession, enabledMetricIds } = useMonitoringStore();
+  const { metricsData, timestamps, isMonitoring, currentSession, enabledMetricIds, devices, selectedDevice } = useMonitoringStore();
 
   // 获取应用名称用于标题显示
   const appName = currentSession?.app_name || '';
 
+  // 检测当前设备类型
+  const currentDeviceType = devices.find(d => d.device_id === selectedDevice)?.type || 'android';
+
   // 关键修改：根据store中的enabledMetricIds过滤卡片（动态显示）
+  // iOS 设备：强制移除 GPU 卡片（即使已启用）
+  // Android 设备：正常显示所有启用的卡片
+  const isIOS = currentDeviceType === 'ios';
+  const filteredMetricIds = isIOS
+    ? enabledMetricIds.filter(id => id !== 'gpu')
+    : enabledMetricIds;
+
   const enabledCards = ALL_METRIC_CARDS
-    .filter(card => enabledMetricIds.includes(card.metricId))
+    .filter(card => filteredMetricIds.includes(card.metricId))
     .sort((a, b) => a.priority - b.priority);
 
   return (

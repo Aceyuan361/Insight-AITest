@@ -6,11 +6,18 @@
  * 支持的配置项：
  * - samplingInterval: 采样间隔（字符串格式：'1s'/'3s'/'5s'/'10s'）
  * - enabledMetrics: 启用的监控指标列表
+ * - alertThresholds: 告警阈值配置
  */
 
 interface MonitoringConfig {
   samplingInterval: string;  // '1s' | '3s' | '5s' | '10s'
   enabledMetrics: string[];   // ['cpu', 'memory', 'fps', 'network_up', 'network_down', 'gpu']
+  alertThresholds?: {         // 告警阈值
+    fps: number;
+    memory: number;
+    cpu: number;
+    temperature: number;
+  };
 }
 
 const DEFAULT_CONFIG: MonitoringConfig = {
@@ -116,6 +123,32 @@ class ConfigManager {
     } catch (error) {
       console.error('清除配置失败:', error);
     }
+  }
+
+  /**
+   * 保存告警阈值
+   *
+   * @param thresholds 告警阈值对象
+   */
+  saveAlertThresholds(thresholds: { fps: number; memory: number; cpu: number; temperature: number }): void {
+    const config = this.loadConfig();
+    config.alertThresholds = thresholds;
+    this.saveConfig(config);
+  }
+
+  /**
+   * 获取告警阈值
+   *
+   * @returns 告警阈值对象，如果不存在则返回默认值
+   */
+  getAlertThresholds(): { fps: number; memory: number; cpu: number; temperature: number } {
+    const config = this.loadConfig();
+    return config.alertThresholds || {
+      fps: 30,
+      memory: 500,
+      cpu: 80,
+      temperature: 45,
+    };
   }
 
   /**
