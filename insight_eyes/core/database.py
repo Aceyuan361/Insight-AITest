@@ -31,18 +31,23 @@ class DatabaseManager:
     def __new__(cls, db_path: Optional[str] = None) -> DatabaseManager:
         """实现单例模式，确保全局只有一个数据库管理器实例
 
+        使用双重检查锁定模式（Double-Checked Locking）确保线程安全
+
         Args:
             db_path: 数据库文件路径
 
         Returns:
             DatabaseManager: 单例实例
         """
+        # 第一次检查（无锁）- 快速路径
         if cls._instance is not None:
             return cls._instance
 
+        # 加锁后再次检查，防止竞态条件
         with cls._lock:
             if cls._instance is None:
                 cls._instance = super().__new__(cls)
+                cls._instance._is_initialized = False
             return cls._instance
 
     def __init__(self, db_path: Optional[str] = None):
@@ -80,6 +85,20 @@ class DatabaseManager:
             )
             self._local.conn.row_factory = sqlite3.Row
         return self._local.conn
+
+    def _cleanup_connection(self) -> None:
+        """清理线程本地的数据库连接
+
+        在线程结束时调用，确保连接被正确关闭，避免连接泄漏
+        """
+        if hasattr(self._local, 'conn') and self._local.conn is not None:
+            try:
+                self._local.conn.close()
+            except Exception as e:
+                # 忽略关闭时的错误
+                pass
+            finally:
+                self._local.conn = None
 
     @contextmanager
     def transaction(self) -> Any:
@@ -602,7 +621,10 @@ class DatabaseManager:
     # ==================== 数据维护 ====================
 
     def close(self) -> None:
-        """关闭数据库连接"""
-        if hasattr(self._local, 'conn') and self._local.conn:
-            self._local.conn.close()
-            self._local.conn = None
+        """关闭数据库连接并清理资源"""
+        # 清理线程本地的连接
+        self._cleanup_connection()
+
+        # 清理单例实例（仅在最后一次引用时）
+        if hasattr(self, '_local') and hasattr(self._local, 'conn'):
+            delattr(self, '_local', 'conn')
