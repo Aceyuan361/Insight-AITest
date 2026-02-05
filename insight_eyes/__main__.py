@@ -1,11 +1,14 @@
 """
 Insight-Eye Web 应用入口点
 
-启动 Web 后端服务 (FastAPI)
+启动 Web 后端服务 (FastAPI) 并自动打开浏览器
 """
 from __future__ import absolute_import
 import sys
 import os
+import webbrowser
+import threading
+import time
 
 # 添加项目根目录到路径
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -15,8 +18,23 @@ if project_root not in sys.path:
 import uvicorn
 
 
+def open_browser():
+    """延迟打开浏览器，等待服务器启动"""
+    time.sleep(2)  # 等待服务器启动
+    try:
+        webbrowser.open("http://localhost:8001")
+        print("✓ 浏览器已自动打开 / Browser opened automatically")
+    except Exception as e:
+        print(f"⚠ 无法自动打开浏览器 / Failed to open browser: {e}")
+        print("  请手动访问 / Please visit: http://localhost:8001")
+
+
 def main():
-    """启动 Web 服务器"""
+    """启动 Web 服务器并自动打开浏览器"""
+    # 在后台线程中打开浏览器
+    browser_thread = threading.Thread(target=open_browser, daemon=True)
+    browser_thread.start()
+
     # 动态导入以避免启动时的依赖问题
     from insight_eyes.web.api.main import app
 
@@ -24,18 +42,25 @@ def main():
 ╔════════════════════════════════════════════════════════════╗
 ║          Insight-Eye Web - 移动设备性能监控               ║
 ║                    版本: 1.0.0-web                         ║
+║               作者 / Author: Aceyuan361                    ║
 ╠════════════════════════════════════════════════════════════╣
-║  API 服务: http://localhost:8001                           ║
-║  API 文档: http://localhost:8001/docs                      ║
+║  API 服务 / API: http://localhost:8001                     ║
+║  API 文档 / Docs: http://localhost:8001/docs               ║
+╠════════════════════════════════════════════════════════════╣
+║  按 Ctrl+C 停止服务 / Press Ctrl+C to stop                 ║
 ╚════════════════════════════════════════════════════════════╝
     """)
 
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=8001,
-        log_level="info"
-    )
+    try:
+        uvicorn.run(
+            app,
+            host="0.0.0.0",
+            port=8001,
+            log_level="info"
+        )
+    except KeyboardInterrupt:
+        print("\n\n👋 Insight-Eye Web 已停止 / Stopped")
+        sys.exit(0)
 
 
 if __name__ == '__main__':
