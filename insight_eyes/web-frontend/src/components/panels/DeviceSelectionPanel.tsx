@@ -31,6 +31,7 @@ export default function DeviceSelectionPanel() {
   const [pendingAppPackage, setPendingAppPackage] = useState<string | null>(null);
   const [pendingAppName, setPendingAppName] = useState<string>('');
   const [pendingAppPid, setPendingAppPid] = useState<number | undefined>(undefined);
+  const [appSearchQuery, setAppSearchQuery] = useState<string>('');
 
   // 加载设备列表
   const loadDevices = async () => {
@@ -252,6 +253,16 @@ export default function DeviceSelectionPanel() {
 
   const canStart = selectedDevice && selectedAppPackage && !isMonitoring;
 
+  // 过滤应用列表（模糊搜索）
+  const filteredApps = apps.filter(app => {
+    if (!appSearchQuery) return true;
+    const query = appSearchQuery.toLowerCase();
+    return (
+      app.name.toLowerCase().includes(query) ||
+      app.package_name.toLowerCase().includes(query)
+    );
+  });
+
   return (
     <div style={{
       padding: '12px',
@@ -357,29 +368,62 @@ export default function DeviceSelectionPanel() {
             {currentAppName}
           </div>
         ) : (
-          // 未监控显示下拉框
-          <select
-            value={selectedAppPackage}
-            onChange={(e) => handleAppChange(e.target.value)}
-            disabled={!selectedDevice}
-            style={{
-              width: '100%',
-              backgroundColor: !selectedDevice ? '#1a1f2e' : '#121824',
-              color: '#e0e6ed',
-              border: '1px solid #1a1f2e',
-              borderRadius: '6px',
-              padding: '10px 12px',
-              fontSize: '10pt',
-              opacity: !selectedDevice ? 0.6 : 1,
-            }}
-          >
-            <option value="">{t('device.selectAppFirst')}</option>
-            {apps.map((app) => (
-              <option key={app.package_name} value={app.package_name}>
-                {app.name}
-              </option>
-            ))}
-          </select>
+          // 未监控显示搜索框和下拉框
+          <>
+            {/* 应用搜索框 */}
+            <input
+              type="text"
+              placeholder={t('report.searchPlaceholder')}
+              value={appSearchQuery}
+              onChange={(e) => setAppSearchQuery(e.target.value)}
+              disabled={!selectedDevice}
+              style={{
+                width: '100%',
+                backgroundColor: !selectedDevice ? '#1a1f2e' : '#121824',
+                color: '#e0e6ed',
+                border: '1px solid #1a1f2e',
+                borderRadius: '6px',
+                padding: '8px 12px',
+                fontSize: '10pt',
+                marginBottom: '8px',
+                opacity: !selectedDevice ? 0.6 : 1,
+              }}
+            />
+            {/* 应用下拉框 */}
+            <select
+              value={selectedAppPackage}
+              onChange={(e) => handleAppChange(e.target.value)}
+              disabled={!selectedDevice}
+              style={{
+                width: '100%',
+                backgroundColor: !selectedDevice ? '#1a1f2e' : '#121824',
+                color: '#e0e6ed',
+                border: '1px solid #1a1f2e',
+                borderRadius: '6px',
+                padding: '10px 12px',
+                fontSize: '10pt',
+                opacity: !selectedDevice ? 0.6 : 1,
+              }}
+            >
+              <option value="">{t('device.selectAppFirst')}</option>
+              {filteredApps.map((app) => (
+                <option key={app.package_name} value={app.package_name}>
+                  {app.name}
+                </option>
+              ))}
+            </select>
+            {/* 显示搜索结果数量 */}
+            {appSearchQuery && (
+              <div style={{
+                fontSize: '9pt',
+                color: '#64748b',
+                marginTop: '4px',
+                textAlign: 'right',
+              }}>
+                {t('stats.total')} {filteredApps.length} {t('stats.items')}
+              </div>
+            )}
+          </>
         )}
       </div>
 
