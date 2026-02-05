@@ -71,7 +71,7 @@ Insight-Eye Web 是一个跨平台的移动设备性能监控 Web 应用，支�
 - **ADB** (Android 调试桥)
 - **pymobiledevice3** >= 7.0.0 (iOS 支持)
 
-### 方式一：从源码运行
+### 安装
 
 ```bash
 # 1. 克隆仓库
@@ -93,19 +93,6 @@ npm install
 npm run dev
 
 # 前端运行在: http://localhost:80 (如果 :80 被占用则是 :81)
-```
-
-### 方式二：使用 pip 安装（简化）
-
-```bash
-# 1. 安装 Insight-Eye
-pip install insight-eyes
-
-# 2. 运行应用 (自动启动后端并打开浏览器)
-insight-eye-web
-
-# 后端运行在: http://localhost:8001
-# 浏览器会自动打开
 ```
 
 ---

@@ -71,7 +71,7 @@ Deep dive into performance metrics to identify potential issues.
 - **ADB** (Android Debug Bridge)
 - **pymobiledevice3** >= 7.0.0 (For iOS support)
 
-### Method 1: Run from Source
+### Installation
 
 ```bash
 # 1. Clone repository
@@ -93,19 +93,6 @@ npm install
 npm run dev
 
 # Frontend runs on: http://localhost:80 (or :81 if :80 occupied)
-```
-
-### Method 2: Install via pip (Simplified)
-
-```bash
-# 1. Install Insight-Eye
-pip install insight-eyes
-
-# 2. Run application (starts backend and opens browser)
-insight-eye-web
-
-# Backend runs on: http://localhost:8001
-# Browser opens automatically
 ```
 
 ---
