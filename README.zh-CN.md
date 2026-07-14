@@ -337,7 +337,7 @@ iOS 系统 API 限制，第三方应用无法访问 GPU 使用率数据。
 
 - **作者**: Aceyuan361
 - **问题反馈**: [GitHub Issues](https://github.com/Aceyuan361/Insight-AITest/issues)
-- **邮箱**: [594902674@qq.com](mailto:594902674@qq.com)
+- **交流讨论**: [GitHub Discussions](https://github.com/Aceyuan361/Insight-AITest/discussions)
 
 ---
 

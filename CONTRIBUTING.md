@@ -138,7 +138,7 @@ Insight-AITest 采用「平台内核 + 可插拔模块」架构。新增功能�
 ## 📧 联系方式
 
 - GitHub Issues: [提交问题](https://github.com/Aceyuan361/Insight-AITest/issues)
-- Email: 594902674@qq.com
+- GitHub Discussions: [交流讨论](https://github.com/Aceyuan361/Insight-AITest/discussions)
 
 ## 📄 许可证
 

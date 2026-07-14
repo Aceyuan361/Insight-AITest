@@ -328,7 +328,7 @@ This project would not be possible without the inspiration and support from thes
 
 - **Author**: Aceyuan361
 - **Issues**: [GitHub Issues](https://github.com/Aceyuan361/Insight-AITest/issues)
-- **Email**: [594902674@qq.com](mailto:594902674@qq.com)
+- **Discussions**: [GitHub Discussions](https://github.com/Aceyuan361/Insight-AITest/discussions)
 
 ---
 

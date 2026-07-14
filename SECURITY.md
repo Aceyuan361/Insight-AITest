@@ -8,10 +8,7 @@
 
 如果你发现了安全漏洞，**请不要创建公开的 Issue**。
 
-请通过以下方式私下报告：
-
-- 发送邮件到: 594902674@qq.com
-- 或通过 GitHub 的 [私有漏洞报告](https://github.com/Aceyuan361/Insight-AITest/security/advisories) 功能
+请通过 GitHub 的 [私有安全公告（Security Advisory）](https://github.com/Aceyuan361/Insight-AITest/security/advisories/new) 私下报告。
 
 ## 报告内容
 
