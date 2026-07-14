@@ -1,0 +1,22 @@
+id: ui
+name:
+  zh: UI 自动化
+  en: UI Automation
+version: 2.0.0
+category: testing
+icon: MonitorSmartphone
+order: 5
+description:
+  zh: Web UI 自动化（Midscene 视觉驱动浏览器）+ 移动端（预留）
+  en: Web UI automation (Midscene vision-driven browser) + Mobile (reserved)
+backend:
+  router: ui.backend.routes:router
+  dependencies: []
+frontend:
+  route: /ui-runner
+  entry: ui:UIApp
+  nav:
+    label: {zh: UI 自动化, en: UI Automation}
+    icon: MonitorSmartphone
+    show_in_dashboard: true
+default_enabled: true

@@ -1,0 +1,143 @@
+/**
+ * Insight-AITest 2.0 设计 token 单一真相源。
+ *
+ * 取代：tailwind.config.js neon.* / shell/theme/neon.ts / ai/components/agentStyles.ts text。
+ * 设计依据：docs/superpowers/specs/2026-07-05-stage2-design-system.md。
+ *
+ * 配色方向（2026-07-05 终版）：高饱和鲜活 + 深底强对比。
+ *   - 用户审定：要鲜艳、强化视觉，所有色高饱和，可超 80%。
+ *   - 单一强调色锁（emerald 翡翠绿），不搞多色霓虹。
+ *   - 底色更深（OLED 友好近黑），让高饱和强调色最大冲击。
+ *   - 状态色全部高饱和提亮，在深底上鲜活可辨。
+ *
+ * 修订记录：暖灰(发泥) → 冷调(偷带绿) → 纯Slate冷中性(太弱) → 本版高饱和鲜活。
+ */
+
+:root {
+  /* ========== NEUTRALS — 纯深底（OLED 友好近黑，让鲜艳色最大冲击）========== */
+  --bg-base: #09090b; /* Void，最深近黑（zinc-950 级）*/
+  --bg-card: #121216; /* Panel，card/panel */
+  --bg-elevated: #1c1c22; /* Raised，hover/active row，明显比 card 亮 */
+
+  /* ========== ACCENT — Emerald 高饱和翡翠绿（单一强调色，鲜活点睛）========== */
+  --accent: #10b981; /* Emerald，CTA/激活/focus/success/数据高亮（饱和度高）*/
+  --accent-hover: #34d399; /* Emerald 亮，hover */
+  --accent-soft: #6ee7b7; /* Emerald 柔，徽章/标签 */
+  --accent-deep: #064e3b; /* Emerald 深，选中行底色 */
+
+  /* ========== TEXT — 高对比白（深底上拉满可读性）========== */
+  --text-primary: #fafafa; /* 近纯白，最大对比 */
+  --text-secondary: #a1a1aa; /* zinc-400，次级 */
+  --text-muted: #52525b; /* zinc-600，弱化 */
+
+  /* ========== BORDER — 高对比边框（深底上需更明显）========== */
+  --border: rgba(255, 255, 255, 0.1); /* hairline */
+  --border-strong: rgba(255, 255, 255, 0.2); /* 强调边框 */
+
+  /* ========== SURFACE — 极淡叠层（hover/info/track 用，深底上是白提亮）========== */
+  --surface-hover: rgba(255, 255, 255, 0.05); /* hover/active 行、tab 激活底 */
+  --surface-tint: rgba(255, 255, 255, 0.03); /* info 面板/说明区底 */
+  --track: rgba(255, 255, 255, 0.07); /* 进度条轨道、分割线背景 */
+  --hairline-soft: rgba(255, 255, 255, 0.06); /* 极淡内分割线 */
+
+  /* ========== STATUS — 全部高饱和提亮，深底上鲜活可辨 ========== */
+  --success: #10b981; /* Emerald（复用 accent）*/
+  --warning: #f59e0b; /* Amber 高饱和 */
+  --error: #ef4444; /* Red 高饱和 */
+  --info: #3b82f6; /* Blue 高饱和 */
+
+  /* ========== CHART — 高饱和可区分（多指标折线在深底上鲜明）========== */
+  --chart-1: #10b981; /* cpu（emerald）*/
+  --chart-2: #a855f7; /* memory（紫，高饱和）*/
+  --chart-3: #f59e0b; /* fps（amber）*/
+  --chart-4: #06b6d4; /* networkUp（cyan，高饱和）*/
+  --chart-5: #3b82f6; /* networkDown（blue）*/
+  --chart-6: #ec4899; /* gpu（pink，高饱和，默认禁用）*/
+
+  /* ========== 字体（index.html 加载）========== */
+  --font-sans: "Geist", "Noto Sans SC", "Microsoft YaHei UI", "Segoe UI", system-ui,
+    sans-serif;
+  --font-mono: "Geist Mono", "JetBrains Mono", Consolas, Monaco, monospace;
+
+  /* ========== 阴影（深底配套，带 emerald 染色发光强化视觉）========== */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.6);
+  --shadow-elevated: 0 4px 12px rgba(0, 0, 0, 0.65);
+  --shadow-glow: 0 0 0 1px rgba(16, 185, 129, 0.3), 0 4px 16px rgba(16, 185, 129, 0.15);
+
+  /* ========== 圆角 ========== */
+  --radius-btn: 6px;
+  --radius-card: 8px;
+  --radius-pill: 999px;
+}
+
+/* ==========================================================================
+   浅色主题（Light）—— 覆盖同一组 token。
+   由 <html data-theme="light"> 触发。默认（无属性 / dark）走上面的深色值。
+
+   设计要点（文字对比度红线）：
+   - 底色用近白浅灰，让深色文字达到 AAA 级可读性。
+   - --text-primary #18181b 在 #ffffff 上对比度 ≈ 18:1（远超 AAA 7:1）。
+   - --text-secondary #3f3f46 在 #ffffff 上 ≈ 11:1（AAA）。
+   - --text-muted #71717a 在 #ffffff 上 ≈ 5.3:1（AA 大字 / AA 普通正文达标）。
+   - 强调色改用深翡翠 #059669，在白底上按钮文字 #fff 对比度 ≈ 4.5:1（AA 达标）。
+   - 阴影改为低透明度黑（浅底上柔和分层，无黑块）。
+   ========================================================================== */
+:root[data-theme='light'] {
+  /* NEUTRALS —— 近白浅灰底 */
+  --bg-base: #ffffff;
+  --bg-card: #f4f4f5; /* zinc-100，卡片/面板 */
+  --bg-elevated: #ffffff; /* 抬高层用纯白 + 阴影区分 */
+
+  /* ACCENT —— 深翡翠（浅底上对比足，鲜亮但不刺眼）*/
+  --accent: #059669; /* emerald-600，白底上可读 */
+  --accent-hover: #047857; /* emerald-700，更深，hover */
+  --accent-soft: #d1fae5; /* emerald-100，徽章/标签底（浅）*/
+  --accent-deep: #a7f3d0; /* emerald-200，选中行底色（浅底上用浅绿）*/
+
+  /* TEXT —— 深色文字（严格高对比，杜绝文字与背景同色）*/
+  --text-primary: #18181b; /* zinc-900，近黑，主文字 */
+  --text-secondary: #3f3f46; /* zinc-700，次级 */
+  --text-muted: #71717a; /* zinc-500，弱化（仍 AA 达标）*/
+
+  /* BORDER —— 深色描边（浅底上可见）*/
+  --border: rgba(0, 0, 0, 0.1); /* hairline */
+  --border-strong: rgba(0, 0, 0, 0.16); /* 强调边框 */
+
+  /* SURFACE —— 极淡叠层（浅底上改用深色提暗，与白底区分可辨）*/
+  --surface-hover: rgba(0, 0, 0, 0.045); /* hover/active 行 */
+  --surface-tint: rgba(0, 0, 0, 0.025); /* info 面板底 */
+  --track: rgba(0, 0, 0, 0.07); /* 进度条轨道 */
+  --hairline-soft: rgba(0, 0, 0, 0.06); /* 极淡内分割线 */
+
+  /* STATUS —— 在浅底上需略加深以保证可读 */
+  --success: #059669; /* emerald-600 */
+  --warning: #d97706; /* amber-600 */
+  --error: #dc2626; /* red-600 */
+  --info: #2563eb; /* blue-600 */
+
+  /* CHART —— 线条色与深色主题同源（高饱和色在浅底上同样鲜明）；
+     但中性色需切换为深色系，见 chart-tokens.ts 的 light 分支。*/
+  --chart-1: #059669;
+  --chart-2: #9333ea;
+  --chart-3: #d97706;
+  --chart-4: #0891b2;
+  --chart-5: #2563eb;
+  --chart-6: #db2777;
+
+  /* SHADOW —— 浅底配套，低透明度柔和阴影（无黑块）*/
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-elevated: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-glow: 0 0 0 1px rgba(5, 150, 105, 0.25), 0 4px 16px rgba(5, 150, 105, 0.12);
+}
+
+/* ===== Stage 5: 响应式全局规则 ===== */
+/* dvh 基线在 AppShell（height:100dvh）处处理，不在全局 html/body/#root 上设 min-height，
+   避免内容驱动导致整页滚动（dashboard 应在 main 内部滚动）。 */
+
+/* 移动端禁页面级横向滚动（内部容器可局部 overflow-x: auto） */
+@media (max-width: 767px) {
+  body {
+    overflow-x: hidden;
+  }
+}
+

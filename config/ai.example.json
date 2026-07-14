@@ -1,0 +1,12 @@
+{
+  "llm_base_url": "https://api.openai.com/v1",
+  "llm_api_key": "sk-your-key-here",
+  "chat_model": "gpt-4o-mini",
+  "embed_model": "text-embedding-3-small",
+  "embed_dim": 1536,
+  "chunk_size": 500,
+  "chunk_overlap": 80,
+  "top_k": 4,
+  "min_score": 0.3,
+  "history_turns": 6
+}

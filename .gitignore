@@ -1,0 +1,162 @@
+# ==================== Python ====================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+# 例外：前端 shadcn 的 lib/（cn helper 等）不被 Python 的 lib/ 忽略
+!insight_aitest/shell-frontend/src/lib/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ==================== Virtual Environment ====================
+venv/
+env/
+ENV/
+.venv/
+
+# ==================== IDE ====================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# ==================== Logs ====================
+*.log
+app.log
+api.log
+frontend.log
+frontend_dev.log
+vite.log
+crash_log.txt
+
+# ==================== OS ====================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==================== Database ====================
+*.db
+*.db-shm
+*.db-wal
+
+# ==================== AI Module Runtime Data ====================
+# 运行时配置与文档绝不进 git（密钥、用户文档）
+config/ai_config.json
+ai_docs/
+
+# ==================== Frontend (Node.js/Vite) ====================
+node_modules/
+dist/
+.nuxt/
+.cache/
+.parcel-cache/
+.next/
+out/
+coverage/
+.nyc_output/
+.playwright/
+test-results/
+playwright-report/
+playwright-results/
+
+# ==================== Environment Variables ====================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ==================== AI & Development Tools ====================
+.claude/
+.agents/
+.serena/
+.skills/
+CLAUDE.md
+EPISODIC-MEMORY-GUIDE.md
+
+# ==================== Changelog ====================
+CHANGELOG.md
+
+# ==================== Git Worktrees ====================
+.worktrees/
+
+# ==================== Temporary Files ====================
+*.tmp
+*.temp
+nul
+analytics/
+test_results.txt
+_path_backup.txt
+_pathcheck.txt
+_pyhome.txt
+_userpath.txt
+
+# ==================== Test Files (临时) ====================
+/test_*.py
+/verify_*.py
+/fix_*.py
+/diagnose_*.py
+/simple_test.py
+/final_test.py
+/quick_test*.py
+
+# ==================== Reports (临时) ====================
+*_SUMMARY.md
+*_REPORT.md
+Task-*-完成报告.md
+E2E-TEST-*.md
+
+# ==================== Icons (临时文件) ====================
+*_icon.png
+
+# ==================== Development Scripts ====================
+scripts/
+# 例外：保留版本化的测试/工具脚本
+!scripts/smoke_test.py
+# 例外：前端 scripts/（token 迁移、hex lint 等版本化工具）
+!insight_aitest/shell-frontend/scripts/
+*.sh
+*.bat
+# 例外：跟踪一键启动脚本（开源用户双击即用）
+!start.bat
+
+# ==================== Build Output ====================
+installer/
+Insight-Eye-Portable/
+# Vite 依赖预构建缓存
+.vite/
+# 一键启动标记文件（首次运行后生成）
+.insight_initialized
+
+# ==================== Brainstorm Visual Companion ====================
+.superpowers/
+.zcode/
+
+# ==================== Coverage ====================
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/

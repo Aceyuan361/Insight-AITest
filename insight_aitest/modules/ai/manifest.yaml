@@ -1,0 +1,22 @@
+id: ai
+name:
+  zh: 测试 Agent
+  en: Test Agent
+version: 2.0.0
+category: agent
+icon: Bot
+order: 1
+description:
+  zh: 资深测试 Agent（RAG 问答，子项目2 升级为计划→确认→执行）
+  en: Senior Test Agent (RAG Q&A, upgrading to plan→confirm→execute)
+backend:
+  router: ai.backend.routes:router
+  dependencies: []
+frontend:
+  route: /ai
+  entry: ai:AIApp
+  nav:
+    label: {zh: 测试 Agent, en: Test Agent}
+    icon: Bot
+    show_in_dashboard: true
+default_enabled: true

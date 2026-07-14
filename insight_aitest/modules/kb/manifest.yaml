@@ -1,0 +1,22 @@
+id: kb
+name:
+  zh: 知识库
+  en: Knowledge Base
+version: 2.0.0
+category: assets
+icon: BookOpen
+order: 1
+description:
+  zh: 项目知识库管理（文档上传、分类、RAG 检索）
+  en: Project knowledge base management
+backend:
+  router: kb.backend.routes:router
+  dependencies: []
+frontend:
+  route: /kb
+  entry: kb:KnowledgeBaseApp
+  nav:
+    label: {zh: 知识库, en: Knowledge Base}
+    icon: BookOpen
+    show_in_dashboard: true
+default_enabled: true

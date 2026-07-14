@@ -1,0 +1,964 @@
+<testsuites id="" name="" tests="20" failures="20" skipped="0" errors="0" time="166.010769">
+<testsuite name="report-panel.spec.ts" timestamp="2026-02-06T04:29:21.996Z" hostname="chromium" tests="20" failures="20" skipped="0" time="70.847" errors="0">
+<testcase name="报告面板 - 布局验证 › 应该显示报告面板标题" classname="report-panel.spec.ts" time="3.641">
+<failure message="report-panel.spec.ts:29:3 应该显示报告面板标题" type="FAILURE">
+<![CDATA[  [chromium] › report-panel.spec.ts:29:3 › 报告面板 - 布局验证 › 应该显示报告面板标题 ────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+       at ..\..\pages\MainWindow.ts:24
+
+      22 |    */
+      23 |   async goto() {
+    > 24 |     await this.page.goto('/');
+         |                     ^
+      25 |     // 等待应用加载
+      26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });
+      27 |   }
+        at MainWindow.goto (C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\pages\MainWindow.ts:24:21)
+        at C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\tests\e2e\report-panel.spec.ts:24:22
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---布局验证-应该显示报告面板标题-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---布局验证-应该显示报告面板标题-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---布局验证-应该显示报告面板标题-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\..\test-results\report-panel-报告面板---布局验证-应该显示报告面板标题-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results\report-panel-报告面板---布局验证-应该显示报告面板标题-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---布局验证-应该显示报告面板标题-chromium\video.webm]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---布局验证-应该显示报告面板标题-chromium\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="报告面板 - 布局验证 › 应该显示所有筛选控件" classname="report-panel.spec.ts" time="3.748">
+<failure message="report-panel.spec.ts:41:3 应该显示所有筛选控件" type="FAILURE">
+<![CDATA[  [chromium] › report-panel.spec.ts:41:3 › 报告面板 - 布局验证 › 应该显示所有筛选控件 ────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+       at ..\..\pages\MainWindow.ts:24
+
+      22 |    */
+      23 |   async goto() {
+    > 24 |     await this.page.goto('/');
+         |                     ^
+      25 |     // 等待应用加载
+      26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });
+      27 |   }
+        at MainWindow.goto (C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\pages\MainWindow.ts:24:21)
+        at C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\tests\e2e\report-panel.spec.ts:24:22
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---布局验证-应该显示所有筛选控件-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---布局验证-应该显示所有筛选控件-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---布局验证-应该显示所有筛选控件-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\..\test-results\report-panel-报告面板---布局验证-应该显示所有筛选控件-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results\report-panel-报告面板---布局验证-应该显示所有筛选控件-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---布局验证-应该显示所有筛选控件-chromium\video.webm]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---布局验证-应该显示所有筛选控件-chromium\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="报告面板 - 布局验证 › 应该显示会话列表和详情区域" classname="report-panel.spec.ts" time="3.646">
+<failure message="report-panel.spec.ts:64:3 应该显示会话列表和详情区域" type="FAILURE">
+<![CDATA[  [chromium] › report-panel.spec.ts:64:3 › 报告面板 - 布局验证 › 应该显示会话列表和详情区域 ─────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+       at ..\..\pages\MainWindow.ts:24
+
+      22 |    */
+      23 |   async goto() {
+    > 24 |     await this.page.goto('/');
+         |                     ^
+      25 |     // 等待应用加载
+      26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });
+      27 |   }
+        at MainWindow.goto (C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\pages\MainWindow.ts:24:21)
+        at C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\tests\e2e\report-panel.spec.ts:24:22
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---布局验证-应该显示会话列表和详情区域-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---布局验证-应该显示会话列表和详情区域-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---布局验证-应该显示会话列表和详情区域-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\..\test-results\report-panel-报告面板---布局验证-应该显示会话列表和详情区域-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results\report-panel-报告面板---布局验证-应该显示会话列表和详情区域-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---布局验证-应该显示会话列表和详情区域-chromium\video.webm]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---布局验证-应该显示会话列表和详情区域-chromium\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="报告面板 - 布局验证 › 平台筛选下拉框应该有三个选项" classname="report-panel.spec.ts" time="3.456">
+<failure message="report-panel.spec.ts:83:3 平台筛选下拉框应该有三个选项" type="FAILURE">
+<![CDATA[  [chromium] › report-panel.spec.ts:83:3 › 报告面板 - 布局验证 › 平台筛选下拉框应该有三个选项 ────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+       at ..\..\pages\MainWindow.ts:24
+
+      22 |    */
+      23 |   async goto() {
+    > 24 |     await this.page.goto('/');
+         |                     ^
+      25 |     // 等待应用加载
+      26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });
+      27 |   }
+        at MainWindow.goto (C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\pages\MainWindow.ts:24:21)
+        at C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\tests\e2e\report-panel.spec.ts:24:22
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---布局验证-平台筛选下拉框应该有三个选项-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---布局验证-平台筛选下拉框应该有三个选项-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---布局验证-平台筛选下拉框应该有三个选项-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\..\test-results\report-panel-报告面板---布局验证-平台筛选下拉框应该有三个选项-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results\report-panel-报告面板---布局验证-平台筛选下拉框应该有三个选项-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---布局验证-平台筛选下拉框应该有三个选项-chromium\video.webm]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---布局验证-平台筛选下拉框应该有三个选项-chromium\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="报告面板 - 布局验证 › 搜索输入框应该接受文本输入" classname="report-panel.spec.ts" time="3.639">
+<failure message="report-panel.spec.ts:88:3 搜索输入框应该接受文本输入" type="FAILURE">
+<![CDATA[  [chromium] › report-panel.spec.ts:88:3 › 报告面板 - 布局验证 › 搜索输入框应该接受文本输入 ─────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+       at ..\..\pages\MainWindow.ts:24
+
+      22 |    */
+      23 |   async goto() {
+    > 24 |     await this.page.goto('/');
+         |                     ^
+      25 |     // 等待应用加载
+      26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });
+      27 |   }
+        at MainWindow.goto (C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\pages\MainWindow.ts:24:21)
+        at C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\tests\e2e\report-panel.spec.ts:24:22
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---布局验证-搜索输入框应该接受文本输入-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---布局验证-搜索输入框应该接受文本输入-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---布局验证-搜索输入框应该接受文本输入-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\..\test-results\report-panel-报告面板---布局验证-搜索输入框应该接受文本输入-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results\report-panel-报告面板---布局验证-搜索输入框应该接受文本输入-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---布局验证-搜索输入框应该接受文本输入-chromium\video.webm]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---布局验证-搜索输入框应该接受文本输入-chromium\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="报告面板 - 会话选择和详情查看 › 应该能够选择会话并查看详情" classname="report-panel.spec.ts" time="3.873">
+<failure message="report-panel.spec.ts:109:3 应该能够选择会话并查看详情" type="FAILURE">
+<![CDATA[  [chromium] › report-panel.spec.ts:109:3 › 报告面板 - 会话选择和详情查看 › 应该能够选择会话并查看详情 ───────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+       at ..\..\pages\MainWindow.ts:24
+
+      22 |    */
+      23 |   async goto() {
+    > 24 |     await this.page.goto('/');
+         |                     ^
+      25 |     // 等待应用加载
+      26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });
+      27 |   }
+        at MainWindow.goto (C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\pages\MainWindow.ts:24:21)
+        at C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\tests\e2e\report-panel.spec.ts:104:22
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---会话选择和详情查看-应该能够选择会话并查看详情-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---会话选择和详情查看-应该能够选择会话并查看详情-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---会话选择和详情查看-应该能够选择会话并查看详情-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\..\test-results\report-panel-报告面板---会话选择和详情查看-应该能够选择会话并查看详情-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results\report-panel-报告面板---会话选择和详情查看-应该能够选择会话并查看详情-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---会话选择和详情查看-应该能够选择会话并查看详情-chromium\video.webm]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---会话选择和详情查看-应该能够选择会话并查看详情-chromium\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="报告面板 - 会话选择和详情查看 › 选中会话后应该显示会话详情" classname="report-panel.spec.ts" time="3.853">
+<failure message="report-panel.spec.ts:129:3 选中会话后应该显示会话详情" type="FAILURE">
+<![CDATA[  [chromium] › report-panel.spec.ts:129:3 › 报告面板 - 会话选择和详情查看 › 选中会话后应该显示会话详情 ───────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+       at ..\..\pages\MainWindow.ts:24
+
+      22 |    */
+      23 |   async goto() {
+    > 24 |     await this.page.goto('/');
+         |                     ^
+      25 |     // 等待应用加载
+      26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });
+      27 |   }
+        at MainWindow.goto (C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\pages\MainWindow.ts:24:21)
+        at C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\tests\e2e\report-panel.spec.ts:104:22
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---会话选择和详情查看-选中会话后应该显示会话详情-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---会话选择和详情查看-选中会话后应该显示会话详情-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---会话选择和详情查看-选中会话后应该显示会话详情-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\..\test-results\report-panel-报告面板---会话选择和详情查看-选中会话后应该显示会话详情-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results\report-panel-报告面板---会话选择和详情查看-选中会话后应该显示会话详情-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---会话选择和详情查看-选中会话后应该显示会话详情-chromium\video.webm]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---会话选择和详情查看-选中会话后应该显示会话详情-chromium\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="报告面板 - 会话选择和详情查看 › 应该能够切换不同会话" classname="report-panel.spec.ts" time="3.684">
+<failure message="report-panel.spec.ts:157:3 应该能够切换不同会话" type="FAILURE">
+<![CDATA[  [chromium] › report-panel.spec.ts:157:3 › 报告面板 - 会话选择和详情查看 › 应该能够切换不同会话 ──────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+       at ..\..\pages\MainWindow.ts:24
+
+      22 |    */
+      23 |   async goto() {
+    > 24 |     await this.page.goto('/');
+         |                     ^
+      25 |     // 等待应用加载
+      26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });
+      27 |   }
+        at MainWindow.goto (C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\pages\MainWindow.ts:24:21)
+        at C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\tests\e2e\report-panel.spec.ts:104:22
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---会话选择和详情查看-应该能够切换不同会话-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---会话选择和详情查看-应该能够切换不同会话-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---会话选择和详情查看-应该能够切换不同会话-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\..\test-results\report-panel-报告面板---会话选择和详情查看-应该能够切换不同会话-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results\report-panel-报告面板---会话选择和详情查看-应该能够切换不同会话-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---会话选择和详情查看-应该能够切换不同会话-chromium\video.webm]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---会话选择和详情查看-应该能够切换不同会话-chromium\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="报告面板 - 筛选功能 › 应该能够按平台筛选会话" classname="report-panel.spec.ts" time="3.595">
+<failure message="report-panel.spec.ts:192:3 应该能够按平台筛选会话" type="FAILURE">
+<![CDATA[  [chromium] › report-panel.spec.ts:192:3 › 报告面板 - 筛选功能 › 应该能够按平台筛选会话 ──────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+       at ..\..\pages\MainWindow.ts:24
+
+      22 |    */
+      23 |   async goto() {
+    > 24 |     await this.page.goto('/');
+         |                     ^
+      25 |     // 等待应用加载
+      26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });
+      27 |   }
+        at MainWindow.goto (C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\pages\MainWindow.ts:24:21)
+        at C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\tests\e2e\report-panel.spec.ts:187:22
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---筛选功能-应该能够按平台筛选会话-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---筛选功能-应该能够按平台筛选会话-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---筛选功能-应该能够按平台筛选会话-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\..\test-results\report-panel-报告面板---筛选功能-应该能够按平台筛选会话-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results\report-panel-报告面板---筛选功能-应该能够按平台筛选会话-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---筛选功能-应该能够按平台筛选会话-chromium\video.webm]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---筛选功能-应该能够按平台筛选会话-chromium\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="报告面板 - 筛选功能 › 应该能够按包名或应用名搜索" classname="report-panel.spec.ts" time="3.496">
+<failure message="report-panel.spec.ts:230:3 应该能够按包名或应用名搜索" type="FAILURE">
+<![CDATA[  [chromium] › report-panel.spec.ts:230:3 › 报告面板 - 筛选功能 › 应该能够按包名或应用名搜索 ────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+       at ..\..\pages\MainWindow.ts:24
+
+      22 |    */
+      23 |   async goto() {
+    > 24 |     await this.page.goto('/');
+         |                     ^
+      25 |     // 等待应用加载
+      26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });
+      27 |   }
+        at MainWindow.goto (C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\pages\MainWindow.ts:24:21)
+        at C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\tests\e2e\report-panel.spec.ts:187:22
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---筛选功能-应该能够按包名或应用名搜索-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---筛选功能-应该能够按包名或应用名搜索-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---筛选功能-应该能够按包名或应用名搜索-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\..\test-results\report-panel-报告面板---筛选功能-应该能够按包名或应用名搜索-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results\report-panel-报告面板---筛选功能-应该能够按包名或应用名搜索-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---筛选功能-应该能够按包名或应用名搜索-chromium\video.webm]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---筛选功能-应该能够按包名或应用名搜索-chromium\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="报告面板 - 筛选功能 › 搜索不存在的应用应该返回空结果" classname="report-panel.spec.ts" time="3.347">
+<failure message="report-panel.spec.ts:261:3 搜索不存在的应用应该返回空结果" type="FAILURE">
+<![CDATA[  [chromium] › report-panel.spec.ts:261:3 › 报告面板 - 筛选功能 › 搜索不存在的应用应该返回空结果 ──────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+       at ..\..\pages\MainWindow.ts:24
+
+      22 |    */
+      23 |   async goto() {
+    > 24 |     await this.page.goto('/');
+         |                     ^
+      25 |     // 等待应用加载
+      26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });
+      27 |   }
+        at MainWindow.goto (C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\pages\MainWindow.ts:24:21)
+        at C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\tests\e2e\report-panel.spec.ts:187:22
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---筛选功能-搜索不存在的应用应该返回空结果-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---筛选功能-搜索不存在的应用应该返回空结果-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---筛选功能-搜索不存在的应用应该返回空结果-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\..\test-results\report-panel-报告面板---筛选功能-搜索不存在的应用应该返回空结果-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results\report-panel-报告面板---筛选功能-搜索不存在的应用应该返回空结果-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---筛选功能-搜索不存在的应用应该返回空结果-chromium\video.webm]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---筛选功能-搜索不存在的应用应该返回空结果-chromium\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="报告面板 - 筛选功能 › 刷新按钮应该重新加载会话列表" classname="report-panel.spec.ts" time="3.431">
+<failure message="report-panel.spec.ts:288:3 刷新按钮应该重新加载会话列表" type="FAILURE">
+<![CDATA[  [chromium] › report-panel.spec.ts:288:3 › 报告面板 - 筛选功能 › 刷新按钮应该重新加载会话列表 ───────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+       at ..\..\pages\MainWindow.ts:24
+
+      22 |    */
+      23 |   async goto() {
+    > 24 |     await this.page.goto('/');
+         |                     ^
+      25 |     // 等待应用加载
+      26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });
+      27 |   }
+        at MainWindow.goto (C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\pages\MainWindow.ts:24:21)
+        at C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\tests\e2e\report-panel.spec.ts:187:22
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---筛选功能-刷新按钮应该重新加载会话列表-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---筛选功能-刷新按钮应该重新加载会话列表-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---筛选功能-刷新按钮应该重新加载会话列表-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\..\test-results\report-panel-报告面板---筛选功能-刷新按钮应该重新加载会话列表-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results\report-panel-报告面板---筛选功能-刷新按钮应该重新加载会话列表-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---筛选功能-刷新按钮应该重新加载会话列表-chromium\video.webm]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---筛选功能-刷新按钮应该重新加载会话列表-chromium\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="报告面板 - 批量操作 › 应该能够全选所有会话" classname="report-panel.spec.ts" time="3.29">
+<failure message="report-panel.spec.ts:315:3 应该能够全选所有会话" type="FAILURE">
+<![CDATA[  [chromium] › report-panel.spec.ts:315:3 › 报告面板 - 批量操作 › 应该能够全选所有会话 ───────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+       at ..\..\pages\MainWindow.ts:24
+
+      22 |    */
+      23 |   async goto() {
+    > 24 |     await this.page.goto('/');
+         |                     ^
+      25 |     // 等待应用加载
+      26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });
+      27 |   }
+        at MainWindow.goto (C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\pages\MainWindow.ts:24:21)
+        at C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\tests\e2e\report-panel.spec.ts:310:22
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---批量操作-应该能够全选所有会话-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---批量操作-应该能够全选所有会话-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---批量操作-应该能够全选所有会话-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\..\test-results\report-panel-报告面板---批量操作-应该能够全选所有会话-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results\report-panel-报告面板---批量操作-应该能够全选所有会话-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---批量操作-应该能够全选所有会话-chromium\video.webm]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---批量操作-应该能够全选所有会话-chromium\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="报告面板 - 批量操作 › 应该能够选中单个会话复选框" classname="report-panel.spec.ts" time="3.483">
+<failure message="report-panel.spec.ts:343:3 应该能够选中单个会话复选框" type="FAILURE">
+<![CDATA[  [chromium] › report-panel.spec.ts:343:3 › 报告面板 - 批量操作 › 应该能够选中单个会话复选框 ────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+       at ..\..\pages\MainWindow.ts:24
+
+      22 |    */
+      23 |   async goto() {
+    > 24 |     await this.page.goto('/');
+         |                     ^
+      25 |     // 等待应用加载
+      26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });
+      27 |   }
+        at MainWindow.goto (C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\pages\MainWindow.ts:24:21)
+        at C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\tests\e2e\report-panel.spec.ts:310:22
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---批量操作-应该能够选中单个会话复选框-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---批量操作-应该能够选中单个会话复选框-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---批量操作-应该能够选中单个会话复选框-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\..\test-results\report-panel-报告面板---批量操作-应该能够选中单个会话复选框-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results\report-panel-报告面板---批量操作-应该能够选中单个会话复选框-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---批量操作-应该能够选中单个会话复选框-chromium\video.webm]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---批量操作-应该能够选中单个会话复选框-chromium\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="报告面板 - 批量操作 › 应该能够取消选择会话" classname="report-panel.spec.ts" time="3.582">
+<failure message="report-panel.spec.ts:369:3 应该能够取消选择会话" type="FAILURE">
+<![CDATA[  [chromium] › report-panel.spec.ts:369:3 › 报告面板 - 批量操作 › 应该能够取消选择会话 ───────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+       at ..\..\pages\MainWindow.ts:24
+
+      22 |    */
+      23 |   async goto() {
+    > 24 |     await this.page.goto('/');
+         |                     ^
+      25 |     // 等待应用加载
+      26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });
+      27 |   }
+        at MainWindow.goto (C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\pages\MainWindow.ts:24:21)
+        at C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\tests\e2e\report-panel.spec.ts:310:22
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---批量操作-应该能够取消选择会话-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---批量操作-应该能够取消选择会话-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---批量操作-应该能够取消选择会话-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\..\test-results\report-panel-报告面板---批量操作-应该能够取消选择会话-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results\report-panel-报告面板---批量操作-应该能够取消选择会话-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---批量操作-应该能够取消选择会话-chromium\video.webm]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---批量操作-应该能够取消选择会话-chromium\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="报告面板 - 批量操作 › 批量删除按钮应该可见且可点击" classname="report-panel.spec.ts" time="3.378">
+<failure message="report-panel.spec.ts:398:3 批量删除按钮应该可见且可点击" type="FAILURE">
+<![CDATA[  [chromium] › report-panel.spec.ts:398:3 › 报告面板 - 批量操作 › 批量删除按钮应该可见且可点击 ───────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+       at ..\..\pages\MainWindow.ts:24
+
+      22 |    */
+      23 |   async goto() {
+    > 24 |     await this.page.goto('/');
+         |                     ^
+      25 |     // 等待应用加载
+      26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });
+      27 |   }
+        at MainWindow.goto (C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\pages\MainWindow.ts:24:21)
+        at C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\tests\e2e\report-panel.spec.ts:310:22
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---批量操作-批量删除按钮应该可见且可点击-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---批量操作-批量删除按钮应该可见且可点击-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---批量操作-批量删除按钮应该可见且可点击-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\..\test-results\report-panel-报告面板---批量操作-批量删除按钮应该可见且可点击-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results\report-panel-报告面板---批量操作-批量删除按钮应该可见且可点击-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---批量操作-批量删除按钮应该可见且可点击-chromium\video.webm]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---批量操作-批量删除按钮应该可见且可点击-chromium\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="报告面板 - 空状态处理 › 没有会话时应该显示空状态" classname="report-panel.spec.ts" time="3.379">
+<failure message="report-panel.spec.ts:433:3 没有会话时应该显示空状态" type="FAILURE">
+<![CDATA[  [chromium] › report-panel.spec.ts:433:3 › 报告面板 - 空状态处理 › 没有会话时应该显示空状态 ────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+       at ..\..\pages\MainWindow.ts:24
+
+      22 |    */
+      23 |   async goto() {
+    > 24 |     await this.page.goto('/');
+         |                     ^
+      25 |     // 等待应用加载
+      26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });
+      27 |   }
+        at MainWindow.goto (C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\pages\MainWindow.ts:24:21)
+        at C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\tests\e2e\report-panel.spec.ts:428:22
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---空状态处理-没有会话时应该显示空状态-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---空状态处理-没有会话时应该显示空状态-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---空状态处理-没有会话时应该显示空状态-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\..\test-results\report-panel-报告面板---空状态处理-没有会话时应该显示空状态-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results\report-panel-报告面板---空状态处理-没有会话时应该显示空状态-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---空状态处理-没有会话时应该显示空状态-chromium\video.webm]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---空状态处理-没有会话时应该显示空状态-chromium\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="报告面板 - 空状态处理 › 空状态时控件仍然应该可用" classname="report-panel.spec.ts" time="3.501">
+<failure message="report-panel.spec.ts:449:3 空状态时控件仍然应该可用" type="FAILURE">
+<![CDATA[  [chromium] › report-panel.spec.ts:449:3 › 报告面板 - 空状态处理 › 空状态时控件仍然应该可用 ────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+       at ..\..\pages\MainWindow.ts:24
+
+      22 |    */
+      23 |   async goto() {
+    > 24 |     await this.page.goto('/');
+         |                     ^
+      25 |     // 等待应用加载
+      26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });
+      27 |   }
+        at MainWindow.goto (C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\pages\MainWindow.ts:24:21)
+        at C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\tests\e2e\report-panel.spec.ts:428:22
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---空状态处理-空状态时控件仍然应该可用-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---空状态处理-空状态时控件仍然应该可用-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---空状态处理-空状态时控件仍然应该可用-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\..\test-results\report-panel-报告面板---空状态处理-空状态时控件仍然应该可用-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results\report-panel-报告面板---空状态处理-空状态时控件仍然应该可用-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---空状态处理-空状态时控件仍然应该可用-chromium\video.webm]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---空状态处理-空状态时控件仍然应该可用-chromium\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="报告面板 - 响应式布局 › 在不同屏幕尺寸下布局应该正常" classname="report-panel.spec.ts" time="3.439">
+<failure message="report-panel.spec.ts:494:3 在不同屏幕尺寸下布局应该正常" type="FAILURE">
+<![CDATA[  [chromium] › report-panel.spec.ts:494:3 › 报告面板 - 响应式布局 › 在不同屏幕尺寸下布局应该正常 ──────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+       at ..\..\pages\MainWindow.ts:24
+
+      22 |    */
+      23 |   async goto() {
+    > 24 |     await this.page.goto('/');
+         |                     ^
+      25 |     // 等待应用加载
+      26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });
+      27 |   }
+        at MainWindow.goto (C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\pages\MainWindow.ts:24:21)
+        at C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\tests\e2e\report-panel.spec.ts:489:22
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---响应式布局-在不同屏幕尺寸下布局应该正常-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---响应式布局-在不同屏幕尺寸下布局应该正常-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---响应式布局-在不同屏幕尺寸下布局应该正常-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\..\test-results\report-panel-报告面板---响应式布局-在不同屏幕尺寸下布局应该正常-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results\report-panel-报告面板---响应式布局-在不同屏幕尺寸下布局应该正常-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---响应式布局-在不同屏幕尺寸下布局应该正常-chromium\video.webm]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---响应式布局-在不同屏幕尺寸下布局应该正常-chromium\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="报告面板 - 综合测试 › 完整的用户流程: 导航 -&gt; 筛选 -&gt; 选择会话 -&gt; 查看详情" classname="report-panel.spec.ts" time="3.386">
+<failure message="report-panel.spec.ts:535:3 完整的用户流程: 导航 -&gt; 筛选 -&gt; 选择会话 -&gt; 查看详情" type="FAILURE">
+<![CDATA[  [chromium] › report-panel.spec.ts:535:3 › 报告面板 - 综合测试 › 完整的用户流程: 导航 -> 筛选 -> 选择会话 -> 查看详情 ────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+       at ..\..\pages\MainWindow.ts:24
+
+      22 |    */
+      23 |   async goto() {
+    > 24 |     await this.page.goto('/');
+         |                     ^
+      25 |     // 等待应用加载
+      26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });
+      27 |   }
+        at MainWindow.goto (C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\pages\MainWindow.ts:24:21)
+        at C:\Users\86132\Desktop\收纳盒\性能工具\insight_eye\insight_eye-1.0.0\.worktrees\1.0.0\insight_eyes\web-frontend\tests\e2e\report-panel.spec.ts:530:22
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---综合测试-完整的用户流程-导航---筛选---选择会话---查看详情-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---综合测试-完整的用户流程-导航---筛选---选择会话---查看详情-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\..\test-results\report-panel-报告面板---综合测试-完整的用户流程-导航---筛选---选择会话---查看详情-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\..\test-results\report-panel-报告面板---综合测试-完整的用户流程-导航---筛选---选择会话---查看详情-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results\report-panel-报告面板---综合测试-完整的用户流程-导航---筛选---选择会话---查看详情-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---综合测试-完整的用户流程-导航---筛选---选择会话---查看详情-chromium\video.webm]]
+
+[[ATTACHMENT|test-results\report-panel-报告面板---综合测试-完整的用户流程-导航---筛选---选择会话---查看详情-chromium\trace.zip]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+</testsuites>

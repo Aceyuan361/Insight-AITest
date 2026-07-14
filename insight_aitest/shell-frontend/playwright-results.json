@@ -1,0 +1,1629 @@
+{
+  "config": {
+    "configFile": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\playwright.config.ts",
+    "rootDir": "C:/Users/86132/Desktop/收纳盒/性能工具/insight_eye/insight_eye-1.0.0/.worktrees/1.0.0/insight_eyes/web-frontend/tests/e2e",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/86132/Desktop/收纳盒/性能工具/insight_eye/insight_eye-1.0.0/.worktrees/1.0.0/insight_eyes/web-frontend/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/Users/86132/Desktop/收纳盒/性能工具/insight_eye/insight_eye-1.0.0/.worktrees/1.0.0/insight_eyes/web-frontend/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "html",
+        {
+          "outputFolder": "playwright-report"
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "playwright-results.json"
+        }
+      ],
+      [
+        "junit",
+        {
+          "outputFile": "playwright-results.xml"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "runAgents": "none",
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.58.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "report-panel.spec.ts",
+      "file": "report-panel.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "报告面板 - 布局验证",
+          "file": "report-panel.spec.ts",
+          "line": 15,
+          "column": 6,
+          "specs": [
+            {
+              "title": "应该显示报告面板标题",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3641,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:24:22",
+                        "location": {
+                          "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                          "column": 21,
+                          "line": 24
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m..\\..\\pages\\MainWindow.ts:24\n\n\u001b[0m \u001b[90m 22 |\u001b[39m \u001b[90m   */\u001b[39m\n \u001b[90m 23 |\u001b[39m   \u001b[36masync\u001b[39m goto() {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 24 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mpage\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 25 |\u001b[39m     \u001b[90m// 等待应用加载\u001b[39m\n \u001b[90m 26 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mmenuBar\u001b[33m.\u001b[39mwaitFor({ state\u001b[33m:\u001b[39m \u001b[32m'visible'\u001b[39m\u001b[33m,\u001b[39m timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 27 |\u001b[39m   }\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                            "column": 21,
+                            "line": 24
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n\n   at ..\\..\\pages\\MainWindow.ts:24\n\n  22 |    */\n  23 |   async goto() {\n> 24 |     await this.page.goto('/');\n     |                     ^\n  25 |     // 等待应用加载\n  26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });\n  27 |   }\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:24:22"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-06T04:29:25.462Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---布局验证-应该显示报告面板标题-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---布局验证-应该显示报告面板标题-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---布局验证-应该显示报告面板标题-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                        "column": 21,
+                        "line": 24
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-9150787093716e869bde",
+              "file": "report-panel.spec.ts",
+              "line": 29,
+              "column": 3
+            },
+            {
+              "title": "应该显示所有筛选控件",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3748,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:24:22",
+                        "location": {
+                          "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                          "column": 21,
+                          "line": 24
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m..\\..\\pages\\MainWindow.ts:24\n\n\u001b[0m \u001b[90m 22 |\u001b[39m \u001b[90m   */\u001b[39m\n \u001b[90m 23 |\u001b[39m   \u001b[36masync\u001b[39m goto() {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 24 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mpage\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 25 |\u001b[39m     \u001b[90m// 等待应用加载\u001b[39m\n \u001b[90m 26 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mmenuBar\u001b[33m.\u001b[39mwaitFor({ state\u001b[33m:\u001b[39m \u001b[32m'visible'\u001b[39m\u001b[33m,\u001b[39m timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 27 |\u001b[39m   }\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                            "column": 21,
+                            "line": 24
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n\n   at ..\\..\\pages\\MainWindow.ts:24\n\n  22 |    */\n  23 |   async goto() {\n> 24 |     await this.page.goto('/');\n     |                     ^\n  25 |     // 等待应用加载\n  26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });\n  27 |   }\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:24:22"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-06T04:29:34.242Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---布局验证-应该显示所有筛选控件-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---布局验证-应该显示所有筛选控件-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---布局验证-应该显示所有筛选控件-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                        "column": 21,
+                        "line": 24
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-c7d1a8cb8c8c8caeb24a",
+              "file": "report-panel.spec.ts",
+              "line": 41,
+              "column": 3
+            },
+            {
+              "title": "应该显示会话列表和详情区域",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3646,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:24:22",
+                        "location": {
+                          "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                          "column": 21,
+                          "line": 24
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m..\\..\\pages\\MainWindow.ts:24\n\n\u001b[0m \u001b[90m 22 |\u001b[39m \u001b[90m   */\u001b[39m\n \u001b[90m 23 |\u001b[39m   \u001b[36masync\u001b[39m goto() {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 24 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mpage\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 25 |\u001b[39m     \u001b[90m// 等待应用加载\u001b[39m\n \u001b[90m 26 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mmenuBar\u001b[33m.\u001b[39mwaitFor({ state\u001b[33m:\u001b[39m \u001b[32m'visible'\u001b[39m\u001b[33m,\u001b[39m timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 27 |\u001b[39m   }\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                            "column": 21,
+                            "line": 24
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n\n   at ..\\..\\pages\\MainWindow.ts:24\n\n  22 |    */\n  23 |   async goto() {\n> 24 |     await this.page.goto('/');\n     |                     ^\n  25 |     // 等待应用加载\n  26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });\n  27 |   }\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:24:22"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-06T04:29:42.606Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---布局验证-应该显示会话列表和详情区域-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---布局验证-应该显示会话列表和详情区域-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---布局验证-应该显示会话列表和详情区域-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                        "column": 21,
+                        "line": 24
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-64607f88fefe2b123460",
+              "file": "report-panel.spec.ts",
+              "line": 64,
+              "column": 3
+            },
+            {
+              "title": "平台筛选下拉框应该有三个选项",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3456,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:24:22",
+                        "location": {
+                          "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                          "column": 21,
+                          "line": 24
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m..\\..\\pages\\MainWindow.ts:24\n\n\u001b[0m \u001b[90m 22 |\u001b[39m \u001b[90m   */\u001b[39m\n \u001b[90m 23 |\u001b[39m   \u001b[36masync\u001b[39m goto() {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 24 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mpage\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 25 |\u001b[39m     \u001b[90m// 等待应用加载\u001b[39m\n \u001b[90m 26 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mmenuBar\u001b[33m.\u001b[39mwaitFor({ state\u001b[33m:\u001b[39m \u001b[32m'visible'\u001b[39m\u001b[33m,\u001b[39m timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 27 |\u001b[39m   }\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                            "column": 21,
+                            "line": 24
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n\n   at ..\\..\\pages\\MainWindow.ts:24\n\n  22 |    */\n  23 |   async goto() {\n> 24 |     await this.page.goto('/');\n     |                     ^\n  25 |     // 等待应用加载\n  26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });\n  27 |   }\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:24:22"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-06T04:29:51.082Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---布局验证-平台筛选下拉框应该有三个选项-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---布局验证-平台筛选下拉框应该有三个选项-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---布局验证-平台筛选下拉框应该有三个选项-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                        "column": 21,
+                        "line": 24
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-569485135ebfc988c29d",
+              "file": "report-panel.spec.ts",
+              "line": 83,
+              "column": 3
+            },
+            {
+              "title": "搜索输入框应该接受文本输入",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3639,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:24:22",
+                        "location": {
+                          "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                          "column": 21,
+                          "line": 24
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m..\\..\\pages\\MainWindow.ts:24\n\n\u001b[0m \u001b[90m 22 |\u001b[39m \u001b[90m   */\u001b[39m\n \u001b[90m 23 |\u001b[39m   \u001b[36masync\u001b[39m goto() {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 24 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mpage\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 25 |\u001b[39m     \u001b[90m// 等待应用加载\u001b[39m\n \u001b[90m 26 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mmenuBar\u001b[33m.\u001b[39mwaitFor({ state\u001b[33m:\u001b[39m \u001b[32m'visible'\u001b[39m\u001b[33m,\u001b[39m timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 27 |\u001b[39m   }\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                            "column": 21,
+                            "line": 24
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n\n   at ..\\..\\pages\\MainWindow.ts:24\n\n  22 |    */\n  23 |   async goto() {\n> 24 |     await this.page.goto('/');\n     |                     ^\n  25 |     // 等待应用加载\n  26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });\n  27 |   }\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:24:22"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-06T04:29:59.072Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---布局验证-搜索输入框应该接受文本输入-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---布局验证-搜索输入框应该接受文本输入-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---布局验证-搜索输入框应该接受文本输入-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                        "column": 21,
+                        "line": 24
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-4e815013593c6d9a9f7d",
+              "file": "report-panel.spec.ts",
+              "line": 88,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "报告面板 - 会话选择和详情查看",
+          "file": "report-panel.spec.ts",
+          "line": 96,
+          "column": 6,
+          "specs": [
+            {
+              "title": "应该能够选择会话并查看详情",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3873,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:104:22",
+                        "location": {
+                          "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                          "column": 21,
+                          "line": 24
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m..\\..\\pages\\MainWindow.ts:24\n\n\u001b[0m \u001b[90m 22 |\u001b[39m \u001b[90m   */\u001b[39m\n \u001b[90m 23 |\u001b[39m   \u001b[36masync\u001b[39m goto() {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 24 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mpage\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 25 |\u001b[39m     \u001b[90m// 等待应用加载\u001b[39m\n \u001b[90m 26 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mmenuBar\u001b[33m.\u001b[39mwaitFor({ state\u001b[33m:\u001b[39m \u001b[32m'visible'\u001b[39m\u001b[33m,\u001b[39m timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 27 |\u001b[39m   }\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                            "column": 21,
+                            "line": 24
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n\n   at ..\\..\\pages\\MainWindow.ts:24\n\n  22 |    */\n  23 |   async goto() {\n> 24 |     await this.page.goto('/');\n     |                     ^\n  25 |     // 等待应用加载\n  26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });\n  27 |   }\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:104:22"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-06T04:30:08.414Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---会话选择和详情查看-应该能够选择会话并查看详情-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---会话选择和详情查看-应该能够选择会话并查看详情-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---会话选择和详情查看-应该能够选择会话并查看详情-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                        "column": 21,
+                        "line": 24
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-8d65b4a3c26c3e9f4231",
+              "file": "report-panel.spec.ts",
+              "line": 109,
+              "column": 3
+            },
+            {
+              "title": "选中会话后应该显示会话详情",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3853,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:104:22",
+                        "location": {
+                          "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                          "column": 21,
+                          "line": 24
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m..\\..\\pages\\MainWindow.ts:24\n\n\u001b[0m \u001b[90m 22 |\u001b[39m \u001b[90m   */\u001b[39m\n \u001b[90m 23 |\u001b[39m   \u001b[36masync\u001b[39m goto() {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 24 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mpage\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 25 |\u001b[39m     \u001b[90m// 等待应用加载\u001b[39m\n \u001b[90m 26 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mmenuBar\u001b[33m.\u001b[39mwaitFor({ state\u001b[33m:\u001b[39m \u001b[32m'visible'\u001b[39m\u001b[33m,\u001b[39m timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 27 |\u001b[39m   }\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                            "column": 21,
+                            "line": 24
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n\n   at ..\\..\\pages\\MainWindow.ts:24\n\n  22 |    */\n  23 |   async goto() {\n> 24 |     await this.page.goto('/');\n     |                     ^\n  25 |     // 等待应用加载\n  26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });\n  27 |   }\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:104:22"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-06T04:30:17.470Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---会话选择和详情查看-选中会话后应该显示会话详情-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---会话选择和详情查看-选中会话后应该显示会话详情-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---会话选择和详情查看-选中会话后应该显示会话详情-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                        "column": 21,
+                        "line": 24
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-593d6cf75185f27d5c3e",
+              "file": "report-panel.spec.ts",
+              "line": 129,
+              "column": 3
+            },
+            {
+              "title": "应该能够切换不同会话",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3684,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:104:22",
+                        "location": {
+                          "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                          "column": 21,
+                          "line": 24
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m..\\..\\pages\\MainWindow.ts:24\n\n\u001b[0m \u001b[90m 22 |\u001b[39m \u001b[90m   */\u001b[39m\n \u001b[90m 23 |\u001b[39m   \u001b[36masync\u001b[39m goto() {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 24 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mpage\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 25 |\u001b[39m     \u001b[90m// 等待应用加载\u001b[39m\n \u001b[90m 26 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mmenuBar\u001b[33m.\u001b[39mwaitFor({ state\u001b[33m:\u001b[39m \u001b[32m'visible'\u001b[39m\u001b[33m,\u001b[39m timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 27 |\u001b[39m   }\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                            "column": 21,
+                            "line": 24
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n\n   at ..\\..\\pages\\MainWindow.ts:24\n\n  22 |    */\n  23 |   async goto() {\n> 24 |     await this.page.goto('/');\n     |                     ^\n  25 |     // 等待应用加载\n  26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });\n  27 |   }\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:104:22"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-06T04:30:26.667Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---会话选择和详情查看-应该能够切换不同会话-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---会话选择和详情查看-应该能够切换不同会话-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---会话选择和详情查看-应该能够切换不同会话-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                        "column": 21,
+                        "line": 24
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-9eafe036e6c44b8b9c21",
+              "file": "report-panel.spec.ts",
+              "line": 157,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "报告面板 - 筛选功能",
+          "file": "report-panel.spec.ts",
+          "line": 179,
+          "column": 6,
+          "specs": [
+            {
+              "title": "应该能够按平台筛选会话",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3595,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:187:22",
+                        "location": {
+                          "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                          "column": 21,
+                          "line": 24
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m..\\..\\pages\\MainWindow.ts:24\n\n\u001b[0m \u001b[90m 22 |\u001b[39m \u001b[90m   */\u001b[39m\n \u001b[90m 23 |\u001b[39m   \u001b[36masync\u001b[39m goto() {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 24 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mpage\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 25 |\u001b[39m     \u001b[90m// 等待应用加载\u001b[39m\n \u001b[90m 26 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mmenuBar\u001b[33m.\u001b[39mwaitFor({ state\u001b[33m:\u001b[39m \u001b[32m'visible'\u001b[39m\u001b[33m,\u001b[39m timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 27 |\u001b[39m   }\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                            "column": 21,
+                            "line": 24
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n\n   at ..\\..\\pages\\MainWindow.ts:24\n\n  22 |    */\n  23 |   async goto() {\n> 24 |     await this.page.goto('/');\n     |                     ^\n  25 |     // 等待应用加载\n  26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });\n  27 |   }\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:187:22"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-06T04:30:35.223Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---筛选功能-应该能够按平台筛选会话-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---筛选功能-应该能够按平台筛选会话-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---筛选功能-应该能够按平台筛选会话-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                        "column": 21,
+                        "line": 24
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-e2eda7d13bb574850892",
+              "file": "report-panel.spec.ts",
+              "line": 192,
+              "column": 3
+            },
+            {
+              "title": "应该能够按包名或应用名搜索",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3496,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:187:22",
+                        "location": {
+                          "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                          "column": 21,
+                          "line": 24
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m..\\..\\pages\\MainWindow.ts:24\n\n\u001b[0m \u001b[90m 22 |\u001b[39m \u001b[90m   */\u001b[39m\n \u001b[90m 23 |\u001b[39m   \u001b[36masync\u001b[39m goto() {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 24 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mpage\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 25 |\u001b[39m     \u001b[90m// 等待应用加载\u001b[39m\n \u001b[90m 26 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mmenuBar\u001b[33m.\u001b[39mwaitFor({ state\u001b[33m:\u001b[39m \u001b[32m'visible'\u001b[39m\u001b[33m,\u001b[39m timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 27 |\u001b[39m   }\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                            "column": 21,
+                            "line": 24
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n\n   at ..\\..\\pages\\MainWindow.ts:24\n\n  22 |    */\n  23 |   async goto() {\n> 24 |     await this.page.goto('/');\n     |                     ^\n  25 |     // 等待应用加载\n  26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });\n  27 |   }\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:187:22"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-06T04:30:42.653Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---筛选功能-应该能够按包名或应用名搜索-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---筛选功能-应该能够按包名或应用名搜索-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---筛选功能-应该能够按包名或应用名搜索-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                        "column": 21,
+                        "line": 24
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-66135fdd4bc2b280eb8b",
+              "file": "report-panel.spec.ts",
+              "line": 230,
+              "column": 3
+            },
+            {
+              "title": "搜索不存在的应用应该返回空结果",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 10,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3347,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:187:22",
+                        "location": {
+                          "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                          "column": 21,
+                          "line": 24
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m..\\..\\pages\\MainWindow.ts:24\n\n\u001b[0m \u001b[90m 22 |\u001b[39m \u001b[90m   */\u001b[39m\n \u001b[90m 23 |\u001b[39m   \u001b[36masync\u001b[39m goto() {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 24 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mpage\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 25 |\u001b[39m     \u001b[90m// 等待应用加载\u001b[39m\n \u001b[90m 26 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mmenuBar\u001b[33m.\u001b[39mwaitFor({ state\u001b[33m:\u001b[39m \u001b[32m'visible'\u001b[39m\u001b[33m,\u001b[39m timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 27 |\u001b[39m   }\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                            "column": 21,
+                            "line": 24
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n\n   at ..\\..\\pages\\MainWindow.ts:24\n\n  22 |    */\n  23 |   async goto() {\n> 24 |     await this.page.goto('/');\n     |                     ^\n  25 |     // 等待应用加载\n  26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });\n  27 |   }\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:187:22"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-06T04:30:50.571Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---筛选功能-搜索不存在的应用应该返回空结果-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---筛选功能-搜索不存在的应用应该返回空结果-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---筛选功能-搜索不存在的应用应该返回空结果-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                        "column": 21,
+                        "line": 24
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-bbaf6e7b7139b3de7578",
+              "file": "report-panel.spec.ts",
+              "line": 261,
+              "column": 3
+            },
+            {
+              "title": "刷新按钮应该重新加载会话列表",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3431,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:187:22",
+                        "location": {
+                          "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                          "column": 21,
+                          "line": 24
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m..\\..\\pages\\MainWindow.ts:24\n\n\u001b[0m \u001b[90m 22 |\u001b[39m \u001b[90m   */\u001b[39m\n \u001b[90m 23 |\u001b[39m   \u001b[36masync\u001b[39m goto() {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 24 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mpage\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 25 |\u001b[39m     \u001b[90m// 等待应用加载\u001b[39m\n \u001b[90m 26 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mmenuBar\u001b[33m.\u001b[39mwaitFor({ state\u001b[33m:\u001b[39m \u001b[32m'visible'\u001b[39m\u001b[33m,\u001b[39m timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 27 |\u001b[39m   }\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                            "column": 21,
+                            "line": 24
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n\n   at ..\\..\\pages\\MainWindow.ts:24\n\n  22 |    */\n  23 |   async goto() {\n> 24 |     await this.page.goto('/');\n     |                     ^\n  25 |     // 等待应用加载\n  26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });\n  27 |   }\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:187:22"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-06T04:30:59.007Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---筛选功能-刷新按钮应该重新加载会话列表-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---筛选功能-刷新按钮应该重新加载会话列表-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---筛选功能-刷新按钮应该重新加载会话列表-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                        "column": 21,
+                        "line": 24
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-c501ce68f0796b618dbe",
+              "file": "report-panel.spec.ts",
+              "line": 288,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "报告面板 - 批量操作",
+          "file": "report-panel.spec.ts",
+          "line": 302,
+          "column": 6,
+          "specs": [
+            {
+              "title": "应该能够全选所有会话",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 12,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3290,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:310:22",
+                        "location": {
+                          "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                          "column": 21,
+                          "line": 24
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m..\\..\\pages\\MainWindow.ts:24\n\n\u001b[0m \u001b[90m 22 |\u001b[39m \u001b[90m   */\u001b[39m\n \u001b[90m 23 |\u001b[39m   \u001b[36masync\u001b[39m goto() {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 24 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mpage\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 25 |\u001b[39m     \u001b[90m// 等待应用加载\u001b[39m\n \u001b[90m 26 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mmenuBar\u001b[33m.\u001b[39mwaitFor({ state\u001b[33m:\u001b[39m \u001b[32m'visible'\u001b[39m\u001b[33m,\u001b[39m timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 27 |\u001b[39m   }\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                            "column": 21,
+                            "line": 24
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n\n   at ..\\..\\pages\\MainWindow.ts:24\n\n  22 |    */\n  23 |   async goto() {\n> 24 |     await this.page.goto('/');\n     |                     ^\n  25 |     // 等待应用加载\n  26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });\n  27 |   }\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:310:22"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-06T04:31:06.794Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---批量操作-应该能够全选所有会话-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---批量操作-应该能够全选所有会话-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---批量操作-应该能够全选所有会话-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                        "column": 21,
+                        "line": 24
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-e418dd51ebac0eed7565",
+              "file": "report-panel.spec.ts",
+              "line": 315,
+              "column": 3
+            },
+            {
+              "title": "应该能够选中单个会话复选框",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 13,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3483,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:310:22",
+                        "location": {
+                          "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                          "column": 21,
+                          "line": 24
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m..\\..\\pages\\MainWindow.ts:24\n\n\u001b[0m \u001b[90m 22 |\u001b[39m \u001b[90m   */\u001b[39m\n \u001b[90m 23 |\u001b[39m   \u001b[36masync\u001b[39m goto() {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 24 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mpage\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 25 |\u001b[39m     \u001b[90m// 等待应用加载\u001b[39m\n \u001b[90m 26 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mmenuBar\u001b[33m.\u001b[39mwaitFor({ state\u001b[33m:\u001b[39m \u001b[32m'visible'\u001b[39m\u001b[33m,\u001b[39m timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 27 |\u001b[39m   }\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                            "column": 21,
+                            "line": 24
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n\n   at ..\\..\\pages\\MainWindow.ts:24\n\n  22 |    */\n  23 |   async goto() {\n> 24 |     await this.page.goto('/');\n     |                     ^\n  25 |     // 等待应用加载\n  26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });\n  27 |   }\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:310:22"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-06T04:31:15.191Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---批量操作-应该能够选中单个会话复选框-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---批量操作-应该能够选中单个会话复选框-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---批量操作-应该能够选中单个会话复选框-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                        "column": 21,
+                        "line": 24
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-10f77cb7cd0989fd2512",
+              "file": "report-panel.spec.ts",
+              "line": 343,
+              "column": 3
+            },
+            {
+              "title": "应该能够取消选择会话",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 14,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3582,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:310:22",
+                        "location": {
+                          "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                          "column": 21,
+                          "line": 24
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m..\\..\\pages\\MainWindow.ts:24\n\n\u001b[0m \u001b[90m 22 |\u001b[39m \u001b[90m   */\u001b[39m\n \u001b[90m 23 |\u001b[39m   \u001b[36masync\u001b[39m goto() {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 24 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mpage\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 25 |\u001b[39m     \u001b[90m// 等待应用加载\u001b[39m\n \u001b[90m 26 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mmenuBar\u001b[33m.\u001b[39mwaitFor({ state\u001b[33m:\u001b[39m \u001b[32m'visible'\u001b[39m\u001b[33m,\u001b[39m timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 27 |\u001b[39m   }\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                            "column": 21,
+                            "line": 24
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n\n   at ..\\..\\pages\\MainWindow.ts:24\n\n  22 |    */\n  23 |   async goto() {\n> 24 |     await this.page.goto('/');\n     |                     ^\n  25 |     // 等待应用加载\n  26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });\n  27 |   }\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:310:22"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-06T04:31:23.006Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---批量操作-应该能够取消选择会话-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---批量操作-应该能够取消选择会话-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---批量操作-应该能够取消选择会话-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                        "column": 21,
+                        "line": 24
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-55fef7fd3843455c6dba",
+              "file": "report-panel.spec.ts",
+              "line": 369,
+              "column": 3
+            },
+            {
+              "title": "批量删除按钮应该可见且可点击",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 15,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3378,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:310:22",
+                        "location": {
+                          "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                          "column": 21,
+                          "line": 24
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m..\\..\\pages\\MainWindow.ts:24\n\n\u001b[0m \u001b[90m 22 |\u001b[39m \u001b[90m   */\u001b[39m\n \u001b[90m 23 |\u001b[39m   \u001b[36masync\u001b[39m goto() {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 24 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mpage\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 25 |\u001b[39m     \u001b[90m// 等待应用加载\u001b[39m\n \u001b[90m 26 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mmenuBar\u001b[33m.\u001b[39mwaitFor({ state\u001b[33m:\u001b[39m \u001b[32m'visible'\u001b[39m\u001b[33m,\u001b[39m timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 27 |\u001b[39m   }\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                            "column": 21,
+                            "line": 24
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n\n   at ..\\..\\pages\\MainWindow.ts:24\n\n  22 |    */\n  23 |   async goto() {\n> 24 |     await this.page.goto('/');\n     |                     ^\n  25 |     // 等待应用加载\n  26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });\n  27 |   }\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:310:22"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-06T04:31:30.702Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---批量操作-批量删除按钮应该可见且可点击-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---批量操作-批量删除按钮应该可见且可点击-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---批量操作-批量删除按钮应该可见且可点击-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                        "column": 21,
+                        "line": 24
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-723906ddc7e993cae7cf",
+              "file": "report-panel.spec.ts",
+              "line": 398,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "报告面板 - 空状态处理",
+          "file": "report-panel.spec.ts",
+          "line": 420,
+          "column": 6,
+          "specs": [
+            {
+              "title": "没有会话时应该显示空状态",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 16,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3379,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:428:22",
+                        "location": {
+                          "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                          "column": 21,
+                          "line": 24
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m..\\..\\pages\\MainWindow.ts:24\n\n\u001b[0m \u001b[90m 22 |\u001b[39m \u001b[90m   */\u001b[39m\n \u001b[90m 23 |\u001b[39m   \u001b[36masync\u001b[39m goto() {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 24 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mpage\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 25 |\u001b[39m     \u001b[90m// 等待应用加载\u001b[39m\n \u001b[90m 26 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mmenuBar\u001b[33m.\u001b[39mwaitFor({ state\u001b[33m:\u001b[39m \u001b[32m'visible'\u001b[39m\u001b[33m,\u001b[39m timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 27 |\u001b[39m   }\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                            "column": 21,
+                            "line": 24
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n\n   at ..\\..\\pages\\MainWindow.ts:24\n\n  22 |    */\n  23 |   async goto() {\n> 24 |     await this.page.goto('/');\n     |                     ^\n  25 |     // 等待应用加载\n  26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });\n  27 |   }\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:428:22"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-06T04:31:38.694Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---空状态处理-没有会话时应该显示空状态-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---空状态处理-没有会话时应该显示空状态-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---空状态处理-没有会话时应该显示空状态-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                        "column": 21,
+                        "line": 24
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-92175a7d36c0b1886169",
+              "file": "report-panel.spec.ts",
+              "line": 433,
+              "column": 3
+            },
+            {
+              "title": "空状态时控件仍然应该可用",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 17,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3501,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:428:22",
+                        "location": {
+                          "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                          "column": 21,
+                          "line": 24
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m..\\..\\pages\\MainWindow.ts:24\n\n\u001b[0m \u001b[90m 22 |\u001b[39m \u001b[90m   */\u001b[39m\n \u001b[90m 23 |\u001b[39m   \u001b[36masync\u001b[39m goto() {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 24 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mpage\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 25 |\u001b[39m     \u001b[90m// 等待应用加载\u001b[39m\n \u001b[90m 26 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mmenuBar\u001b[33m.\u001b[39mwaitFor({ state\u001b[33m:\u001b[39m \u001b[32m'visible'\u001b[39m\u001b[33m,\u001b[39m timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 27 |\u001b[39m   }\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                            "column": 21,
+                            "line": 24
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n\n   at ..\\..\\pages\\MainWindow.ts:24\n\n  22 |    */\n  23 |   async goto() {\n> 24 |     await this.page.goto('/');\n     |                     ^\n  25 |     // 等待应用加载\n  26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });\n  27 |   }\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:428:22"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-06T04:31:46.316Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---空状态处理-空状态时控件仍然应该可用-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---空状态处理-空状态时控件仍然应该可用-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---空状态处理-空状态时控件仍然应该可用-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                        "column": 21,
+                        "line": 24
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-7af3e460162f0d7ebc37",
+              "file": "report-panel.spec.ts",
+              "line": 449,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "报告面板 - 响应式布局",
+          "file": "report-panel.spec.ts",
+          "line": 481,
+          "column": 6,
+          "specs": [
+            {
+              "title": "在不同屏幕尺寸下布局应该正常",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 18,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3439,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:489:22",
+                        "location": {
+                          "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                          "column": 21,
+                          "line": 24
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m..\\..\\pages\\MainWindow.ts:24\n\n\u001b[0m \u001b[90m 22 |\u001b[39m \u001b[90m   */\u001b[39m\n \u001b[90m 23 |\u001b[39m   \u001b[36masync\u001b[39m goto() {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 24 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mpage\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 25 |\u001b[39m     \u001b[90m// 等待应用加载\u001b[39m\n \u001b[90m 26 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mmenuBar\u001b[33m.\u001b[39mwaitFor({ state\u001b[33m:\u001b[39m \u001b[32m'visible'\u001b[39m\u001b[33m,\u001b[39m timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 27 |\u001b[39m   }\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                            "column": 21,
+                            "line": 24
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n\n   at ..\\..\\pages\\MainWindow.ts:24\n\n  22 |    */\n  23 |   async goto() {\n> 24 |     await this.page.goto('/');\n     |                     ^\n  25 |     // 等待应用加载\n  26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });\n  27 |   }\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:489:22"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-06T04:31:54.614Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---响应式布局-在不同屏幕尺寸下布局应该正常-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---响应式布局-在不同屏幕尺寸下布局应该正常-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---响应式布局-在不同屏幕尺寸下布局应该正常-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                        "column": 21,
+                        "line": 24
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-b52d3610465dd03ca679",
+              "file": "report-panel.spec.ts",
+              "line": 494,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "报告面板 - 综合测试",
+          "file": "report-panel.spec.ts",
+          "line": 522,
+          "column": 6,
+          "specs": [
+            {
+              "title": "完整的用户流程: 导航 -> 筛选 -> 选择会话 -> 查看详情",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 19,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3386,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:530:22",
+                        "location": {
+                          "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                          "column": 21,
+                          "line": 24
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m..\\..\\pages\\MainWindow.ts:24\n\n\u001b[0m \u001b[90m 22 |\u001b[39m \u001b[90m   */\u001b[39m\n \u001b[90m 23 |\u001b[39m   \u001b[36masync\u001b[39m goto() {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 24 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mpage\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 25 |\u001b[39m     \u001b[90m// 等待应用加载\u001b[39m\n \u001b[90m 26 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mmenuBar\u001b[33m.\u001b[39mwaitFor({ state\u001b[33m:\u001b[39m \u001b[32m'visible'\u001b[39m\u001b[33m,\u001b[39m timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 27 |\u001b[39m   }\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                            "column": 21,
+                            "line": 24
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"load\"\u001b[22m\n\n\n   at ..\\..\\pages\\MainWindow.ts:24\n\n  22 |    */\n  23 |   async goto() {\n> 24 |     await this.page.goto('/');\n     |                     ^\n  25 |     // 等待应用加载\n  26 |     await this.menuBar.waitFor({ state: 'visible', timeout: 10000 });\n  27 |   }\n    at MainWindow.goto (C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts:24:21)\n    at C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\tests\\e2e\\report-panel.spec.ts:530:22"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-06T04:32:03.142Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---综合测试-完整的用户流程-导航---筛选---选择会话---查看详情-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---综合测试-完整的用户流程-导航---筛选---选择会话---查看详情-chromium\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\test-results\\report-panel-报告面板---综合测试-完整的用户流程-导航---筛选---选择会话---查看详情-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\86132\\Desktop\\收纳盒\\性能工具\\insight_eye\\insight_eye-1.0.0\\.worktrees\\1.0.0\\insight_eyes\\web-frontend\\pages\\MainWindow.ts",
+                        "column": 21,
+                        "line": 24
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "fb571f6132b73d9c87ba-b428d833b993933381b4",
+              "file": "report-panel.spec.ts",
+              "line": 535,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-02-06T04:29:21.470Z",
+    "duration": 166010.769,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 20,
+    "flaky": 0
+  }
+}

@@ -1,0 +1,67 @@
+name: CI
+
+# v2.0.0 pipeline. Previous version targeted the deleted `web-frontend/` dir
+# and never ran the pytest suite — this fixes both.
+on:
+  push:
+    branches: [ 1.0.0, 2.0.0, main, "feature/v2-*" ]
+  pull_request:
+    branches: [ 1.0.0, 2.0.0, main ]
+
+jobs:
+  backend-test:
+    name: Backend Tests (pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      - name: Install dependencies (app + dev extras)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: Run pytest
+        run: pytest tests/ -q
+
+  backend-lint:
+    name: Backend Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: Run Ruff (lint, fatal errors)
+        run: ruff check insight_aitest/ --select E9,F63,F7,F82
+      - name: Run Black (format check)
+        run: black --check insight_aitest/
+
+  frontend-build:
+    name: Frontend Lint + Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: insight_aitest/shell-frontend
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: insight_aitest/shell-frontend/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Run ESLint
+        run: npm run lint
+      - name: Build (tsc + vite)
+        run: npm run build

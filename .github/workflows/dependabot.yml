@@ -1,0 +1,30 @@
+version: 2
+updates:
+  # GitHub Actions 的依赖更新
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+
+  # Node.js 的依赖更新（v2.0.0 前端在 shell-frontend/）
+  - package-ecosystem: "npm"
+    directory: "/insight_aitest/shell-frontend"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "frontend"
+      include: "scope"
+    open-pull-requests-limit: 10
+
+  # Python 的依赖更新（pyproject.toml + requirements.txt 在仓库根目录）
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "backend"
+      include: "scope"
+    open-pull-requests-limit: 10

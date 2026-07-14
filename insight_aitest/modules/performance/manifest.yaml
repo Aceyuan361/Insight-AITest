@@ -1,0 +1,23 @@
+id: performance
+name:
+  zh: 性能监控
+  en: Performance
+version: 2.0.0
+category: testing
+icon: Gauge
+order: 5
+description:
+  zh: 移动设备性能实时监控
+  en: Real-time mobile performance monitoring
+backend:
+  router: performance.backend.routes:router
+  websocket: performance.backend.websocket.handler:monitoring_websocket
+  dependencies: []
+frontend:
+  route: /performance
+  entry: performance:PerformanceApp
+  nav:
+    label: {zh: 性能监控, en: Performance}
+    icon: Gauge
+    show_in_dashboard: true
+default_enabled: true

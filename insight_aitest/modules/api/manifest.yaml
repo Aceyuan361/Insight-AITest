@@ -1,0 +1,22 @@
+id: api
+name:
+  zh: API 自动化
+  en: API Automation
+version: 2.0.0
+category: testing
+icon: Network
+order: 4
+description:
+  zh: 执行 API 用例（多步请求 + 断言 + 变量串联）
+  en: Execute API test cases (multi-step requests + assertions + variable chaining)
+backend:
+  router: api.backend.routes:router
+  dependencies: []
+frontend:
+  route: /api-runner
+  entry: api:ApiApp
+  nav:
+    label: {zh: API 自动化, en: API Automation}
+    icon: Network
+    show_in_dashboard: true
+default_enabled: true

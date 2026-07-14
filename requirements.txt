@@ -1,0 +1,40 @@
+# Insight-AITest Dependencies
+# 核心依赖以 pyproject.toml [project].dependencies 为准。
+# UI 自动化（playwright/pymidscene）在 pyproject.toml [project.optional-dependencies].ui。
+# 完整安装：pip install -e ".[dev,ui]"
+
+# ==================== Web Framework ====================
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+websockets>=14.0
+python-multipart>=0.0.6
+pydantic>=2.0
+
+# ==================== Database ====================
+sqlalchemy>=2.0.0
+sqlite-vec>=0.1
+
+# ==================== Device Support ====================
+pymobiledevice3>=9.0.0
+psutil>=6.0.0
+
+# ==================== AI / KB (C) ====================
+openai>=1.0
+chardet>=5.0
+pypdf>=4.0
+pymupdf>=1.24              # PDF 文本层 + 扫描件 rasterize（OCR）
+python-docx>=1.0           # Word 文档解析（.docx 需求文档）
+openpyxl>=3.1              # Excel 表格解析（.xlsx 知识库文档）
+python-pptx>=0.6           # PowerPoint 解析（.pptx 知识库文档）
+beautifulsoup4>=4.12       # HTML 文档解析（.html/.htm 知识库文档）
+
+# ==================== API Automation (E) ====================
+jsonpath-ng>=1.6.0
+apscheduler>=3.10           # 定时调度（cron 表达式定时执行套件）
+
+# ==================== UI Automation (F) ====================
+playwright>=1.40.0         # 浏览器驱动（pip install + playwright install chromium）
+pymidscene>=0.1.0          # Midscene.js Python 移植（ai_action/ai_assert/ai_query）
+
+# ==================== Logging ====================
+logzero>=1.7.0
