@@ -46,6 +46,32 @@ Insight-AITest is a **modular AI-powered testing & monitoring platform**. v2.0.0
 - **API automation**: multi-step HTTP cases with assertions, variable chaining (`{{var}}`), and history.
 - **UI automation**: Midscene (vision LLM) drives a real browser — `aiAction` / `aiAssert` / `aiQuery` — with per-step screenshots.
 
+### Why Insight-AITest?
+
+Most testing tools solve **one** problem well. Insight-AITest is the only open-source platform that fuses **performance monitoring, AI agents, test generation, and API/UI automation into one cohesive product** — so your data, cases, and results live in one place instead of being scattered across Postman + JMeter + Selenium + a wiki.
+
+| Capability | Insight-AITest | Postman | MeterSphere | Katalon | Selenium/Playwright |
+|---|:---:|:---:|:---:|:---:|:---:|
+| 🤖 AI Agent (understands docs, plans, executes) | ✅ | ❌ | ❌ | ⚠️ Limited | ❌ |
+| 📊 Mobile performance monitoring (Android/iOS) | ✅ | ❌ | ❌ | ❌ | ❌ |
+| 📝 AI test-case generation | ✅ | ❌ | ❌ | ⚠️ Limited | ❌ |
+| 🔗 API automation (steps + assertions + suites) | ✅ | ✅ | ✅ | ✅ | ❌ |
+| 🖥️ Vision-driven UI automation (no selectors) | ✅ | ❌ | ❌ | ❌ | ⚠️ Code only |
+| 📚 Local RAG knowledge base (your docs) | ✅ | ❌ | ❌ | ❌ | ❌ |
+| 🔒 Data stays local (no cloud lock-in) | ✅ | ❌ | ⚠️ | ❌ | ✅ |
+| 🧩 Plugin module architecture | ✅ | — | ⚠️ | ❌ | — |
+| 💰 Cost | 🟢 Free / MIT | 🟡 Freemium | 🟢 Free | 🔴 Paid | 🟢 Free |
+
+### 💎 Core Advantages
+
+| Traditional way | Insight-AITest | Why it matters |
+|---|---|---|
+| Write API/UI scripts by hand | Describe what to test in natural language; the Agent plans & executes | Hours → minutes; survives UI/API changes without rewriting scripts |
+| Performance = separate tool, post-hoc reports | Real-time WebSocket stream, the moment you hit start | Catch regressions live, not after the run |
+| Knowledge scattered in wikis/docs | Upload docs → local vector index → Agent answers grounded in *your* product | The AI actually "reads" your docs; answers are traceable, not hallucinated |
+| Pick selector / XPath by hand | Vision LLM finds the element from a screenshot + description | No more broken tests when the page re-renders |
+| Switch between 4–5 tools | One platform, one data model, plugin-extensible | Cases flow: generated → run as API → run as UI, all in one place |
+
 ### Supported Performance Metrics
 
 | Metrics | Android | iOS |
