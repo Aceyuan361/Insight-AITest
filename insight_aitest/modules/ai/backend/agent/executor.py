@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Agent Task 执行器（降级为单动作执行器 + 顺序 fallback）。
 
 原本在后台线程中执行 Task 的 plan，包含 $prev 解析和修复循环。ReAct 大脑层（ReActAgent）
@@ -32,16 +32,22 @@ class TaskEvent:
 
 
 def _resolve_prev(step_params: dict, prev_result: dict | None) -> dict:
-    """把 params 里 case_id == "$prev" 替换为上一步结果的 case_id。
+    """Resolve $prev placeholders in step_params.
 
-    轻量模板：只识别 "$prev" 这一个占位符，不引表达式引擎。
+
+template: replaces "$prev" values with prev_result fields
+beyond just case_id — now supports run_id, batch_id, etc.
     """
     if prev_result is None:
         return step_params
     resolved = dict(step_params)
     for k, v in resolved.items():
-        if v == "$prev" and "case_id" in prev_result:
-            resolved[k] = prev_result["case_id"]
+        if v == "$prev":
+            # case_id is the primary ref, but also propagate other common fields
+            for field in ("case_id", "run_id", "batch_id"):
+                if field in prev_result:
+                    resolved[k] = prev_result[field]
+                    break
     return resolved
 
 
@@ -67,7 +73,10 @@ class TaskExecutor:
 
         def _emit(event: TaskEvent) -> None:
             if queue is not None and loop is not None:
-                asyncio.run_coroutine_threadsafe(queue.put(event), loop).result()
+                try:
+                    queue.put_nowait(event)
+                except asyncio.QueueFull:
+                    pass  # queue 满：丢弃事件，避免后台线程阻塞死锁
 
         total = len(plan)
         case_ids: list[int] = []
@@ -176,7 +185,14 @@ class TaskExecutor:
             )
             return {"error": err}
         try:
-            result = skill.execute(params, self.ctx)
+            # timeout: skill.execute may hang (HTTP no response, Playwright stuck)
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                future = pool.submit(skill.execute, params, self.ctx)
+                try:
+                    result = future.result(timeout=300)
+                except concurrent.futures.TimeoutError:
+                    raise TimeoutError(f"skill {skill_id} execution exceeded 300s")
             task_db.update_task_step(task_id, step_index, result)
             _emit(
                 TaskEvent(

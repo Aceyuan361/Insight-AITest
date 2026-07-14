@@ -413,57 +413,73 @@ async def create_task(
     # 解析或创建 Conversation（修复会话拆分：Task 创建时即绑定 Conversation）
     conv_id = body.conversation_id
     conv_created_here = conv_id is None
-    if conv_created_here:
-        conv_id = db.create_conversation(
-            title=body.intent[:50] if body.intent else "新任务",
+    task_id: int | None = None
+    try:
+        if conv_created_here:
+            conv_id = db.create_conversation(
+                title=body.intent[:50] if body.intent else "新任务",
+                project_id=body.project_id,
+            )
+
+        # 创建 task（UNDERSTANDING 状态，关联 conversation）
+        task_id = db.create_task(
+            body.intent,
+            uploaded_files=filenames,
             project_id=body.project_id,
+            version_id=body.version_id,
+            use_kb=body.use_kb,
+            conversation_id=conv_id,
         )
 
-    # 创建 task（UNDERSTANDING 状态，关联 conversation）
-    task_id = db.create_task(
-        body.intent,
-        uploaded_files=filenames,
-        project_id=body.project_id,
-        version_id=body.version_id,
-        use_kb=body.use_kb,
-        conversation_id=conv_id,
-    )
+        # 持久化用户意图消息（修复上下文丢失：后续 agent_chat 可加载历史）
+        db.add_message(conv_id, Role.USER, body.intent, task_id=task_id)
 
-    # 持久化用户意图消息（修复上下文丢失：后续 agent_chat 可加载历史）
-    db.add_message(conv_id, Role.USER, body.intent, task_id=task_id)
+        # 阶段 A：理解
+        context = planner.understand(body.intent, uploaded_files)
+        context["document_ids"] = body.document_ids or []
+        context["project_id"] = body.project_id
+        db.update_task_context(task_id, context, status=TaskStatus.STRATEGIZING)
 
-    # 阶段 A：理解
-    context = planner.understand(body.intent, uploaded_files)
-    context["document_ids"] = body.document_ids or []
-    context["project_id"] = body.project_id
-    db.update_task_context(task_id, context, status=TaskStatus.STRATEGIZING)
+        # 持久化理解结果消息
+        summary_text = context.get("summary", body.intent)
+        scope_text = ", ".join(context.get("scope", [])[:5]) if context.get("scope") else ""
+        understand_msg = f"【需求理解】{summary_text}"
+        if scope_text:
+            understand_msg += f"\n\n涉及范围：{scope_text}"
+        db.add_message(conv_id, Role.ASSISTANT, understand_msg, task_id=task_id)
 
-    # 持久化理解结果消息
-    summary_text = context.get("summary", body.intent)
-    scope_text = ", ".join(context.get("scope", [])[:5]) if context.get("scope") else ""
-    understand_msg = f"【需求理解】{summary_text}"
-    if scope_text:
-        understand_msg += f"\n\n涉及范围：{scope_text}"
-    db.add_message(conv_id, Role.ASSISTANT, understand_msg, task_id=task_id)
+        # 阶段 B：策略生成
+        strategies = planner.propose_strategies(context, document_ids=body.document_ids)
+        db.update_task_strategies(task_id, strategies, status=TaskStatus.PENDING_SELECT)
 
-    # 阶段 B：策略生成
-    strategies = planner.propose_strategies(context, document_ids=body.document_ids)
-    db.update_task_strategies(task_id, strategies, status=TaskStatus.PENDING_SELECT)
+        # 持久化策略消息
+        strategy_lines = []
+        for s in strategies:
+            label = s.get("label", "")
+            desc = s.get("description", "")
+            strategy_lines.append(f"- **{label}**：{desc}")
+        if strategy_lines:
+            db.add_message(
+                conv_id, Role.ASSISTANT,
+                "【测试策略建议】\n\n" + "\n".join(strategy_lines),
+                task_id=task_id,
+            )
 
-    # 持久化策略消息
-    strategy_lines = []
-    for s in strategies:
-        label = s.get("label", "")
-        desc = s.get("description", "")
-        strategy_lines.append(f"- **{label}**：{desc}")
-    if strategy_lines:
-        db.add_message(
-            conv_id, Role.ASSISTANT,
-            "【测试策略建议】\n\n" + "\n".join(strategy_lines),
-            task_id=task_id,
-        )
+        return _task_to_out(db.get_task(task_id))
 
-    return _task_to_out(db.get_task(task_id))
+    except Exception:
+        # create_task fail: rollback orphan task and conversation
+        if task_id is not None:
+            try:
+                db.delete_task(task_id)
+            except Exception:
+                pass
+        if conv_created_here and conv_id is not None:
+            try:
+                db.delete_conversation(conv_id)
+            except Exception:
+                pass
+        raise
 
 
 @router.post("/stream")

@@ -55,6 +55,7 @@ class SkillContext:
     # UI 执行依赖（execute_ui_case 用；不注入则 UI 执行 skill 不可用）
     ui_run_db: "UIRunDatabase | None" = None
     ui_agent_factory: "Callable | None" = None  # 测试注入 FakeAgent 工厂
+    ui_batch_db: "Any | None" = None  # UI 批量执行记录库（run_ui_batch 用）
     # 套件执行依赖（run_api_suite 用；不注入则套件 skill 不可用）
     suite_db: "SuiteDatabase | None" = None
     suite_run_db: "SuiteRunDatabase | None" = None
@@ -264,15 +265,24 @@ def _execute_ui_case(params: dict, ctx: SkillContext) -> dict:
     _validate_content(content)
 
     # async → sync 桥接：后台线程无运行中事件循环，asyncio.run 创建临时 loop
-    run = asyncio.run(
-        execute(
+    # async sync bridge: asyncio.run fails if thread already has a running loop
+    async def _do_execute():
+        return await execute(
             content,
             agent_factory=ctx.ui_agent_factory,
             case_id=case_id,
             case_title=case.title or "",
             base_url_override=base_url_override,
         )
-    )
+
+    try:
+        run = asyncio.run(_do_execute())
+    except RuntimeError:
+        # thread already has a running event loop: spin up a dedicated thread
+        import concurrent.futures
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+            future = pool.submit(asyncio.run, _do_execute())
+            run = future.result()
     run.id = ctx.ui_run_db.create_run(run)
 
     # 回填 D 的 last_result / last_run_at（失败不阻断）
@@ -804,12 +814,26 @@ def _run_api_suite(params: dict, ctx: SkillContext) -> dict:
     srid = ctx.suite_run_db.create(suite_run)
 
     # 执行
+    # per-case SSE progress callback
+    def _on_case_done(done_count: int, run_id: int) -> None:
+        if ctx.queue is not None and ctx._loop is not None:
+            import asyncio as _aio
+            evt = {
+                "type": "suite_case_done",
+                "data": {"done": done_count, "total": len(suite_def["case_ids"]), "run_id": run_id},
+            }
+            try:
+                ctx.queue.put_nowait(evt)
+            except _aio.QueueFull:
+                pass
+
     result = execute_suite(
         suite=suite_def,
         cases_provider=cases_provider,
         run_saver=run_saver,
         transport=ctx.http_transport,
         environment=environment,
+        on_case_done=_on_case_done,
     )
 
     # 收尾 SuiteRunRecord
@@ -1033,6 +1057,125 @@ def _summarize_context(params: dict, ctx: SkillContext) -> dict:
     return {"summary": summary}
 
 
+
+
+def _run_ui_batch(params: dict, ctx: SkillContext) -> dict:
+    """Execute multiple UI cases sequentially (batch mode).
+
+Mirrors UI module batch execution: iterates over case_ids, runs each
+via the async UI executor (bridged to sync), persists individual runs,
+and returns an aggregate summary.
+    """
+    import asyncio
+    import copy
+    from datetime import datetime
+
+    if ctx.ui_run_db is None:
+        raise RuntimeError("UI run db not available")
+    if ctx.ui_batch_db is None:
+        raise RuntimeError("UI batch db not available")
+
+    from insight_aitest.modules.ui.backend.engine.executor import (
+        _validate_content,
+        execute,
+    )
+    from insight_aitest.modules.ui.backend.persistence.batch_models import (
+        BatchRunStatus,
+        UIBatchRun,
+    )
+
+    case_ids = params.get("case_ids")
+    if not case_ids or not isinstance(case_ids, list):
+        raise ValueError("run_ui_batch requires case_ids list")
+    case_ids = [int(c) for c in case_ids]
+    base_url = params.get("base_url")
+
+    batch = UIBatchRun(
+        name=params.get("name", "Agent UI batch"),
+        case_ids=case_ids,
+        config={"base_url": base_url} if base_url else {},
+        status=BatchRunStatus.RUNNING,
+        total=len(case_ids),
+        started_at=datetime.now(),
+    )
+    batch_id = ctx.ui_batch_db.create(batch)
+
+    case_results = []
+    passed = 0
+    failed = 0
+    error_count = 0
+    case_run_ids = []
+
+    for cid in case_ids:
+        case = ctx.case_db.get_case(cid)
+        if case is None:
+            error_count += 1
+            case_results.append({"case_id": cid, "status": "error", "error": "case not found"})
+            continue
+
+        content = copy.deepcopy(case.content or {})
+        if base_url:
+            content["base_url"] = base_url
+
+        try:
+            _validate_content(content)
+        except ValueError as e:
+            error_count += 1
+            case_results.append({"case_id": cid, "status": "error", "error": str(e)})
+            continue
+
+        async def _do_run():
+            return await execute(
+                content,
+                agent_factory=ctx.ui_agent_factory,
+                case_id=cid,
+                case_title=case.title or "",
+            )
+
+        try:
+            try:
+                run = asyncio.run(_do_run())
+            except RuntimeError:
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                    future = pool.submit(asyncio.run, _do_run())
+                    run = future.result()
+
+            run.id = ctx.ui_run_db.create_run(run)
+            case_run_ids.append(run.id)
+            status = run.status.value
+            if status == "passed":
+                passed += 1
+            elif status == "failed":
+                failed += 1
+            else:
+                error_count += 1
+            case_results.append({
+                "case_id": cid, "run_id": run.id, "status": status,
+                "passed_steps": run.passed_steps, "total_steps": run.total_steps,
+            })
+        except Exception as e:
+            error_count += 1
+            case_results.append({"case_id": cid, "status": "error", "error": str(e)})
+
+    if error_count > 0:
+        final_status = BatchRunStatus.ERROR
+    elif failed > 0:
+        final_status = BatchRunStatus.FAILED
+    else:
+        final_status = BatchRunStatus.PASSED
+
+    ctx.ui_batch_db.update(
+        batch_id, status=final_status, passed=passed, failed=failed,
+        error=error_count, case_run_ids=case_run_ids, finished_at=datetime.now(),
+    )
+
+    return {
+        "batch_id": batch_id, "total": len(case_ids),
+        "passed": passed, "failed": failed, "error": error_count,
+        "overall_status": final_status.value if hasattr(final_status, "value") else str(final_status),
+        "per_case": case_results,
+    }
 # ===== 注册表 =====
 
 SKILLS: dict[str, SkillSpec] = {
@@ -1155,6 +1298,13 @@ SKILLS: dict[str, SkillSpec] = {
         description="对长会话历史（>20条消息）生成结构化摘要（主题/决策/产物/待解决），缓存到会话，注入LLM上下文替代被截断的早期消息。解决长会话失忆。",
         params_description='{"task_id": "任务ID", "force_refresh": [可选，强制重新生成摘要]}',
         execute=_summarize_context,
+    ),
+    "run_ui_batch": SkillSpec(
+        id="run_ui_batch",
+        name="UI batch run",
+        description="Execute multiple UI test cases sequentially as a batch. Iterates over case_ids, runs each with the vision-driven UI engine, and returns per-case pass/fail results with an aggregate summary.",
+        params_description='{"case_ids":[case_id list], "base_url":"[optional]"}',
+        execute=_run_ui_batch,
     ),
 }
 

@@ -9,6 +9,10 @@ import uuid
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+import logging
+
+logger = logging.getLogger(__name__)
+
 from fastapi.responses import StreamingResponse, FileResponse
 from pydantic import BaseModel
 
@@ -41,17 +45,27 @@ async def chat(
     conv = db.get_conversation(body.conversation_id)
     if not conv:
         raise HTTPException(404, "会话不存在")
-    history = db.list_messages(body.conversation_id, limit=body.history_turns * 2)
+    history = db.list_messages_by_turns(body.conversation_id, turns=body.history_turns)
     history_msgs = [{"role": m.role.value, "content": m.content} for m in history]
     # use_rag：请求级 use_kb 优先（None→用会话级 rag_enabled）
     use_rag = body.use_kb if body.use_kb is not None else conv.rag_enabled
     # KB 升级：按会话所属项目隔离检索（project_id 来自 Conversation，杜绝跨项目污染）
     proj_id = getattr(conv, "project_id", None)
-    result = agent.answer(
-        body.query, history_msgs, body.document_ids, use_rag=use_rag, project_id=proj_id
-    )
+    # 先持久化 user 消息（保证历史完整，即使 answer 失败也不丢失用户输入）
     db.add_message(body.conversation_id, Role.USER, body.query)
-    db.add_message(body.conversation_id, Role.ASSISTANT, result.answer, result.citations)
+    try:
+        result = agent.answer(
+            body.query, history_msgs, body.document_ids, use_rag=use_rag, project_id=proj_id
+        )
+    except Exception as e:
+        # answer 失败：写错误占位消息，与流式路径行为一致
+        db.add_message(
+            body.conversation_id, Role.ASSISTANT, f'[reply failed: {e}]'
+        )
+        raise HTTPException(500, f'reply failed: {e}')
+    db.add_message(
+        body.conversation_id, Role.ASSISTANT, result.answer, result.citations
+    )
     return ChatResponse(
         answer=result.answer,
         citations=[c.__dict__ for c in result.citations],
@@ -74,7 +88,7 @@ async def chat_stream(
     conv = db.get_conversation(body.conversation_id)
     if not conv:
         raise HTTPException(404, "会话不存在")
-    history = db.list_messages(body.conversation_id, limit=body.history_turns * 2)
+    history = db.list_messages_by_turns(body.conversation_id, turns=body.history_turns)
     history_msgs = [{"role": m.role.value, "content": m.content} for m in history]
     db.add_message(body.conversation_id, Role.USER, body.query, attachments=body.attachments)
 
@@ -130,20 +144,31 @@ async def chat_stream(
                     db.add_message(
                         body.conversation_id,
                         Role.ASSISTANT,
-                        f"⚠️ 回复失败：{event.data}",
+                        "⚠️ 回复失败，请重试",
                     )
-                    yield _sse("error", {"code": "internal", "message": str(event.data)})
+                    yield _sse("error", {"code": "internal", "message": _safe_error(event.data)})
         except Exception as e:
             # 写入错误占位消息，保证历史完整（避免 DB 残留孤立 user 消息）
             db.add_message(
                 body.conversation_id,
                 Role.ASSISTANT,
-                f"⚠️ 回复失败：{e}",
+                "⚠️ 回复失败，请重试",
             )
-            yield _sse("error", {"code": "internal", "message": str(e)})
+            yield _sse("error", {"code": "internal", "message": _safe_error(e)})
 
     return StreamingResponse(event_gen(), media_type="text/event-stream")
 
+
+_SAFE_ERROR_MSG = "internal error"
+
+def _safe_error(detail: object) -> str:
+    """Sanitize error detail for client-facing messages.
+
+    Internal details (stack traces, file paths) are logged but not
+    exposed to the SSE client. Only a generic message is returned.
+    """
+    logger.warning("Chat error: %s", detail)
+    return _SAFE_ERROR_MSG
 
 _ATTACHMENT_ID_RE = re.compile(r"^[a-f0-9]+\.[a-zA-Z0-9]+$")
 _PREVIEW_MAX_CHARS = 2000

@@ -223,6 +223,44 @@ class AIDatabase:
         with session_scope(self.db_path) as s:
             return s.scalars(stmt).first()
 
+    def get_or_create_empty_conversation(
+        self,
+        title: str | None = None,
+        rag_enabled: bool = True,
+        thinking_level: str = "off",
+        project_id: int | None = None,
+    ) -> int:
+        """原子化 get-or-create：在单个 session 内查找空会话或创建新会话。
+
+        修复并发竞态：find + create 分离时两个请求可能各自创建。
+        """
+        from sqlalchemy import select as sa_select
+
+        msg_conv_ids = sa_select(Message.conversation_id).distinct()
+        find_stmt = (
+            select(Conversation)
+            .where(
+                Conversation.project_id == project_id
+                if project_id is not None
+                else Conversation.project_id.is_(None)
+            )
+            .where(~Conversation.id.in_(msg_conv_ids))
+            .order_by(Conversation.created_at.desc())
+            .limit(1)
+        )
+        with session_scope(self.db_path) as s:
+            existing = s.scalars(find_stmt).first()
+            if existing is not None:
+                return existing.id
+            c = Conversation(
+                title=title or "新会话",
+                rag_enabled=rag_enabled,
+                thinking_level=thinking_level,
+                project_id=project_id,
+            )
+            s.add(c)
+            s.flush()
+            return c.id
     def save_summary(self, conv_id: int, summary: dict) -> None:
         """保存会话上下文摘要。"""
         with session_scope(self.db_path) as s:
@@ -292,6 +330,43 @@ class AIDatabase:
                 m.citations = []
         return msgs
 
+    def list_messages_by_turns(
+        self, conversation_id: int, turns: int = 6
+    ) -> list[Message]:
+        """按对话轮次取历史（turns = user 消息条数）。
+
+        与 list_messages(limit=N) 不同，以 user 消息为锚点计算轮次：
+        一个 user 消息可能对应多条 assistant 消息（task 场景），
+        这些消息作为一个完整 turn 被全部包含。
+        """
+        stmt = (
+            select(Message)
+            .where(Message.conversation_id == conversation_id)
+            .order_by(Message.created_at.desc())
+        )
+        with session_scope(self.db_path) as s:
+            all_msgs = list(s.scalars(stmt))
+
+        # 从最新消息往前扫描，数到第 turns 个 user 消息时截止
+        user_count = 0
+        cutoff = 0
+        for i, m in enumerate(all_msgs):
+            if m.role == Role.USER:
+                user_count += 1
+                if user_count >= turns:
+                    cutoff = i
+                    break
+        else:
+            cutoff = len(all_msgs) - 1
+
+        msgs = all_msgs[: cutoff + 1]
+        msgs.reverse()
+        for m in msgs:
+            if m.citations:
+                m.citations = [Citation(**c) if isinstance(c, dict) else c for c in m.citations]
+            else:
+                m.citations = []
+        return msgs
     def list_messages_by_task(self, task_id: int, limit: int | None = None) -> list[Message]:
         """按 task_id 查询消息（用于 agent_chat 加载对话历史）。"""
         stmt = (

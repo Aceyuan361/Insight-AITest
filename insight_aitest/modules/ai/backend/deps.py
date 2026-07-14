@@ -8,7 +8,10 @@ PUT /config 时调用 reset_singletons() 重建。
 
 from __future__ import annotations
 
+import logging
 import os
+
+logger = logging.getLogger(__name__)
 
 from insight_aitest.platform.services.llm.config import AIConfig
 from insight_aitest.modules.ai.backend.persistence.database import AIDatabase
@@ -101,16 +104,27 @@ def get_executor(
         from insight_aitest.modules.api.backend.deps import get_run_db
 
         api_run_db = get_run_db()
-    except Exception:
-        api_run_db = None  # API 模块未启用时，执行类 skill 不可用
+    except Exception as _e:
+        api_run_db = None
+        logger.warning("API run db injection failed: %s", _e)  # API 模块未启用时，执行类 skill 不可用
 
     # UI 执行依赖：UI 运行记录库（延迟 import 避免循环）
     try:
         from insight_aitest.modules.ui.backend.deps import get_run_db as get_ui_run_db
 
         ui_run_db = get_ui_run_db()
-    except Exception:
-        ui_run_db = None  # UI 模块未启用时，UI 执行 skill 不可用
+    except Exception as _e:
+        ui_run_db = None
+        logger.warning("UI run db injection failed: %s", _e)
+
+    # UI 批量执行依赖（run_ui_batch skill 用）
+    try:
+        from insight_aitest.modules.ui.backend.deps import get_batch_db as get_ui_batch_db
+
+        ui_batch_db = get_ui_batch_db()
+    except Exception as _e:
+        ui_batch_db = None
+        logger.warning("UI batch db injection failed: %s", _e)  # UI 模块未启用时，UI 执行 skill 不可用
 
     # 套件执行依赖（延迟 import 避免循环）
     try:
@@ -118,9 +132,10 @@ def get_executor(
 
         suite_db = get_suite_db()
         suite_run_db = get_suite_run_db()
-    except Exception:
+    except Exception as _e:
         suite_db = None
         suite_run_db = None
+        logger.warning("Suite db injection failed: %s", _e)
 
     if use_kb:
         retriever = get_retriever()
@@ -148,6 +163,7 @@ def get_executor(
         ui_run_db=ui_run_db,
         suite_db=suite_db,
         suite_run_db=suite_run_db,
+        ui_batch_db=ui_batch_db,
     )
     return TaskExecutor(ctx)
 

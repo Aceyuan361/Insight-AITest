@@ -6,7 +6,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from insight_aitest.modules.ai.backend.deps import get_db
+from insight_aitest.modules.ai.backend.deps import get_config, get_db
 from insight_aitest.modules.ai.backend.persistence.database import AIDatabase
 
 router = APIRouter(prefix="/conversations", tags=["ai-conversations"])
@@ -63,10 +63,8 @@ async def create_conversation(
     think = body.thinking_level if body and body.thinking_level is not None else "off"
     pid = body.project_id if body else None
     # 去重：复用已有的空会话（无消息），避免重复创建空会话行污染侧栏
-    existing = db.find_empty_conversation(pid)
-    if existing:
-        return _out(existing)
-    cid = db.create_conversation(title, rag_enabled=rag, thinking_level=think, project_id=pid)
+    # 原子化 get-or-create：修复并发竞态（find+create 分离时两个请求可能各自创建）
+    cid = db.get_or_create_empty_conversation(title, rag_enabled=rag, thinking_level=think, project_id=pid)
     return _out(db.get_conversation(cid))
 
 
@@ -116,7 +114,29 @@ async def update_conversation(
 
 
 @router.delete("/{conv_id}")
-async def delete_conversation(conv_id: int, db: AIDatabase = Depends(get_db)) -> dict:
+async def delete_conversation(
+    conv_id: int,
+    db: AIDatabase = Depends(get_db),
+    config=Depends(get_config),
+) -> dict:
+    # collect attachment ids before deletion
+    messages = db.list_messages(conv_id)
+    attachment_ids = []
+    for m in messages:
+        if m.attachments:
+            for att in m.attachments:
+                if isinstance(att, dict) and att.get("id"):
+                    attachment_ids.append(att["id"])
     if not db.delete_conversation(conv_id):
-        raise HTTPException(404, "会话不存在")
+        raise HTTPException(404, "conversation not found")
+    # cleanup orphan attachment files
+    from pathlib import Path as _Path
+    attachments_dir = _Path(config.docs_dir) / "attachments"
+    for att_id in attachment_ids:
+        try:
+            f = attachments_dir / att_id
+            if f.exists():
+                f.unlink()
+        except Exception:
+            pass
     return {"deleted": conv_id}

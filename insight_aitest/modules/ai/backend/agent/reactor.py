@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """ReAct 大脑层：在 plan 执行中引入"观察→反思→纠错"循环。
 
 混合式架构：顶层仍是 Plan-and-Solve（planner 不动），每个 step 执行后由 LLM 反思决策。
@@ -318,7 +318,7 @@ class ReActAgent:
             iteration += 1
             stats["iterations"] += 1
             # 全局反思轮次超限 → 中止整个任务（防死循环）
-            if stats["iterations"] > max_iterations:
+            if iteration > max_iterations:  # per-step iteration, not global accumulation
                 stats["abort_reason"] = "max_iterations_reached"
                 trace.append(
                     TraceEntry(
@@ -715,7 +715,10 @@ class ReActAgent:
 
         def _emit(event: ReActEvent) -> None:
             if queue is not None and loop is not None:
-                asyncio.run_coroutine_threadsafe(queue.put(event), loop).result()
+                try:
+                    queue.put_nowait(event)
+                except asyncio.QueueFull:
+                    pass  # queue 满：丢弃事件，避免后台线程阻塞死锁
 
         return _emit
 
