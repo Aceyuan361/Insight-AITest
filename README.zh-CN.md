@@ -15,6 +15,10 @@
 
 </div>
 
+<p align="center">
+  <img src="docs/screenshots/promo-1-zh.png" width="100%" alt="Insight-AITest 宣传图">
+</p>
+
 ---
 
 ## 简介
@@ -63,7 +67,11 @@ Insight-AITest 是一个**模块化 AI 驱动的测试与监控平台**。v2.0.0
 
 iOS 17+ 设备通过 pymobiledevice3 的 CoreDevice tunnel 协议自动建立连接（`RemoteServiceDiscoveryService` + `DvtProvider`），无需手动启动 tunneld。
 
-### 界定预览
+### 界面预览
+
+<p align="center">
+  <img src="docs/screenshots/promo-2-zh.png" width="100%" alt="Insight-AITest 能力总览">
+</p>
 
 <p align="center">
   <img src="docs/screenshots/home.png" width="80%" alt="首页"><br>

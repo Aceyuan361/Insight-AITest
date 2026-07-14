@@ -15,6 +15,10 @@
 
 </div>
 
+<p align="center">
+  <img src="docs/screenshots/promo-1-en.png" width="100%" alt="Insight-AITest Promo">
+</p>
+
 ---
 
 ## Introduction
@@ -55,6 +59,10 @@ Insight-AITest is a **modular AI-powered testing & monitoring platform**. v2.0.0
 | Energy | ✅ GPU | ✅ CPU/GPU/Network |
 
 ### Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/promo-2-en.png" width="100%" alt="Insight-AITest Capabilities">
+</p>
 
 <p align="center">
   <img src="docs/screenshots/home.png" width="80%" alt="Home"><br>
