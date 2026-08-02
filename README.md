@@ -48,7 +48,7 @@ Insight-AITest is a **modular AI-powered testing & monitoring platform**. v2.0.0
 ### Key Features
 
 - **Pluggable modules**: every capability is a self-contained module — add one with a `manifest.yaml`.
-- **Performance monitoring**: real-time CPU / memory / FPS / network / battery for Android (and CPU/memory/network/battery for iOS — see metrics table) over WebSocket.
+- **Performance monitoring**: real-time CPU / memory / FPS / network / battery for Android and iOS (see metrics table) over WebSocket.
 - **AI assistant**: chat grounded in your own documents (local embeddings + vector store, RAG).
 - **Test-case generation**: AI analyzes scenarios and proposes structured test cases for review.
 - **API automation**: multi-step HTTP cases with assertions, variable chaining (`{{var}}`), and history.
@@ -84,10 +84,10 @@ Most testing tools solve **one** problem well. Insight-AITest is the only open-s
 
 | Metrics | Android | iOS |
 |---------|---------|-----|
-| CPU Usage | ✅ App/System | ✅ App |
+| CPU Usage | ✅ App/System | ✅ App (normalized by core count) |
 | Memory | ✅ PSS/Native/Dalvik | ✅ physFootprint |
-| Frame Rate | ✅ FPS+Jank detection | ⚠️ Placeholder (iOS doesn't expose real app FPS) |
-| Network | ✅ Up/Down traffic | ✅ System traffic |
+| Frame Rate | ✅ FPS+Jank detection | ✅ Real FPS via CoreAnimation + Jank detection |
+| Network | ✅ Up/Down traffic | ✅ System traffic (iOS <17) · ⚠️ iOS 17+/26 unsupported |
 | Battery | ✅ Level/Temp | ✅ Level/Temp |
 | GPU | ✅ Partial support | ❌ Not supported |
 | Energy | ✅ GPU | ✅ CPU/GPU/Network |

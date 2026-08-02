@@ -48,7 +48,7 @@ Insight-AITest 是一个**模块化 AI 驱动的测试与监控平台**。v2.0.0
 ### 核心特性
 
 - **可插拔模块**：每个能力都是自包含模块，加一份 `manifest.yaml` 即可接入。
-- **性能监控**：基于 WebSocket 的实时 CPU / 内存 / 网络 / 电池监控（Android 另含 FPS；iOS 见指标表）。
+- **性能监控**：基于 WebSocket 的实时 CPU / 内存 / FPS / 网络 / 电池监控（Android 和 iOS，详见指标表）。
 - **AI 助手**：基于自有文档构建本地知识库（本地 embedding + 向量库），RAG 接地问答。
 - **用例生成**：AI 分析场景，提出结构化用例供审阅编辑。
 - **API 自动化**：多步 HTTP 用例 + 断言 + 跨步 `{{变量}}` 串联，含历史与统计。
@@ -84,10 +84,10 @@ Insight-AITest 是一个**模块化 AI 驱动的测试与监控平台**。v2.0.0
 
 | 指标类别 | Android | iOS |
 |---------|---------|-----|
-| CPU | ✅ 应用/系统 | ✅ 应用（DVT Sysmontap） |
+| CPU | ✅ 应用/系统 | ✅ 应用（DVT Sysmontap，按核心数归一化） |
 | 内存 | ✅ PSS/Native/Dalvik | ✅ physFootprint（DVT Sysmontap） |
-| FPS | ✅ 帧率+卡顿检测 | ❌ 不支持（iOS 平台限制，CoreAnimation 私有 API） |
-| 网络 | ✅ 上行/下行流量 | ✅ 系统流量（PcapdService） |
+| FPS | ✅ 帧率+卡顿检测 | ✅ 真实帧率（CoreAnimation）+ 卡顿检测 |
+| 网络 | ✅ 上行/下行流量 | ✅ 系统流量（iOS <17）· ⚠️ iOS 17+/26 不支持 |
 | 电池 | ✅ 电量/温度 | ✅ 电量（DiagnosticsService） |
 | GPU | ✅ 部分设备支持 | ❌ 不支持 |
 | 能耗 | ✅ GPU 能耗 | ✅ CPU/GPU/网络能耗 |
