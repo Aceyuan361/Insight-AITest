@@ -35,7 +35,7 @@ export default function MonitorPanel() {
                 config={card}
                 data={metricsData[card.metricId] || []}
                 timestamps={timestamps}
-                note={isIOS && card.metricId === 'fps' ? '⚠ iOS 不支持应用级 FPS（系统限制）' : undefined}
+                note={undefined}
               />
             ))}
           </div>

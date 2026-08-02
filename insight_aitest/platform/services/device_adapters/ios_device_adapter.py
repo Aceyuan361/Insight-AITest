@@ -161,15 +161,32 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
             f"ios17+={self._conn_mgr.is_ios17_plus})"
         )
 
-        # iOS <17 时确保 DeveloperDiskImage 已挂载
-        if not self._conn_mgr.is_ios17_plus:
-            try:
-                if DevDiskHelper is not None and not DevDiskHelper.ensure_developer_disk_mounted(
-                    self.device_id
-                ):
-                    logger.warning("DeveloperDiskImage 挂载失败，部分功能可能不可用")
-            except Exception as e:
-                logger.warning(f"DeveloperDiskImage 挂载检查失败: {e}，继续连接")
+        # 确保 DeveloperDiskImage / Personalized DDI 已挂载。
+        # iOS <17：普通 DDI 提供 DVT 服务；
+        # iOS 17+：必须挂载 personalized DDI 后 RSD 才会暴露
+        #          com.apple.instruments.dtservicehub（DVT/instruments 服务）。
+        try:
+            if DevDiskHelper is not None and not DevDiskHelper.ensure_developer_disk_mounted(
+                self.device_id
+            ):
+                logger.warning("DeveloperDiskImage 挂载失败，DVT 服务可能不可用")
+        except DeveloperModeNotEnabledError:
+            # iOS 17+ 未启用 Developer Mode：自动尝试让开关显示在设置中，再提示用户。
+            if DevDiskHelper is not None:
+                logger.info("检测到 Developer Mode 未启用，尝试让开关显示在设置中...")
+                DevDiskHelper.reveal_developer_mode(self.device_id)
+            logger.error(
+                "iOS 17+ 未启用 Developer Mode，无法挂载 DDI / 使用 DVT 服务。\n"
+                "请按以下步骤操作：\n"
+                "  1. 在设备「设置 → 隐私与安全性」底部找到「开发者 Mode」\n"
+                "     （若仍看不到，重新插拔设备后重试连接，会自动再次发送 reveal）\n"
+                "  2. 打开 Developer Mode 开关 → 重启设备\n"
+                "  3. 重启后在弹窗中确认「Turn On」\n"
+                "  4. 重新运行本程序连接设备"
+            )
+            raise
+        except Exception as e:
+            logger.warning(f"DeveloperDiskImage 挂载检查失败: {e}，继续连接")
 
         return True
 
@@ -379,14 +396,14 @@ class IOSDeviceAdapter(BaseDeviceAdapter):
     # ========== 性能指标采集接口 ==========
 
     def collect_fps(self, package_name: str) -> Optional[Dict[str, Any]]:
-        """采集FPS数据（iOS 不暴露真实应用 FPS，返回占位值）"""
+        """采集FPS数据（通过 DVT Graphics 服务的 CoreAnimation 帧率）"""
         try:
             apm = self._get_apm(package_name)
             if apm:
                 return apm.collectFps()
         except Exception as e:
             logger.debug(f"iOS FPS 采集失败: {e}")
-        return {"fps": 60, "jank": 0, "bigJank": 0}
+        return {"fps": 0, "jank": 0, "bigJank": 0}
 
     def collect_memory(self, package_name: str) -> Optional[Dict[str, Any]]:
         """采集内存数据"""

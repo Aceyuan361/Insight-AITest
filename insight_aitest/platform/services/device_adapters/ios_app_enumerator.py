@@ -88,11 +88,23 @@ class IOSAppEnumerator(BaseAppEnumerator):
                 logger.warning("未获取到任何应用信息")
                 return []
 
+            # iOS 26 兼容：installation_proxy 会把所有应用（含用户应用）都标记为
+            # ApplicationType=System，导致按 "User" 过滤会把用户应用也排除掉。
+            # 检测这种「全部 System」的退化情况，改用 bundle-id 前缀启发式判断系统应用。
+            all_system = all(
+                info.get("ApplicationType", "User") != "User" for info in apps_dict.values()
+            )
+            if all_system and not include_system_apps:
+                logger.info(
+                    f"检测到 iOS 26 应用类型退化（{len(apps_dict)} 个应用全标记为 System），"
+                    "改用 bundle-id 前缀识别系统应用"
+                )
+
             apps = []
             skipped_system = 0
             for bundle_id, app_info in apps_dict.items():
                 # 检查是否为系统应用
-                is_system = app_info.get("ApplicationType", "User") != "User"
+                is_system = self._classify_as_system(bundle_id, app_info, all_system)
 
                 # 如果不包含系统应用，跳过系统应用
                 if not include_system_apps and is_system:
@@ -128,6 +140,30 @@ class IOSAppEnumerator(BaseAppEnumerator):
         except Exception as e:
             logger.error(f"枚举iOS应用失败: {e}")
             return []
+
+    # Apple 系统应用常见的 bundle-id 前缀（用于 iOS 26 退化时的启发式判断）
+    _APPLE_SYSTEM_BUNDLE_PREFIXES = (
+        "com.apple.",
+        "com.apple",
+    )
+
+    @classmethod
+    def _classify_as_system(
+        cls, bundle_id: str, app_info: dict, all_system_degraded: bool
+    ) -> bool:
+        """判断应用是否为系统应用。
+
+        - 正常情况（iOS <26 或 ApplicationType 字段可信）：按 ``ApplicationType != "User"`` 判断。
+        - iOS 26 退化（所有应用都被标记为 System）：改用 bundle-id 前缀启发式——
+          以 ``com.apple.`` 等开头的视为系统应用，其余视为用户应用。
+        """
+        app_type = app_info.get("ApplicationType", "User")
+        if not all_system_degraded:
+            # ApplicationType 字段可信
+            return app_type != "User"
+        # iOS 26 退化：用 bundle-id 前缀判断
+        return bundle_id.startswith(cls._APPLE_SYSTEM_BUNDLE_PREFIXES)
+
 
     def _build_app_name_lookup(self) -> dict:
         """

@@ -248,7 +248,7 @@ export default {
         memoryDesc: 'Display application memory usage, including PSS (Proportional Set Size)',
 
         fpsTitle: 'Frame Rate',
-        fpsDesc: 'Display application frame rate for assessing UI smoothness (iOS does not support app-level FPS due to system limitations)',
+        fpsDesc: 'Display application frame rate for assessing UI smoothness (iOS collected via CoreAnimation frame rate)',
 
         networkTitle: 'Network Traffic',
         networkDesc: 'Display network upload and download speeds',
@@ -270,9 +270,9 @@ export default {
         },
         ios: {
           title: 'iOS Platform',
-          osVersion: 'Supported OS: iOS 11.0 and above (including iOS 17+, requires pymobiledevice3 >= 9.0)',
-          features: 'Supported Metrics: CPU, Memory, Network (System-level), Battery',
-          fpsStatus: 'FPS Status: App-level FPS not supported (system limitation — CoreAnimation frame rate unavailable without jailbreak)',
+          osVersion: 'Supported OS: iOS 11.0 and above (including iOS 17+/26, requires pymobiledevice3 >= 10.3.0)',
+          features: 'Supported Metrics: CPU, Memory, Network (System-level), Battery, FPS',
+          fpsStatus: 'FPS Status: Collected via CoreAnimation frame rate (system-level, DVT Graphics service)',
           gpuStatus: 'GPU Status: Not supported',
           gpuReason: 'Reason:',
           gpuReason1: '• iOS system DVT channel cannot access GPU energy data',

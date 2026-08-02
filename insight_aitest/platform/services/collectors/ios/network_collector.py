@@ -55,6 +55,7 @@ class NetworkCollector:
         # 后台捕获 task（运行在 ConnectionManager 事件循环上）
         self._capture_task: Optional[asyncio.Future] = None
         self._running = False
+        self._available = True  # pcapd 服务是否可用（iOS 17+/26 可能不可用）
         self._lock = threading.Lock()
 
     def _build_process_name_map(self):
@@ -129,7 +130,8 @@ class NetworkCollector:
         """
         采集网络流量数据
 
-        返回自上次调用以来的平均流量速率（KB/s）
+        返回自上次调用以来的平均流量速率（KB/s）。
+        若 pcapd 服务不可用（iOS 17+/26 上 RSD 可能拒绝启动），返回 0 并记录一次警告。
 
         Returns:
             {
@@ -137,6 +139,10 @@ class NetworkCollector:
                 'downFlow': float     # 下载流量速率 (KB/s)
             }
         """
+        # pcapd 不可用时直接返回 0，避免无意义计算
+        if not self._available:
+            return {"upFlow": 0.0, "downFlow": 0.0}
+
         with self._lock:
             current_time = time.time()
             elapsed = current_time - self._traffic_data["last_time"]
@@ -208,7 +214,19 @@ class NetworkCollector:
             logger.info("网络捕获协程已取消")
             raise
         except Exception as e:
-            logger.error(f"网络捕获协程异常: {type(e).__name__}: {e}")
+            error_type = type(e).__name__
+            # iOS 17+/26 上 pcapd 的 RSD 服务可能被拒绝启动（StartServiceError），
+            # 这是系统限制而非代码问题，标记为不可用并优雅降级。
+            if "StartService" in error_type or "InvalidService" in error_type:
+                logger.warning(
+                    f"网络流量采集不可用：pcapd 服务在当前设备上无法启动 "
+                    f"({error_type})。iOS 17+/26 的 RSD tunnel 可能不支持 pcapd。"
+                )
+                with self._lock:
+                    self._available = False
+                    self._running = False
+                return
+            logger.error(f"网络捕获协程异常: {error_type}: {e}")
             # 设置失败标志
             with self._lock:
                 self._running = False

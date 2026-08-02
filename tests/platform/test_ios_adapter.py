@@ -13,6 +13,8 @@ iOS 设备适配器单元测试 (pymobiledevice3 v9.x async API)
 
 from unittest.mock import patch, MagicMock
 
+import pytest
+
 
 def test_ios_adapter_inherits_shared_base():
     """IOSDeviceAdapter 必须继承共享的 BaseDeviceAdapter（来自 base.py）。"""
@@ -74,6 +76,60 @@ def test_attempt_connect_uses_connection_manager(mock_dd, mock_usbmux):
         result = adapter.connect()
         assert result is True
         assert adapter._lockdown_client is mock_mgr.get_lockdown.return_value
+
+
+@patch("insight_aitest.platform.services.device_adapters.ios_device_adapter.usbmux")
+@patch("insight_aitest.platform.services.device_adapters.ios_device_adapter.DevDiskHelper")
+def test_attempt_connect_ios26_mounts_ddi(mock_dd, mock_usbmux):
+    """iOS 17+/26 连接后必须挂载 personalized DDI（不再跳过）。"""
+    mock_usbmux.list_devices.return_value = [MagicMock(serial="ios26-udid")]
+    mock_dd.ensure_developer_disk_mounted.return_value = True
+
+    mock_mgr = _make_mock_mgr(product_version="26.6")
+    mock_mgr.is_ios17_plus = True
+
+    with patch(
+        "insight_aitest.platform.services.collectors.ios.connection_manager.IOSConnectionManager.get_instance",
+        return_value=mock_mgr,
+    ):
+        from insight_aitest.platform.services.device_adapters.ios_device_adapter import (
+            IOSDeviceAdapter,
+        )
+
+        adapter = IOSDeviceAdapter("ios26-udid")
+        result = adapter.connect()
+
+    assert result is True
+    # iOS 17+ 也必须调用 DDI 挂载（个性化 DDI 暴露 dtservicehub）
+    mock_dd.ensure_developer_disk_mounted.assert_called_once_with("ios26-udid")
+
+
+@patch("insight_aitest.platform.services.device_adapters.ios_device_adapter.usbmux")
+@patch("insight_aitest.platform.services.device_adapters.ios_device_adapter.DevDiskHelper")
+def test_attempt_connect_ios17_dev_mode_off_raises_no_retry(mock_dd, mock_usbmux):
+    """iOS 17+ 未启用 Developer Mode 时应抛 DeveloperModeNotEnabledError（不重试）。"""
+    from insight_aitest.platform.services.collectors.ios.exceptions import (
+        DeveloperModeNotEnabledError,
+    )
+
+    mock_usbmux.list_devices.return_value = [MagicMock(serial="ios17-udid")]
+    mock_dd.ensure_developer_disk_mounted.side_effect = DeveloperModeNotEnabledError()
+
+    mock_mgr = _make_mock_mgr(product_version="17.5")
+    mock_mgr.is_ios17_plus = True
+
+    with patch(
+        "insight_aitest.platform.services.collectors.ios.connection_manager.IOSConnectionManager.get_instance",
+        return_value=mock_mgr,
+    ):
+        from insight_aitest.platform.services.device_adapters.ios_device_adapter import (
+            IOSDeviceAdapter,
+        )
+
+        adapter = IOSDeviceAdapter("ios17-udid")
+        # 该异常在 NO_RETRY_EXCEPTIONS 中，_connect_with_retry 应直接抛出而非重试
+        with pytest.raises(DeveloperModeNotEnabledError):
+            adapter.connect()
 
 
 def test_get_device_info_queries_lockdown():

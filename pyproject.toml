@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "insight-aitest"
-version = "2.0.0"
+version = "2.1.0"
 description = "Insight-AITest — AI 驱动的测试与监控一体化平台 / AI-Powered Testing & Monitoring Platform"
 readme = "README.md"
 license = {text = "MIT"}
@@ -46,7 +46,7 @@ dependencies = [
     "websockets>=14.0",
     "pydantic>=2.0",
     "sqlalchemy>=2.0.0",
-    "pymobiledevice3>=9.0.0",
+    "pymobiledevice3>=10.3.0",
     "psutil>=6.0.0",
     "sqlite-vec>=0.1",
     "pypdf>=4.0",
@@ -78,7 +78,7 @@ dev = [
 
 [project.urls]
 Homepage = "https://github.com/Aceyuan361/Insight-AITest"
-Documentation = "https://github.com/Aceyuan361/Insight-AITest/blob/2.0.0/docs"
+Documentation = "https://github.com/Aceyuan361/Insight-AITest/blob/2.1.0/docs"
 Repository = "https://github.com/Aceyuan361/Insight-AITest"
 Issues = "https://github.com/Aceyuan361/Insight-AITest/issues"
 

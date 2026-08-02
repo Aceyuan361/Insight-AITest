@@ -248,7 +248,7 @@ export default {
         memoryDesc: '显示应用程序的内存使用情况，包括 PSS（比例集大小）',
 
         fpsTitle: '帧率',
-        fpsDesc: '显示应用程序的帧率，用于评估界面流畅度（iOS 受系统限制不支持应用级 FPS）',
+        fpsDesc: '显示应用程序的帧率，用于评估界面流畅度（iOS 通过 CoreAnimation 帧率采集）',
 
         networkTitle: '网络流量',
         networkDesc: '显示网络上传和下载速度',
@@ -270,9 +270,9 @@ export default {
         },
         ios: {
           title: 'iOS 平台',
-          osVersion: '支持系统：iOS 11.0 及以上版本（含 iOS 17+，需 pymobiledevice3 >= 9.0）',
-          features: '支持指标：CPU、内存、网络（系统级）、电池',
-          fpsStatus: 'FPS 状态：不支持应用级 FPS（系统限制，非越狱无法获取 CoreAnimation 帧率）',
+          osVersion: '支持系统：iOS 11.0 及以上版本（含 iOS 17+/26，需 pymobiledevice3 >= 10.3.0）',
+          features: '支持指标：CPU、内存、网络（系统级）、电池、FPS',
+          fpsStatus: 'FPS 状态：通过 CoreAnimation 帧率采集（系统级，DVT Graphics 服务）',
           gpuStatus: 'GPU 状态：不支持',
           gpuReason: '不支持原因：',
           gpuReason1: '• iOS 系统 DVT 通道无法获取 GPU 能耗数据',

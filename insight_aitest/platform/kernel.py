@@ -88,7 +88,7 @@ def build_app() -> FastAPI:
 
     app = FastAPI(
         title="Insight-AITest Platform API",
-        version="2.0.0",
+        version="2.1.0",
         lifespan=lifespan,
     )
     app.add_middleware(
@@ -119,6 +119,6 @@ def build_app() -> FastAPI:
 
     @app.get("/")
     async def root():
-        return {"name": "Insight-AITest Platform API", "version": "2.0.0", "docs": "/docs"}
+        return {"name": "Insight-AITest Platform API", "version": "2.1.0", "docs": "/docs"}
 
     return app

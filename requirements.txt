@@ -15,7 +15,7 @@ sqlalchemy>=2.0.0
 sqlite-vec>=0.1
 
 # ==================== Device Support ====================
-pymobiledevice3>=9.0.0
+pymobiledevice3>=10.3.0   # iOS 17+/26 需 v10.2+ 的 CoreDevice tunnel 支持（Windows DTX 修复在 10.2.1）
 psutil>=6.0.0
 
 # ==================== AI / KB (C) ====================

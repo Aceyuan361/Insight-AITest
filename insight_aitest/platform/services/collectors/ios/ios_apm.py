@@ -154,7 +154,22 @@ class IOSAPM:
         from insight_aitest.platform.services.collectors.ios.metrics_throttle import MetricsThrottle
 
         # 创建频率控制层
-        self._throttle = MetricsThrottle(target_frequency=self.frequency)
+        # 获取 CPU 核心数，用于把 sysmontap 的非归一化 cpuUsage 归一化为 0-100%
+        cpu_core_count = 1
+        try:
+            from insight_aitest.platform.services.collectors.ios.connection_manager import (
+                IOSConnectionManager,
+            )
+
+            mgr = IOSConnectionManager.get_instance(self.device_id)
+            if mgr.is_connected:
+                cpu_core_count = mgr.get_cpu_core_count()
+        except Exception as e:
+            logger.debug(f"获取 CPU 核心数失败，CPU 使用率将不归一化: {e}")
+
+        self._throttle = MetricsThrottle(
+            target_frequency=self.frequency, cpu_core_count=cpu_core_count
+        )
 
         # 创建并启动监听服务
         self._stream_service = SysmonStreamService.get_instance(self.device_id)
@@ -191,6 +206,9 @@ class IOSAPM:
             from insight_aitest.platform.services.collectors.ios.network_collector import (
                 NetworkCollector,
             )
+            from insight_aitest.platform.services.collectors.ios.fps_collector import (
+                FpsCollector,
+            )
 
             # 传递 Throttle 给 CPU 和 Memory 采集器
             self.cpu_collector = CPUCollector(
@@ -202,9 +220,12 @@ class IOSAPM:
             self.battery_collector = BatteryCollector(self.adapter)
             self.energy_collector = EnergyCollector(self.adapter, self.bundle_name)
             self.network_collector = NetworkCollector(self.adapter, self.bundle_name)
+            self.fps_monitor = FpsCollector(self.adapter, self.bundle_name)
 
             # 启动网络采集器
             self.network_collector.start()
+            # 启动 FPS 采集器（DVT Graphics 流）
+            self.fps_monitor.start()
 
             logger.info("iOS APM 启动成功")
         except Exception as e:
@@ -222,6 +243,11 @@ class IOSAPM:
         if self.network_collector:
             self.network_collector.stop()
             logger.info("网络采集器已停止")
+
+        # 停止 FPS 采集器
+        if self.fps_monitor:
+            self.fps_monitor.stop()
+            logger.info("FPS 采集器已停止")
 
         # 停止流式监听服务
         if hasattr(self, "_stream_service") and self._stream_service:
@@ -272,14 +298,20 @@ class IOSAPM:
         """
         采集帧率信息
 
-        Returns:
-            {'fps': int, 'jank': int}
+        通过 DVT Graphics 服务的 ``CoreAnimationFramesPerSecond`` 获取真实渲染帧率
+        （系统级 Core Animation 合成帧率，与 PerfDog/Xcode 同源）。
 
-        注意：iOS 不向第三方暴露真实应用 FPS（私有 API，越狱外不可用），
-        此处返回占位值 60，不代表真实帧率。前端/文档据此标注，勿当真实数据。
+        Returns:
+            {'fps': int, 'jank': int, 'bigJank': int}
+            - fps: 最新帧率（0 表示当前无前台渲染/锁屏）
+            - jank: 自上次采集以来的掉帧次数
+            - bigJank: 自上次采集以来的严重掉帧次数
         """
-        logger.debug("iOS FPS 返回占位值 60（iOS 不暴露真实应用 FPS）")
-        return {"fps": 60, "jank": 0}
+        if self.fps_monitor:
+            return self.fps_monitor.collect()
+
+        logger.debug("iOS FPS 采集器未初始化，返回默认值")
+        return {"fps": 0, "jank": 0, "bigJank": 0}
 
     def collectFlow(self) -> Dict[str, Any]:
         """

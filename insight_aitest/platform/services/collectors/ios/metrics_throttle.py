@@ -337,20 +337,26 @@ class MetricsThrottle:
     3. 提供按设定频率获取聚合数据的接口
     """
 
-    def __init__(self, target_frequency: float = 1.0):
+    def __init__(self, target_frequency: float = 1.0, cpu_core_count: int = 1):
         """初始化频率控制层
 
         Args:
             target_frequency: 目标采集频率（秒），例如 1.0 表示每秒采集一次
+            cpu_core_count: CPU 核心数，用于把 sysmontap 的非归一化 cpuUsage
+                归一化为 0-100% 的单核等效值（业界标准：PerfDog/Xcode）。
+                默认 1 表示不归一化。
         """
         self._target_frequency = target_frequency
+        self._cpu_core_count = max(1, cpu_core_count)  # 至少为 1，避免除零
         self._accumulator = TimeWindowAccumulator(window_seconds=120)
         self._process_cache: Dict[int, Dict] = {}  # {pid: {name, cpu, memory}}
         self._cache_lock = threading.RLock()
         self._last_data_time = 0.0
         self._target_bundle_id: Optional[str] = None  # 目标应用的 Bundle ID
         self._target_pid: Optional[int] = None  # 目标进程的 PID
-        logger.debug(f"频率控制层初始化: 目标频率={target_frequency}秒")
+        logger.debug(
+            f"频率控制层初始化: 目标频率={target_frequency}秒, CPU核心数={self._cpu_core_count}"
+        )
 
     def on_raw_batch(self, process_list: List[Dict]):
         """接收原始数据批次（由 SysmonStreamService 调用）
@@ -379,22 +385,27 @@ class MetricsThrottle:
                 }
 
                 # 提取 CPU 和内存数据
-                cpu = proc.get("cpuUsage", 0.0)
+                # sysmontap 的 cpuUsage 是非归一化值（按核心累加，可 >100%），
+                # 按 PerfDog/Xcode 标准除以核心数得到 0-100% 的单核等效值。
+                raw_cpu = proc.get("cpuUsage", 0.0)
+                if raw_cpu is None:
+                    raw_cpu = 0.0
+                cpu = raw_cpu / self._cpu_core_count if self._cpu_core_count > 1 else raw_cpu
                 phys_footprint = proc.get("physFootprint", 0)
                 memory_mb = phys_footprint / 1024 / 1024 if phys_footprint > 0 else 0.0
 
-                # 调试日志：显示接收到的原始数据
+                # 调试日志：显示接收到的原始数据（含归一化前后）
                 logger.debug(
-                    f"[Throttle] 接收原始数据: pid={pid}, name={proc.get('name')}, cpuUsage={cpu}, physFootprint={phys_footprint}, memory_mb={memory_mb:.2f}"
+                    f"[Throttle] 接收原始数据: pid={pid}, name={proc.get('name')}, "
+                    f"cpuUsage={raw_cpu}(归一化={cpu:.2f}, cores={self._cpu_core_count}), "
+                    f"physFootprint={phys_footprint}, memory_mb={memory_mb:.2f}"
                 )
 
-                # 关键修复：只累加目标进程的数据
-                # 如果已设置目标 PID，只累加目标进程
-                if self._target_pid is not None:
-                    if pid == self._target_pid:
-                        self._accumulator.add(cpu, memory_mb)
-                # 否则累加所有数据（兼容模式）
-                else:
+                # 关键：只累加目标进程的 CPU/内存数据。
+                # 目标 PID 尚未确定时（首批数据），只更新缓存、不累加——
+                # 否则把所有进程的 CPU 加起来会得到错误的偏高值。
+                # 目标 PID 由 get_metrics() 调用 get_process_info() 解析后设置。
+                if self._target_pid is not None and pid == self._target_pid:
                     self._accumulator.add(cpu, memory_mb)
 
     def get_metrics(self, bundle_id: str, target_pid: Optional[int] = None) -> Dict[str, float]:
@@ -460,13 +471,15 @@ class MetricsThrottle:
             else:
                 app_name = bundle_id
 
-            # 在缓存中查找
+            # 在缓存中查找（忽略大小写：iOS 进程名大小写不固定，
+            # 如抖音进程名为 "Aweme"，而 bundle id 末段为 "aweme"）
+            app_name_lower = app_name.lower()
             for proc in self._process_cache.values():
-                exec_name = proc.get("execName", "")
-                comm = proc.get("comm", "")
-                name = proc.get("name", "")
+                exec_name = (proc.get("execName") or "").lower()
+                comm = (proc.get("comm") or "").lower()
+                name = (proc.get("name") or "").lower()
 
-                if app_name in exec_name or app_name in comm or app_name in name:
+                if app_name_lower in exec_name or app_name_lower in comm or app_name_lower in name:
                     return proc
 
             return None

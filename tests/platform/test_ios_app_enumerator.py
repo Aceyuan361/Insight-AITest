@@ -276,3 +276,63 @@ def test_enumerate_apps_returns_app_list():
     assert apps[0].package_name == "com.example.app1"
     assert apps[0].app_name == "App1"
     assert apps[0].version == "1.0.0"
+
+
+def test_enumerate_apps_ios26_all_system_degradation():
+    """iOS 26 把所有应用都标记为 ApplicationType=System（含第三方应用）。
+
+    此时按 bundle-id 前缀启发式判断：com.apple.* 视为系统应用，
+    其余视为第三方应用。确保第三方应用不被错误过滤掉。
+    """
+    apps_dict = {
+        # 真实第三方应用，但被 iOS 26 误标为 System
+        "com.APSQA.MetisTest": {
+            "CFBundleDisplayName": "OTEAutomationTest",
+            "CFBundleShortVersionString": "1.0",
+            "ApplicationType": "System",
+            "Path": "/Applications/OTEAutomationTest.app",
+        },
+        # 两个苹果系统应用
+        "com.apple.mobilemail": {
+            "CFBundleDisplayName": "Mail",
+            "ApplicationType": "System",
+        },
+        "com.apple.mobilesafari": {
+            "CFBundleDisplayName": "Safari",
+            "ApplicationType": "System",
+        },
+    }
+
+    mgr = _make_mock_mgr(apps_dict=apps_dict)
+
+    with patch("pymobiledevice3.services.installation_proxy.InstallationProxyService"):
+        enum = _make_enum(mgr)
+        apps = enum.enumerate_apps(include_system_apps=False)
+
+    # 只应返回第三方应用，苹果系统应用被过滤
+    assert len(apps) == 1
+    assert apps[0].package_name == "com.APSQA.MetisTest"
+    assert apps[0].app_name == "OTEAutomationTest"
+
+
+def test_classify_as_system_normal_vs_degraded():
+    """_classify_as_system 在正常/退化两种模式下行为正确。"""
+    from insight_aitest.platform.services.device_adapters.ios_app_enumerator import (
+        IOSAppEnumerator,
+    )
+
+    # 正常模式：信任 ApplicationType 字段
+    assert IOSAppEnumerator._classify_as_system(
+        "com.example.app", {"ApplicationType": "User"}, all_system_degraded=False
+    ) is False
+    assert IOSAppEnumerator._classify_as_system(
+        "com.apple.foo", {"ApplicationType": "System"}, all_system_degraded=False
+    ) is True
+
+    # iOS 26 退化模式：用 bundle-id 前缀
+    assert IOSAppEnumerator._classify_as_system(
+        "com.APSQA.MetisTest", {"ApplicationType": "System"}, all_system_degraded=True
+    ) is False
+    assert IOSAppEnumerator._classify_as_system(
+        "com.apple.mobilemail", {"ApplicationType": "System"}, all_system_degraded=True
+    ) is True

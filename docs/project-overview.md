@@ -1,6 +1,6 @@
 # 项目架构概览
 
-## Insight-AITest v2.0.0
+## Insight-AITest v2.1.0
 
 **Insight-AITest** 是一款 AI 驱动的模块化测试与监控平台。平台内核（kernel）在启动时扫描各模块的 `manifest.yaml`，完成校验、拓扑排序并注册 FastAPI 路由与 WebSocket；React 外壳前端（shell）根据模块映射表渲染每个模块的界面。
 

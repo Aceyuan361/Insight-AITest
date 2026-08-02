@@ -8,7 +8,7 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![React 19](https://img.shields.io/badge/react-19-61DAFB.svg)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6.svg)](https://www.typescriptlang.org/)
-[![Version](https://img.shields.io/badge/version-2.0.0-green.svg)](https://github.com/Aceyuan361/Insight-AITest/releases)
+[![Version](https://img.shields.io/badge/version-2.1.0-green.svg)](https://github.com/Aceyuan361/Insight-AITest/releases)
 [![Tests](https://img.shields.io/badge/tests-719%20passed-brightgreen.svg)](#testing)
 
 **[中文文档](./README.zh-CN.md)** | English
@@ -24,6 +24,14 @@
 ## Introduction
 
 Insight-AITest is a **modular AI-powered testing & monitoring platform**. v2.0.0 evolves it from a single performance tool into a plugin-based platform where every capability ships as a module driven by a `manifest.yaml`. The platform kernel (`platform/`) assembles the app by scanning modules and registering routes; a React shell frontend (`shell-frontend/`) renders each module's UI from the same manifest.
+
+> **v2.1.0 — iOS 26 full support & real FPS:**
+> - iOS 17+/26 device connection via pymobiledevice3 v10.x userspace tunnel (no root/admin)
+> - Auto-mount Personalized DDI + reveal Developer Mode toggle without Xcode
+> - Real app FPS via DVT Graphics service (CoreAnimation frame rate) + Jank detection
+> - CPU usage normalized by core count (PerfDog/Xcode standard)
+> - App list classification for iOS 26's degraded `ApplicationType`
+> - Network collector graceful degradation (pcapd unsupported on iOS 17+/26 RSD)
 
 > **v2.0.0 ships six core modules (A–F) plus a knowledge-base module, all complete:**
 >
@@ -119,7 +127,7 @@ Most testing tools solve **one** problem well. Insight-AITest is the only open-s
 - **Python**: 3.10+
 - **Node.js**: 16+ and npm ⚠️ **Required** - Install from [nodejs.org](https://nodejs.org/)
 - **ADB** (Android Debug Bridge) - for Android devices
-- **pymobiledevice3** >= 7.0.0 - for iOS devices (optional)
+- **pymobiledevice3** >= 10.3.0 - for iOS devices incl. iOS 17+/26 (optional)
 - **Playwright Chromium** - for UI Automation (F): `playwright install chromium`
 
 ### One-Click Launch (Windows) ✨
@@ -206,7 +214,7 @@ Insight-AITest/
 ├── docs/                         # Documentation + specs + handoff notes
 ├── README.md / README.zh-CN.md
 ├── ROADMAP.md                    # A–F subsystem roadmap & status
-├── pyproject.toml                # Package configuration (v2.0.0)
+├── pyproject.toml                # Package configuration (v2.1.0)
 └── requirements.txt              # Python dependencies
 ```
 
@@ -316,7 +324,7 @@ npm run test:e2e
 ## FAQ
 
 ### Q: iOS device not connecting?
-Ensure the device has trusted the computer, Developer Mode is enabled, `pymobiledevice3 >= 7.0.0`, and iOS is 11.0 – 16.x (iOS 17+ not supported).
+Ensure the device has trusted the computer, Developer Mode is enabled, and `pymobiledevice3 >= 10.3.0`. Supports iOS 11–16 (usbmux) and iOS 17+/26 (via CoreDevice tunnel). If you see "未找到 iOS 17+ tunnel 服务" on iOS 26, upgrade pymobiledevice3 to ≥10.3.0 — older 9.x cannot speak iOS 26's CoreDevice protocol.
 
 ### Q: Android device not detected?
 Ensure ADB is installed, USB debugging is enabled, and the computer is authorized for debugging.

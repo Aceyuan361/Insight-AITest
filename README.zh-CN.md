@@ -8,7 +8,7 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![React 19](https://img.shields.io/badge/react-19-61DAFB.svg)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6.svg)](https://www.typescriptlang.org/)
-[![Version](https://img.shields.io/badge/version-2.0.0-green.svg)](https://github.com/Aceyuan361/Insight-AITest/releases)
+[![Version](https://img.shields.io/badge/version-2.1.0-green.svg)](https://github.com/Aceyuan361/Insight-AITest/releases)
 [![Tests](https://img.shields.io/badge/tests-719%20passed-brightgreen.svg)](#测试)
 
 中文 | **[English](./README.md)**
@@ -24,6 +24,14 @@
 ## 简介
 
 Insight-AITest 是一个**模块化 AI 驱动的测试与监控平台**。v2.0.0 从单一性能工具演进为基于插件的平台：每个能力都是一个由 `manifest.yaml` 驱动的模块。平台内核（`platform/`）通过扫描模块、注册路由来装配应用；React 外壳前端（`shell-frontend/`）依据同一份 manifest 渲染各模块 UI。
+
+> **v2.1.0 — iOS 26 全面支持 & 真实 FPS：**
+> - iOS 17+/26 设备连接（pymobiledevice3 v10.x userspace tunnel，无需 root/管理员）
+> - 自动挂载 Personalized DDI + 无需 Xcode 即可显示「开发者模式」开关
+> - 真实应用 FPS（DVT Graphics 服务的 CoreAnimation 帧率）+ Jank 检测
+> - CPU 使用率按核心数归一化（PerfDog/Xcode 标准）
+> - iOS 26 应用列表分类（应对 ApplicationType 退化）
+> - 网络采集优雅降级（iOS 17+/26 的 RSD 不支持 pcapd）
 
 > **v2.0.0 已交付六大核心模块（A–F）加一个知识库模块，全部完成：**
 >
@@ -89,9 +97,9 @@ Insight-AITest 是一个**模块化 AI 驱动的测试与监控平台**。v2.0.0
 | iOS 版本 | 连接方式 | 要求 |
 |---------|---------|------|
 | 11.0 - 16.x | usbmux 直连 | 信任电脑 + DeveloperDiskImage 挂载 |
-| 17.0+ | CoreDevice Tunnel | 信任电脑 + Developer Mode + pymobiledevice3 >= 9.0 |
+| 17.0+ / 26.x | CoreDevice Tunnel | 信任电脑 + Developer Mode + pymobiledevice3 >= 10.3.0 |
 
-iOS 17+ 设备通过 pymobiledevice3 的 CoreDevice tunnel 协议自动建立连接（`RemoteServiceDiscoveryService` + `DvtProvider`），无需手动启动 tunneld。
+iOS 17+ 设备通过 pymobiledevice3 v10.x 的 `UserspaceRsdTunnel`（CoreDevice tunnel，纯 Python 网络栈）自动建立连接，跨平台、无需 root/管理员，无需手动启动 tunneld。
 
 ### 界面预览
 
@@ -128,7 +136,7 @@ iOS 17+ 设备通过 pymobiledevice3 的 CoreDevice tunnel 协议自动建立连
 - **Python**: 3.10+
 - **Node.js**: 16+ 和 npm ⚠️ **必需** - 从 [nodejs.org](https://nodejs.org/) 安装
 - **ADB**（Android 调试桥）- 用于 Android 设备
-- **pymobiledevice3** >= 9.0.0 - 用于 iOS 设备（iOS 17+ 需要 tunnel 支持）
+- **pymobiledevice3** >= 10.3.0 - 用于 iOS 设备（iOS 17+/26 需 v10.2+ 的 CoreDevice tunnel 支持）
 - **Playwright Chromium** - UI 自动化（F）所需：`playwright install chromium`
 
 ### 一键启动（Windows）✨
@@ -215,7 +223,7 @@ Insight-AITest/
 ├── docs/                         # 文档 + spec + 交接笔记
 ├── README.md / README.zh-CN.md
 ├── ROADMAP.md                    # A–F 子系统路线图与状态
-├── pyproject.toml                # 包配置（v2.0.0）
+├── pyproject.toml                # 包配置（v2.1.0）
 └── requirements.txt              # Python 依赖
 ```
 
@@ -325,7 +333,7 @@ npm run test:e2e
 ## 常见问题
 
 ### Q：iOS 设备无法连接？
-请确保设备已信任电脑、已启用开发者模式（iOS 16+）、`pymobiledevice3 >= 9.0.0`、DeveloperDiskImage 已挂载（程序自动处理）。
+请确保设备已信任电脑、已启用开发者模式（iOS 16+）、`pymobiledevice3 >= 10.3.0`。iOS 11–16 走 usbmux 直连，iOS 17+/26 通过 CoreDevice tunnel 连接。若 iOS 26 报「未找到 iOS 17+ tunnel 服务」，请将 pymobiledevice3 升级到 ≥10.3.0——旧版 9.x 无法与 iOS 26 改动后的 CoreDevice 协议握手。
 
 ### Q：Android 设备检测不到？
 请确保已安装 ADB、已启用 USB 调试、已授权电脑调试。
