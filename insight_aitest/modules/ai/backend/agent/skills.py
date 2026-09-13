@@ -17,7 +17,7 @@ execute 接收 (params, ctx) 执行并返回结果摘要 dict。
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
 if TYPE_CHECKING:
     import httpx
@@ -84,9 +84,7 @@ def _rag_search(params: dict, ctx: SkillContext) -> dict:
     query = params.get("query", "")
     document_ids = params.get("document_ids")  # 可选，限定文档范围
     try:
-        scored = ctx.retriever.retrieve(
-            query, document_ids=document_ids, project_id=ctx.project_id
-        )
+        scored = ctx.retriever.retrieve(query, document_ids=document_ids, project_id=ctx.project_id)
     except Exception:
         scored = []
     chunks = [
@@ -280,6 +278,7 @@ def _execute_ui_case(params: dict, ctx: SkillContext) -> dict:
     except RuntimeError:
         # thread already has a running event loop: spin up a dedicated thread
         import concurrent.futures
+
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
             future = pool.submit(asyncio.run, _do_execute())
             run = future.result()
@@ -577,9 +576,7 @@ def _generate_data_driven_api_case(params: dict, ctx: SkillContext) -> dict:
     refs_section = ""
     chunks: list[tuple[str, str]] = []
     try:
-        scored = ctx.retriever.retrieve(
-            query, document_ids=document_ids, project_id=ctx.project_id
-        )
+        scored = ctx.retriever.retrieve(query, document_ids=document_ids, project_id=ctx.project_id)
         chunks = [(s.document.filename, s.chunk.text[:500]) for s in scored[:3]]
         if chunks:
             refs_section = f"\n参考资料：\n{_format_refs(chunks)}"
@@ -818,6 +815,7 @@ def _run_api_suite(params: dict, ctx: SkillContext) -> dict:
     def _on_case_done(done_count: int, run_id: int) -> None:
         if ctx.queue is not None and ctx._loop is not None:
             import asyncio as _aio
+
             evt = {
                 "type": "suite_case_done",
                 "data": {"done": done_count, "total": len(suite_def["case_ids"]), "run_id": run_id},
@@ -948,14 +946,20 @@ def _write_cases_batch(params: dict, ctx: SkillContext) -> dict:
             try:
                 import asyncio
                 from collections import namedtuple
+
                 Evt = namedtuple("Evt", ["type", "data"])
                 asyncio.run_coroutine_threadsafe(
-                    queue.put(Evt("progress", {
-                        "step": "generate_case",
-                        "current": i + 1,
-                        "total": total,
-                        "message": f"生成用例 {i + 1}/{total}",
-                    })),
+                    queue.put(
+                        Evt(
+                            "progress",
+                            {
+                                "step": "generate_case",
+                                "current": i + 1,
+                                "total": total,
+                                "message": f"生成用例 {i + 1}/{total}",
+                            },
+                        )
+                    ),
                     loop,
                 )
             except Exception:
@@ -998,6 +1002,7 @@ def _write_cases_batch(params: dict, ctx: SkillContext) -> dict:
 
     # 质量自检：批量生成后自动校验+修复（不合格用例重试生成 1 次，仍不合格标记 ai:invalid）
     from insight_aitest.modules.ai.backend.agent.quality import validate_and_fix_cases
+
     validation = validate_and_fix_cases(batch_id, document_ids, ctx)
 
     return {
@@ -1048,6 +1053,7 @@ def _summarize_context(params: dict, ctx: SkillContext) -> dict:
     force = params.get("force_refresh", False)
 
     import insight_aitest.modules.ai.backend.deps as deps
+
     db = deps.get_db()
     task = db.get_task(task_id)
     if not task or not task.conversation_id:
@@ -1057,14 +1063,12 @@ def _summarize_context(params: dict, ctx: SkillContext) -> dict:
     return {"summary": summary}
 
 
-
-
 def _run_ui_batch(params: dict, ctx: SkillContext) -> dict:
     """Execute multiple UI cases sequentially (batch mode).
 
-Mirrors UI module batch execution: iterates over case_ids, runs each
-via the async UI executor (bridged to sync), persists individual runs,
-and returns an aggregate summary.
+    Mirrors UI module batch execution: iterates over case_ids, runs each
+    via the async UI executor (bridged to sync), persists individual runs,
+    and returns an aggregate summary.
     """
     import asyncio
     import copy
@@ -1137,6 +1141,7 @@ and returns an aggregate summary.
                 run = asyncio.run(_do_run())
             except RuntimeError:
                 import concurrent.futures
+
                 with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
                     future = pool.submit(asyncio.run, _do_run())
                     run = future.result()
@@ -1150,10 +1155,15 @@ and returns an aggregate summary.
                 failed += 1
             else:
                 error_count += 1
-            case_results.append({
-                "case_id": cid, "run_id": run.id, "status": status,
-                "passed_steps": run.passed_steps, "total_steps": run.total_steps,
-            })
+            case_results.append(
+                {
+                    "case_id": cid,
+                    "run_id": run.id,
+                    "status": status,
+                    "passed_steps": run.passed_steps,
+                    "total_steps": run.total_steps,
+                }
+            )
         except Exception as e:
             error_count += 1
             case_results.append({"case_id": cid, "status": "error", "error": str(e)})
@@ -1166,16 +1176,28 @@ and returns an aggregate summary.
         final_status = BatchRunStatus.PASSED
 
     ctx.ui_batch_db.update(
-        batch_id, status=final_status, passed=passed, failed=failed,
-        error=error_count, case_run_ids=case_run_ids, finished_at=datetime.now(),
+        batch_id,
+        status=final_status,
+        passed=passed,
+        failed=failed,
+        error=error_count,
+        case_run_ids=case_run_ids,
+        finished_at=datetime.now(),
     )
 
     return {
-        "batch_id": batch_id, "total": len(case_ids),
-        "passed": passed, "failed": failed, "error": error_count,
-        "overall_status": final_status.value if hasattr(final_status, "value") else str(final_status),
+        "batch_id": batch_id,
+        "total": len(case_ids),
+        "passed": passed,
+        "failed": failed,
+        "error": error_count,
+        "overall_status": (
+            final_status.value if hasattr(final_status, "value") else str(final_status)
+        ),
         "per_case": case_results,
     }
+
+
 # ===== 注册表 =====
 
 SKILLS: dict[str, SkillSpec] = {

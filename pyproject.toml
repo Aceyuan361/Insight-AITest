@@ -60,6 +60,7 @@ dependencies = [
     "python-multipart>=0.0.6",
     "jsonpath-ng>=1.6.0",
     "logzero>=1.7.0",
+    "apscheduler>=3.10",
 ]
 
 [project.optional-dependencies]

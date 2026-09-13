@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import html
 import json
+import xml.etree.ElementTree as ET
 from typing import Any
 
 from insight_aitest.modules.api.backend.persistence.models import RunRecord, StepResult
@@ -141,7 +142,8 @@ def render_suite_html(suite_run: dict, child_runs: list[RunRecord]) -> str:
         sv = r.status.value if r.status else "unknown"
         cl = _STATUS_COLOR.get(sv, "#64748b")
         step_blocks = "".join(_step_block(s) for s in r.steps)
-        case_blocks.append(f"""
+        case_blocks.append(
+            f"""
     <details class="card" style="border-left:4px solid {cl};">
       <summary style="font-weight:600;font-size:15px;cursor:pointer;">
         {_esc(r.case_title)}
@@ -149,7 +151,8 @@ def render_suite_html(suite_run: dict, child_runs: list[RunRecord]) -> str:
         <span style="color:#64748b;font-weight:400;font-size:13px;margin-left:8px;">{r.passed_steps}/{r.total_steps} 步</span>
       </summary>
       {step_blocks}
-    </details>""")
+    </details>"""
+        )
 
     return f"""<!DOCTYPE html>
 <html lang="zh-CN"><head><meta charset="utf-8"><title>套件报告 - {_esc(suite_run.get('suite_name',''))}</title>
@@ -177,29 +180,34 @@ def render_junit_xml(suite_run: dict, child_runs: list[RunRecord]) -> str:
     suite_run: 同 render_suite_html
     child_runs: list[RunRecord]
     """
-    import xml.etree.ElementTree as ET
-
     total = suite_run.get("total", 0)
     failures = sum(1 for r in child_runs if r.status and r.status.value in ("failed", "error"))
     errors = sum(1 for r in child_runs if r.status and r.status.value == "error")
     total_time = sum((r.duration_ms or 0) for r in child_runs) / 1000.0
 
-    ts = ET.Element("testsuite", {
-        "name": suite_run.get("suite_name", ""),
-        "tests": str(total),
-        "failures": str(failures),
-        "errors": str(errors),
-        "time": f"{total_time:.3f}",
-        "timestamp": str(suite_run.get("started_at", "")),
-    })
+    ts = ET.Element(
+        "testsuite",
+        {
+            "name": suite_run.get("suite_name", ""),
+            "tests": str(total),
+            "failures": str(failures),
+            "errors": str(errors),
+            "time": f"{total_time:.3f}",
+            "timestamp": str(suite_run.get("started_at", "")),
+        },
+    )
 
     for r in child_runs:
         sv = r.status.value if r.status else "unknown"
-        tc = ET.SubElement(ts, "testcase", {
-            "name": r.case_title or f"case-{r.case_id}",
-            "classname": suite_run.get("suite_name", ""),
-            "time": f"{(r.duration_ms or 0) / 1000.0:.3f}",
-        })
+        tc = ET.SubElement(
+            ts,
+            "testcase",
+            {
+                "name": r.case_title or f"case-{r.case_id}",
+                "classname": suite_run.get("suite_name", ""),
+                "time": f"{(r.duration_ms or 0) / 1000.0:.3f}",
+            },
+        )
         if sv == "error":
             err_msg = ""
             for s in r.steps:
@@ -211,7 +219,7 @@ def render_junit_xml(suite_run: dict, child_runs: list[RunRecord]) -> str:
             # 取第一个失败断言
             fail_msg = ""
             for s in r.steps:
-                for a in (s.assertions or []):
+                for a in s.assertions or []:
                     if not a.get("passed"):
                         fail_msg = f"{a.get('type')} {a.get('target')}: expected={a.get('expected')} actual={a.get('actual')}"
                         break
