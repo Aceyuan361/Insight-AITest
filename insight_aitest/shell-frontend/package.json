@@ -25,7 +25,7 @@
     "@tailwindcss/postcss": "^4.1.18",
     "@univerjs/preset-sheets-core": "^0.25.1",
     "@univerjs/presets": "^0.25.1",
-    "axios": "^1.13.4",
+    "axios": "^1.20.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dayjs": "^1.11.19",
