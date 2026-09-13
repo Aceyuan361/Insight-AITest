@@ -7,6 +7,8 @@ from typing import Any, Callable
 
 from fastapi import APIRouter
 
+from insight_aitest import __version__
+
 
 # 可注入的"模块清单视图"，由 kernel 启动时设置。
 # 默认返回空列表（便于测试与未装配时安全降级）。
@@ -46,7 +48,7 @@ def build_platform_router() -> APIRouter:
 
     @router.get("/health")
     async def health() -> dict[str, str]:
-        return {"status": "healthy"}
+        return {"status": "healthy", "version": __version__}
 
     @router.get("/dashboard/summary")
     async def dashboard_summary() -> dict[str, Any]:

@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import axios from 'axios';
 import { Menu, X } from 'lucide-react';
 import { platformIcons } from './icons';
 import { SettingsPanel } from '../modules/ai/components/SettingsPanel';
@@ -14,7 +15,23 @@ interface TopBarProps {
 export function TopBar({ onToggleSidebar }: TopBarProps) {
   const { t } = useTranslation();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [version, setVersion] = useState<string>('2.2.0');
   const isMobile = useIsMobile();
+
+  useEffect(() => {
+    let cancelled = false;
+    axios
+      .get<{ status: string; version?: string }>('/api/platform/health')
+      .then((res) => {
+        if (!cancelled && res.data.version) setVersion(res.data.version);
+      })
+      .catch(() => {
+        // 后端不可达时保留回退版本号，不打扰用户
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <>
@@ -50,7 +67,7 @@ export function TopBar({ onToggleSidebar }: TopBarProps) {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <ProjectSelector />
-          <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>v2.0.0</span>
+          <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>v{version}</span>
           <LanguageSwitcher />
           <button
             onClick={() => setSettingsOpen(true)}

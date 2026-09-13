@@ -1,7 +1,7 @@
 """
 Insight-AITest - AI 驱动的测试与监控平台
 
-版本: v2.0.0
+版本: v2.2.0
 
 Web 应用特性:
     - 基于 FastAPI 的 RESTful API 和 WebSocket 服务
@@ -68,4 +68,4 @@ Web 应用特性:
     - iOS FPS 为系统刷新率参考值，非应用级数据
 """
 
-__version__ = "2.0.0"
+__version__ = "2.2.0"

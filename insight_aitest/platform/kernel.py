@@ -16,6 +16,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from logzero import logger
 
+from insight_aitest import __version__
+
 # 兼容旧 main.py 的 sys.path 注入（worktree 开发模式）
 _PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 if _PROJECT_ROOT not in sys.path:
@@ -88,7 +90,7 @@ def build_app() -> FastAPI:
 
     app = FastAPI(
         title="Insight-AITest Platform API",
-        version="2.1.0",
+        version=__version__,
         lifespan=lifespan,
     )
     app.add_middleware(
@@ -119,6 +121,6 @@ def build_app() -> FastAPI:
 
     @app.get("/")
     async def root():
-        return {"name": "Insight-AITest Platform API", "version": "2.1.0", "docs": "/docs"}
+        return {"name": "Insight-AITest Platform API", "version": __version__, "docs": "/docs"}
 
     return app

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from fastapi.testclient import TestClient
 
+from insight_aitest import __version__
 from insight_aitest.platform.kernel import build_app
 
 
@@ -19,4 +20,4 @@ def test_build_app_root_returns_version():
     r = client.get("/")
     assert r.status_code == 200
     body = r.json()
-    assert body["version"] == "2.0.0"
+    assert body["version"] == __version__
