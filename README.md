@@ -2,22 +2,28 @@
 
 <div align="center">
 
+<img src="docs/brand/logo-horizontal.svg" width="420" alt="Insight-AITest logo">
+
 **Modular AI-Powered Testing & Monitoring Platform**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![React 19](https://img.shields.io/badge/react-19-61DAFB.svg)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6.svg)](https://www.typescriptlang.org/)
-[![Version](https://img.shields.io/badge/version-2.1.0-green.svg)](https://github.com/Aceyuan361/Insight-AITest/releases)
-[![Tests](https://img.shields.io/badge/tests-719%20passed-brightgreen.svg)](#testing)
+[![Version](https://img.shields.io/badge/version-2.2.0-green.svg)](https://github.com/Aceyuan361/Insight-AITest/releases)
+[![Tests](https://img.shields.io/badge/tests-749%20passed-brightgreen.svg)](#testing)
 
 **[中文文档](./README.zh-CN.md)** | English
 
-</div>
+> ⚡ **Fastest path to value — no LLM key required**: plug in an Android phone, run
+> `start.bat`, open `/performance`, and watch live CPU / FPS / memory curves in seconds.
+> The AI modules unlock whenever you add an LLM key later.
 
 <p align="center">
-  <img src="docs/screenshots/promo-1-en.png" width="100%" alt="Insight-AITest Promo">
+  <img src="docs/screenshots/demo.gif" width="100%" alt="Insight-AITest real-time monitoring demo (GIF)">
 </p>
+
+</div>
 
 ---
 
@@ -93,6 +99,11 @@ Most testing tools solve **one** problem well. Insight-AITest is the only open-s
 | Energy | ✅ GPU | ✅ CPU/GPU/Network |
 
 ### Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/promo-1-en.png" width="72%" alt="Insight-AITest Promo"><br>
+  <sub>Poster · feature overview at a glance</sub>
+</p>
 
 <p align="center">
   <img src="docs/screenshots/promo-2-en.png" width="100%" alt="Insight-AITest Capabilities">
@@ -199,18 +210,18 @@ Insight-AITest/
 │   │   ├── _registry/            # Module contract (manifest schema, base class)
 │   │   ├── performance/          # (B) Real-time performance monitoring
 │   │   ├── ai/                   # (C) RAG knowledge-base assistant
+│   │   ├── kb/                   # Local knowledge base (documents, versions, tags)
 │   │   ├── testcase/             # (D) AI test-case generation
 │   │   ├── api/                  # (E) API automation
-│   │   ├── ui/                   # (F) UI automation (Midscene + Playwright)
-│   │   └── example/              # Placeholder module (verifies the module system)
+│   │   └── ui/                   # (F) UI automation (Midscene + Playwright)
 │   └── shell-frontend/           # React platform shell
 │       └── src/
 │           ├── shell/            # AppShell, TopBar, SideNav, Dashboard, theme
-│           ├── modules/          # Per-module frontends (performance/ai/testcase/api/ui/)
+│           ├── modules/          # Per-module frontends (performance/ai/kb/testcase/api/ui/)
 │           ├── shared/           # api client, types, config, i18n
 │           ├── module-map.ts     # Static module entry → component mapping
 │           └── routing.tsx       # react-router assembly driven by manifest
-├── tests/                        # pytest suite (719 passed, 1 skipped)
+├── tests/                        # pytest suite (749 passed, 1 skipped)
 ├── docs/                         # Documentation + specs + handoff notes
 ├── README.md / README.zh-CN.md
 ├── ROADMAP.md                    # A–F subsystem roadmap & status
@@ -266,7 +277,7 @@ Each step records a screenshot (saved to disk, not the DB) and an action log; `e
 
 ### Frontend
 
-- **React 18** + **TypeScript** + **Vite**
+- **React 19** + **TypeScript** + **Vite**
 - **react-router-dom** — routing driven by module manifests
 - **Zustand** — per-module state stores
 - **ECharts** — data visualization
@@ -302,7 +313,7 @@ After starting the backend, visit `http://localhost:8001/docs` for full Swagger 
 
 ```bash
 # Full Python suite
-python -m pytest tests/ -q        # → 719 passed, 1 skipped
+python -m pytest tests/ -q        # → 749 passed, 1 skipped
 
 # Per subsystem
 python -m pytest tests/ui/ -q     # UI automation (F): 30 tests

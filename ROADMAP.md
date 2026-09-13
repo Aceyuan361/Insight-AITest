@@ -1,6 +1,6 @@
 # Roadmap
 
-> Last updated: 2026-07-14 · Branch: `2.0.0`
+> Last updated: 2026-09-13 · Branch: `main`
 
 Insight-AITest v2.0.0 is built as six subsystems (A–F). All six are complete in code
 and tests. This document tracks their status and the deferred (YAGNI) work.
@@ -18,7 +18,7 @@ F  UI 自动化（Midscene）        UI Automation (Midscene)             100% �
 
 **v2.0.0 六大模块全部完成。**
 
-Test baseline: `python -m pytest tests/ -q` → **719 passed, 1 skipped** (zero regressions).
+Test baseline: `python -m pytest tests/ -q` → **749 passed, 1 skipped** (zero regressions).
 
 ## Subsystem detail
 

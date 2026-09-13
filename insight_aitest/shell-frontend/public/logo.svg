@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Insight-AITest logo">
+  <!-- Insight-AITest 品牌标：洞察之眼 + 性能脉搏（emerald-on-black，与 tokens.css 同源） -->
+  <defs>
+    <radialGradient id="iris-glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.22"/>
+      <stop offset="70%" stop-color="#10b981" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- 底板：Void 近黑圆角方 + emerald 微光描边 -->
+  <rect width="64" height="64" rx="14" fill="#09090b"/>
+  <rect x="0.75" y="0.75" width="62.5" height="62.5" rx="13.25" fill="none" stroke="#10b981" stroke-opacity="0.30" stroke-width="1.5"/>
+
+  <!-- 虹膜辉光 -->
+  <circle cx="32" cy="32" r="14" fill="url(#iris-glow)"/>
+
+  <!-- 眼睑（杏仁形） -->
+  <path d="M9 32 Q32 14 55 32 Q32 50 9 32 Z" fill="none" stroke="#10b981" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/>
+
+  <!-- 虹膜 -->
+  <circle cx="32" cy="32" r="8.6" fill="none" stroke="#10b981" stroke-width="2.6"/>
+
+  <!-- 瞳孔内的性能脉搏 -->
+  <path d="M27.4 32 h1.9 l1.9 -4.1 2.6 7.6 2 -5.2 1.4 1.7 h1.4" fill="none" stroke="#6ee7b7" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 96" role="img" aria-label="Insight-AITest">
+  <!-- 横版组合标：方标 + 字标，用于 README / 宣传物料 -->
+  <g transform="translate(0,16) scale(1)">
+    <rect width="64" height="64" rx="14" fill="#09090b"/>
+    <rect x="0.75" y="0.75" width="62.5" height="62.5" rx="13.25" fill="none" stroke="#10b981" stroke-opacity="0.30" stroke-width="1.5"/>
+    <path d="M9 32 Q32 14 55 32 Q32 50 9 32 Z" fill="none" stroke="#10b981" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="32" cy="32" r="8.6" fill="none" stroke="#10b981" stroke-width="2.6"/>
+    <path d="M27.4 32 h1.9 l1.9 -4.1 2.6 7.6 2 -5.2 1.4 1.7 h1.4" fill="none" stroke="#6ee7b7" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <g font-family="'Geist','Noto Sans SC',system-ui,sans-serif" font-weight="600">
+    <text x="84" y="56" font-size="34" fill="#10b981">Insight</text>
+    <text x="196" y="56" font-size="34" fill="#e4e4e7">-AITest</text>
+    <text x="86" y="76" font-size="12.5" font-weight="400" fill="#a1a1aa" letter-spacing="1.5">AI TESTING &amp; MONITORING PLATFORM</text>
+  </g>
+</svg>

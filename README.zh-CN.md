@@ -2,22 +2,27 @@
 
 <div align="center">
 
+<img src="docs/brand/logo-horizontal.svg" width="420" alt="Insight-AITest logo">
+
 **模块化 AI 驱动的测试与监控平台**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![React 19](https://img.shields.io/badge/react-19-61DAFB.svg)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6.svg)](https://www.typescriptlang.org/)
-[![Version](https://img.shields.io/badge/version-2.1.0-green.svg)](https://github.com/Aceyuan361/Insight-AITest/releases)
-[![Tests](https://img.shields.io/badge/tests-719%20passed-brightgreen.svg)](#测试)
+[![Version](https://img.shields.io/badge/version-2.2.0-green.svg)](https://github.com/Aceyuan361/Insight-AITest/releases)
+[![Tests](https://img.shields.io/badge/tests-749%20passed-brightgreen.svg)](#测试)
 
 中文 | **[English](./README.md)**
 
-</div>
+> ⚡ **零 LLM key 快速体验**：插上安卓手机 → 运行 `start.bat` → 打开 `/performance`，
+> 几秒内就能看到 CPU / FPS / 内存的实时曲线。AI 模块等你想用时再配 key 也来得及。
 
 <p align="center">
-  <img src="docs/screenshots/promo-1-zh.png" width="100%" alt="Insight-AITest 宣传图">
+  <img src="docs/screenshots/demo.gif" width="100%" alt="Insight-AITest 实时监控演示 (GIF)">
 </p>
+
+</div>
 
 ---
 
@@ -102,6 +107,11 @@ Insight-AITest 是一个**模块化 AI 驱动的测试与监控平台**。v2.0.0
 iOS 17+ 设备通过 pymobiledevice3 v10.x 的 `UserspaceRsdTunnel`（CoreDevice tunnel，纯 Python 网络栈）自动建立连接，跨平台、无需 root/管理员，无需手动启动 tunneld。
 
 ### 界面预览
+
+<p align="center">
+  <img src="docs/screenshots/promo-1-zh.png" width="72%" alt="Insight-AITest 宣传海报"><br>
+  <sub>宣传海报 · 功能一图速览</sub>
+</p>
 
 <p align="center">
   <img src="docs/screenshots/promo-2-zh.png" width="100%" alt="Insight-AITest 能力总览">
@@ -208,18 +218,18 @@ Insight-AITest/
 │   │   ├── _registry/            # 模块契约（manifest schema、基类）
 │   │   ├── performance/          #（B）实时性能监控
 │   │   ├── ai/                   #（C）RAG 知识库助手
+│   │   ├── kb/                   # 本地知识库（文档、版本、标签）
 │   │   ├── testcase/             #（D）AI 用例生成
 │   │   ├── api/                  #（E）API 自动化
-│   │   ├── ui/                   #（F）UI 自动化（Midscene + Playwright）
-│   │   └── example/              # 占位模块（验证模块机制）
+│   │   └── ui/                   #（F）UI 自动化（Midscene + Playwright）
 │   └── shell-frontend/           # React 平台外壳
 │       └── src/
 │           ├── shell/            # AppShell、TopBar、SideNav、Dashboard、主题
-│           ├── modules/          # 各模块前端（performance/ai/testcase/api/ui/）
+│           ├── modules/          # 各模块前端（performance/ai/kb/testcase/api/ui/）
 │           ├── shared/           # api client、types、config、i18n
 │           ├── module-map.ts     # 静态模块入口 → 组件映射
 │           └── routing.tsx       # 由 manifest 驱动的 react-router 装配
-├── tests/                        # pytest 套件（719 passed, 1 skipped）
+├── tests/                        # pytest 套件（749 passed, 1 skipped）
 ├── docs/                         # 文档 + spec + 交接笔记
 ├── README.md / README.zh-CN.md
 ├── ROADMAP.md                    # A–F 子系统路线图与状态
@@ -311,7 +321,7 @@ AI 分析场景、选取测试点并生成结构化用例，供你审阅编辑�
 
 ```bash
 # 全量 Python 套件
-python -m pytest tests/ -q        # → 719 passed, 1 skipped
+python -m pytest tests/ -q        # → 749 passed, 1 skipped
 
 # 按子系统
 python -m pytest tests/ui/ -q     # UI 自动化（F）：30 个测试

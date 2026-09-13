@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- favicon：logo.svg 的简化版（小尺寸下略去辉光，加粗笔画） -->
+  <rect width="64" height="64" rx="14" fill="#09090b"/>
+  <rect x="0.75" y="0.75" width="62.5" height="62.5" rx="13.25" fill="none" stroke="#10b981" stroke-opacity="0.30" stroke-width="1.5"/>
+  <path d="M9 32 Q32 14 55 32 Q32 50 9 32 Z" fill="none" stroke="#10b981" stroke-width="3.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="32" cy="32" r="8.6" fill="none" stroke="#10b981" stroke-width="3"/>
+  <path d="M27.4 32 h1.9 l1.9 -4.1 2.6 7.6 2 -5.2 1.4 1.7 h1.4" fill="none" stroke="#6ee7b7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -18,7 +18,7 @@
 **A:** 请确保：
 1. 设备已信任电脑
 2. 已启用开发者模式
-3. pymobiledevice3 版本 >= 9.0.0（iOS 17+ 需 tunnel 支持）
+3. pymobiledevice3 版本 >= 10.3.0（iOS 17+ 需 tunnel 支持；iOS 26 必须用 10.3.0+，旧版 9.x 无法与 iOS 26 CoreDevice 通信）
 4. USB 连接稳定
 
 ### Q: Android 设备检测不到？
