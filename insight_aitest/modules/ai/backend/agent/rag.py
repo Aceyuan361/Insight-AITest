@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from dataclasses import dataclass
 from typing import AsyncIterator, TYPE_CHECKING
 
@@ -12,6 +13,8 @@ from insight_aitest.modules.ai.backend.agent.prompts import (
     build_system_message,
 )
 from insight_aitest.modules.ai.backend.persistence.models import Citation
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from insight_aitest.platform.services.llm.config import AIConfig
@@ -40,10 +43,15 @@ class RagAgent:
 
     def _retrieve(self, query: str, document_ids, project_id: int | None = None):
         try:
-            return self.retriever.retrieve(
-                query, document_ids=document_ids, project_id=project_id
-            )
+            return self.retriever.retrieve(query, document_ids=document_ids, project_id=project_id)
         except Exception:
+            # 检索失败降级为无引用回答，但必须留痕——否则用户无法区分"没命中"和"检索坏了"
+            logger.warning(
+                "RAG 检索失败，已降级为无知识库回答: query=%r project_id=%r",
+                query[:80],
+                project_id,
+                exc_info=True,
+            )
             return []
 
     def _build_messages(self, query, history, scored: list["ScoredChunk"], use_rag: bool = True):
@@ -101,9 +109,7 @@ class RagAgent:
         thinking_level != "off" 时读 reasoning 发 thinking 事件（按模型族探测注入参数）。
         project_id 非 None 时按项目隔离检索（KB 升级，杜绝跨项目污染）。
         """
-        scored = (
-            self._retrieve(query, document_ids, project_id=project_id) if use_rag else []
-        )
+        scored = self._retrieve(query, document_ids, project_id=project_id) if use_rag else []
         citations = self._to_citations(scored)
         yield StreamEvent(type="citations", data=citations)
 

@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import hashlib
+import logging
 import threading
 import uuid
 from pathlib import Path
@@ -18,6 +19,8 @@ from pydantic import BaseModel
 from insight_aitest.platform.services.llm.config import AIConfig
 from insight_aitest.platform.services.kb.database import KBDatabase
 from insight_aitest.platform.services.kb.models import DocumentStatus
+
+logger = logging.getLogger(__name__)
 from insight_aitest.platform.services.kb.loader import get_loader
 from insight_aitest.platform.services.kb.loader.base import UnsupportedFormatError
 from insight_aitest.platform.services.kb.ingest import process_document
@@ -125,7 +128,8 @@ async def delete_document(
     try:
         vs.delete_document(doc_id)
     except Exception:
-        pass
+        # 向量残留会导致已删文档继续被 RAG 引用，必须留痕
+        logger.warning("删除文档 %s 的向量失败，可能残留脏向量", doc_id, exc_info=True)
     # 删原始文件
     try:
         Path(doc.storage_path).unlink(missing_ok=True)

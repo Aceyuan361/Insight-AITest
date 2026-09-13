@@ -18,6 +18,7 @@ import asyncio
 import base64
 import hashlib
 import json
+import logging
 import threading
 import uuid
 from pathlib import Path
@@ -39,6 +40,8 @@ from insight_aitest.modules.ai.backend.persistence.database import AIDatabase
 from insight_aitest.modules.ai.backend.persistence.models import TaskStatus, Role
 from insight_aitest.modules.ai.backend.agent.prompts import build_agent_chat_message
 from insight_aitest.modules.ai.backend.agent.reactor import ReActAgent, ReActConfig
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/tasks", tags=["ai-tasks"])
 
@@ -213,10 +216,10 @@ def _sse(event_type: str, data: Any) -> str:
 
 def _fetch_kb_documents(document_ids: list[int], kb_db) -> list[dict]:
     """从知识库获取文档内容（用于后续任务继承文档上下文）。
-    
+
     当用户创建后续任务但没有上传新文件时，使用已有的 document_ids
     从 KB 获取文档内容，拼入 uploaded_files 格式供 planner.understand 使用。
-    
+
     Returns: [{"filename": str, "content": str}, ...]
     """
     docs = []
@@ -234,7 +237,7 @@ def _fetch_kb_documents(document_ids: list[int], kb_db) -> list[dict]:
 
 def _synthesize_task_context(task) -> list[dict]:
     """从 task 字段合成上下文消息（向后兼容：旧 task 无持久化消息时使用）。
-    
+
     返回 message dict 列表（role + content），按时间顺序排列。
     """
     msgs: list[dict] = []
@@ -334,7 +337,9 @@ async def upload_files(
     files: list[UploadFile] = File(...),
     config=Depends(get_config),
     llm=Depends(
-        lambda: __import__("insight_aitest.platform.services.kb.deps", fromlist=["get_llm"]).get_llm()
+        lambda: __import__(
+            "insight_aitest.platform.services.kb.deps", fromlist=["get_llm"]
+        ).get_llm()
     ),
 ) -> dict:
     """上传文件 → 解析内容返回（供前端拼入 task 创建请求）。
@@ -387,7 +392,12 @@ async def upload_files(
 
                 threading.Thread(target=_bg, daemon=True).start()
         except Exception:
-            pass  # 知识库存入失败不阻塞任务
+            # 不阻塞任务，但必须留痕——否则上传的文档会无声消失
+            logger.warning(
+                "任务附件存入知识库失败（任务继续，附件不可检索）: filename=%r",
+                getattr(f, "filename", None),
+                exc_info=True,
+            )
 
     return {"files": parsed_files, "document_ids": document_ids}
 
@@ -460,7 +470,8 @@ async def create_task(
             strategy_lines.append(f"- **{label}**：{desc}")
         if strategy_lines:
             db.add_message(
-                conv_id, Role.ASSISTANT,
+                conv_id,
+                Role.ASSISTANT,
                 "【测试策略建议】\n\n" + "\n".join(strategy_lines),
                 task_id=task_id,
             )
@@ -570,7 +581,9 @@ async def create_task_stream(
 
             # 阶段 B：策略生成
             strategies: list[dict] = []
-            for kind, data in planner.propose_strategies_stream(context, thinking_level, document_ids=body.document_ids):
+            for kind, data in planner.propose_strategies_stream(
+                context, thinking_level, document_ids=body.document_ids
+            ):
                 if kind == "result":
                     strategies = data  # 回填：stream 的 result 是最终策略列表
                 asyncio.run_coroutine_threadsafe(
@@ -588,7 +601,8 @@ async def create_task_stream(
                 strategy_lines.append(f"- **{label}**：{desc}")
             if strategy_lines:
                 db.add_message(
-                    conv_id, Role.ASSISTANT,
+                    conv_id,
+                    Role.ASSISTANT,
                     "【测试策略建议】\n\n" + "\n".join(strategy_lines),
                     task_id=task_id,
                 )
@@ -708,9 +722,7 @@ async def agent_chat(
                 conv_id = task.conversation_id
 
             # 加载历史消息（按 task_id，最近 history_turns*2 条，时间正序）
-            history = db.list_messages_by_task(
-                body.task_id, limit=body.history_turns * 2
-            )
+            history = db.list_messages_by_task(body.task_id, limit=body.history_turns * 2)
             for m in history:
                 history_msgs.append({"role": m.role.value, "content": m.content})
 
@@ -721,9 +733,11 @@ async def agent_chat(
 
             # 注入 task 上下文摘要（若有）作为额外 system 消息
             if task.context_json:
-                ctx_summary = task.context_json.get("summary") if isinstance(
-                    task.context_json, dict
-                ) else None
+                ctx_summary = (
+                    task.context_json.get("summary")
+                    if isinstance(task.context_json, dict)
+                    else None
+                )
                 if ctx_summary:
                     history_msgs.insert(
                         0,
@@ -734,7 +748,11 @@ async def agent_chat(
                     )
 
             # 注入 document_ids 信息（告知 LLM 可用文档）
-            doc_ids = (task.context_json or {}).get("document_ids", []) if isinstance(task.context_json, dict) else []
+            doc_ids = (
+                (task.context_json or {}).get("document_ids", [])
+                if isinstance(task.context_json, dict)
+                else []
+            )
             if doc_ids:
                 history_msgs.insert(
                     0,
@@ -754,8 +772,10 @@ async def agent_chat(
 
             # 注入会话上下文摘要（长会话时替代被截断的早期消息）
             from insight_aitest.modules.ai.backend.agent.summarizer import (
-                summarize_context, format_summary_for_injection,
+                summarize_context,
+                format_summary_for_injection,
             )
+
             conv_summary = summarize_context(conv_id, db, llm)
             if conv_summary:
                 history_msgs.insert(
@@ -772,7 +792,9 @@ async def agent_chat(
     # 构造 LLM 消息列表：[system] + history + [user]
     system_msg = build_agent_chat_message(has_task_context=has_task_context)
     llm_messages = (
-        [{"role": "system", "content": system_msg}] + history_msgs + [{"role": "user", "content": body.message}]
+        [{"role": "system", "content": system_msg}]
+        + history_msgs
+        + [{"role": "user", "content": body.message}]
     )
 
     # 收集完整回复（流式结束后持久化 assistant 消息）
@@ -819,9 +841,7 @@ async def agent_chat(
             # 流式结束：持久化 assistant 消息（仅 task_id 模式且有内容）
             answer = "".join(full_answer_holder).strip()
             if body.task_id is not None and conv_id is not None and answer:
-                db.add_message(
-                    conv_id, Role.ASSISTANT, answer, task_id=body.task_id
-                )
+                db.add_message(conv_id, Role.ASSISTANT, answer, task_id=body.task_id)
             yield _task_sse("done", {})
         except Exception as e:
             yield _task_sse("error", {"message": str(e)})
@@ -857,8 +877,11 @@ async def select_strategy(
     if doc_ids:
         for step in plan:
             if step.get("skill") in {
-                "extract_test_points", "write_cases_batch",
-                "write_functional_case", "write_api_case", "write_ui_case_from_image",
+                "extract_test_points",
+                "write_cases_batch",
+                "write_functional_case",
+                "write_api_case",
+                "write_ui_case_from_image",
                 "generate_data_driven_api_case",
             }:
                 step["params"]["document_ids"] = doc_ids
@@ -869,7 +892,8 @@ async def select_strategy(
     conv_id = task.conversation_id
     if conv_id is not None:
         db.add_message(
-            conv_id, Role.USER,
+            conv_id,
+            Role.USER,
             f"选择策略：{strategy_label}",
             task_id=task_id,
         )
@@ -883,7 +907,15 @@ async def select_strategy(
     # 后台线程执行
     def _run():
         try:
-            executor = get_executor(body.project_id, body.version_id, use_kb=use_kb, task_id=task_id, task_db=db, queue=queue, evt_loop=loop)
+            executor = get_executor(
+                body.project_id,
+                body.version_id,
+                use_kb=use_kb,
+                task_id=task_id,
+                task_db=db,
+                queue=queue,
+                evt_loop=loop,
+            )
             _run_task_plan(executor, task_id, plan, db, queue, loop)
         except Exception as e:
             db.update_task_status(task_id, TaskStatus.FAILED, error=str(e))
@@ -906,16 +938,16 @@ async def get_task(task_id: int, db: AIDatabase = Depends(get_db)) -> TaskOut:
 @router.get("/{task_id}/messages")
 async def get_task_messages(task_id: int, db: AIDatabase = Depends(get_db)) -> dict:
     """返回任务关联的消息列表（用于前端刷新后重建对话历史）。
-    
+
     若 task 有 conversation_id，同时返回同会话下其他任务的消息，
     实现跨任务历史连续（修复会话拆分后的历史丢失问题）。
     """
     task = db.get_task(task_id)
     if not task:
         raise HTTPException(404, "任务不存在")
-    
+
     messages = db.list_messages_by_task(task_id)
-    
+
     # 跨任务合并：同 conversation 下其他 task 的消息也纳入
     conv_id = task.conversation_id
     if conv_id is not None:
@@ -927,7 +959,7 @@ async def get_task_messages(task_id: int, db: AIDatabase = Depends(get_db)) -> d
                 messages.append(m)
         # 按创建时间升序排列
         messages.sort(key=lambda m: m.created_at if m.created_at else "")
-    
+
     return {
         "task_id": task_id,
         "conversation_id": conv_id,
@@ -935,7 +967,9 @@ async def get_task_messages(task_id: int, db: AIDatabase = Depends(get_db)) -> d
             {
                 "role": m.role.value,
                 "content": m.content,
-                "citations": [c.__dict__ if hasattr(c, '__dict__') else c for c in (m.citations or [])],
+                "citations": [
+                    c.__dict__ if hasattr(c, "__dict__") else c for c in (m.citations or [])
+                ],
                 "thinking": m.thinking,
                 "attachments": m.attachments,
                 "task_id": m.task_id,
@@ -1112,8 +1146,12 @@ async def create_quick_task(
     def _run():
         try:
             executor = get_executor(
-                body.project_id, body.version_id, use_kb=body.use_kb,
-                task_id=task_id, task_db=db, queue=queue,
+                body.project_id,
+                body.version_id,
+                use_kb=body.use_kb,
+                task_id=task_id,
+                task_db=db,
+                queue=queue,
             )
             executor.run(task_id, plan, db, queue=queue, loop=loop)
         except Exception as e:
@@ -1290,6 +1328,7 @@ async def reindex_documents(
             if doc is None:
                 results.append({"id": doc_id, "status": "not_found"})
                 continue
+
             # 在后台线程重新处理（需传入全部依赖）
             def _bg(did=doc_id):
                 try:
@@ -1331,9 +1370,9 @@ async def kb_stats(
         pid = project_id if project_id else None
         if pid is not None:
             doc_q = doc_q.filter(Document.project_id == pid)
-            chunk_q = chunk_q.filter(Chunk.document_id.in_(
-                s.query(Document.id).filter(Document.project_id == pid)
-            ))
+            chunk_q = chunk_q.filter(
+                Chunk.document_id.in_(s.query(Document.id).filter(Document.project_id == pid))
+            )
         total_docs = doc_q.scalar() or 0
         total_chunks = chunk_q.scalar() or 0
 

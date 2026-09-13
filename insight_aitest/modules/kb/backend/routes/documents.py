@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import threading
 import uuid
 import zipfile
@@ -29,6 +30,8 @@ from insight_aitest.platform.services.kb.loader import get_loader
 from insight_aitest.platform.services.kb.loader.base import UnsupportedFormatError
 from insight_aitest.platform.services.kb.ingest import process_document
 from insight_aitest.modules.ai.backend.deps import get_config, get_kb_db, get_llm, get_vector_store
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/documents", tags=["kb-documents"])
 
@@ -162,7 +165,8 @@ async def delete_document(
     try:
         vs.delete_document(doc_id)
     except Exception:
-        pass
+        # 向量残留会导致已删文档继续被 RAG 引用，必须留痕
+        logger.warning("删除文档 %s 的向量失败，可能残留脏向量", doc_id, exc_info=True)
     # 删原始文件
     try:
         Path(doc.storage_path).unlink(missing_ok=True)
@@ -224,9 +228,7 @@ def _reindex_in_bg(doc_id: int, db: KBDatabase) -> None:
 
 
 @router.get("/{doc_id}/content")
-async def get_document_content(
-    doc_id: int, db: KBDatabase = Depends(get_kb_db)
-) -> dict:
+async def get_document_content(doc_id: int, db: KBDatabase = Depends(get_kb_db)) -> dict:
     """返回文档解析后的纯文本（拼接 chunks）。用于前端预览/编辑加载。"""
     doc = db.get_document(doc_id)
     if not doc:
@@ -245,9 +247,7 @@ async def get_document_content(
 
 
 @router.get("/{doc_id}/raw")
-async def download_document_raw(
-    doc_id: int, db: KBDatabase = Depends(get_kb_db)
-) -> FileResponse:
+async def download_document_raw(doc_id: int, db: KBDatabase = Depends(get_kb_db)) -> FileResponse:
     """下载文档原始文件（保留原扩展名）。"""
     doc = db.get_document(doc_id)
     if not doc:
@@ -338,7 +338,8 @@ async def update_document_content(
     try:
         Path(doc.storage_path).write_text(body.text, encoding="utf-8")
     except Exception:
-        pass
+        # 写回失败意味着文件与 DB 内容分叉，预览/导出会拿到旧文本
+        logger.warning("文档 %s 内容写回原始文件失败", doc_id, exc_info=True)
 
     # 3. 后台 reindex
     threading.Thread(target=_reindex_in_bg, args=(doc_id, db), daemon=True).start()
