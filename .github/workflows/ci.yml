@@ -4,9 +4,9 @@ name: CI
 # and never ran the pytest suite — this fixes both.
 on:
   push:
-    branches: [ 1.0.0, 2.0.0, main, "feature/v2-*" ]
+    branches: [ main, "2.*", "feature/**" ]
   pull_request:
-    branches: [ 1.0.0, 2.0.0, main ]
+    branches: [ main, "2.*" ]
 
 jobs:
   backend-test:

@@ -75,6 +75,8 @@ coverage/
 test-results/
 playwright-report/
 playwright-results/
+playwright-results.json
+playwright-results.xml
 
 # ==================== Environment Variables ====================
 .env
