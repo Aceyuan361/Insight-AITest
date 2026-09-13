@@ -29,11 +29,11 @@ interface ChartCardConfig {
 
 // 图表配置（颜色用 chartColors 真实 hex，echarts canvas 不支持 CSS variables）
 const CHART_CONFIGS: ChartCardConfig[] = [
-  { metricId: 'cpu_app', title: 'CPU Usage', color: chartColors.cpu, unit: '%', decimals: 2, yMin: 0, yMax: 100 },
-  { metricId: 'fps', title: 'FPS', color: chartColors.fps, unit: 'fps', decimals: 1, yMin: 0 },
-  { metricId: 'memory_pss', title: 'Memory Usage', color: chartColors.memory, unit: 'MB', decimals: 1, yMin: 0 },
-  { metricId: 'network_down_speed', title: 'Network Download', color: chartColors.networkDown, unit: 'KB/s', decimals: 2, yMin: 0 },
-  { metricId: 'network_up_speed', title: 'Network Upload', color: chartColors.networkUp, unit: 'KB/s', decimals: 2, yMin: 0 },
+  { metricId: 'cpu_app', title: 'performance.sessionCharts.cpuTitle', color: chartColors.cpu, unit: '%', decimals: 2, yMin: 0, yMax: 100 },
+  { metricId: 'fps', title: 'performance.sessionCharts.fpsTitle', color: chartColors.fps, unit: 'fps', decimals: 1, yMin: 0 },
+  { metricId: 'memory_pss', title: 'performance.sessionCharts.memoryTitle', color: chartColors.memory, unit: 'MB', decimals: 1, yMin: 0 },
+  { metricId: 'network_down_speed', title: 'performance.sessionCharts.networkDownTitle', color: chartColors.networkDown, unit: 'KB/s', decimals: 2, yMin: 0 },
+  { metricId: 'network_up_speed', title: 'performance.sessionCharts.networkUpTitle', color: chartColors.networkUp, unit: 'KB/s', decimals: 2, yMin: 0 },
 ];
 
 // 指标优先级顺序（桌面版一致）
@@ -42,7 +42,9 @@ const METRIC_PRIORITY: (keyof MetricsData)[] = [
 ];
 
 export default function SessionCharts({ sessionId }: SessionChartsProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  // 图表时间轴跟随界面语言（而非写死 zh-CN）
+  const timeLocale = i18n.language === 'en-US' ? 'en-US' : 'zh-CN';
   const isMobile = useIsMobile();
   const theme = useThemeStore((s) => s.theme);
   const chartNeutral = getChartNeutral(theme);
@@ -69,8 +71,6 @@ export default function SessionCharts({ sessionId }: SessionChartsProps) {
           api.getSessionMetrics(sessionId, 10000)
         ]);
 
-        console.log('[SessionCharts] 加载原始数据:', data.length, '条');
-        console.log('[SessionCharts] 会话时间:', session.start_time, '-', session.end_time);
 
         // 后端已经返回正确的字段名（cpu_app, memory_pss, network_up_speed, network_down_speed）
         // 不需要字段名映射
@@ -84,8 +84,6 @@ export default function SessionCharts({ sessionId }: SessionChartsProps) {
           return itemTime >= startTime && itemTime <= endTime;
         });
 
-        console.log('[SessionCharts] 过滤后数据:', filteredData.length, '条');
-        console.log('[SessionCharts] 时间范围:', new Date(startTime).toLocaleTimeString(), '-', new Date(endTime).toLocaleTimeString());
 
         setMetrics(filteredData);
       } catch (error) {
@@ -112,7 +110,6 @@ export default function SessionCharts({ sessionId }: SessionChartsProps) {
 
   // 当 sessionId 变化时清理旧的图表实例
   useEffect(() => {
-    console.log('[SessionCharts] sessionId 变化，清理旧图表:', sessionId);
     // 清理所有旧的图表实例
     Object.values(chartInstances.current).forEach(chart => {
       if (chart && typeof chart.dispose === 'function') {
@@ -126,7 +123,6 @@ export default function SessionCharts({ sessionId }: SessionChartsProps) {
   // 分析哪些指标有数据
   const availableMetrics = useMemo(() => {
     if (metrics.length === 0) {
-      console.log('[SessionCharts] availableMetrics: 无数据');
       return [];
     }
 
@@ -140,8 +136,6 @@ export default function SessionCharts({ sessionId }: SessionChartsProps) {
     }
     // 按优先级排序
     const result = METRIC_PRIORITY.filter(k => available.has(k));
-    console.log('[SessionCharts] availableMetrics:', result);
-    console.log('[SessionCharts] 可用指标数量:', result.length);
     return result;
   }, [metrics]);
 
@@ -173,7 +167,7 @@ export default function SessionCharts({ sessionId }: SessionChartsProps) {
 
   // 格式化时间戳（HH:mm:ss）
   const formatTime = (date: Date): string => {
-    return date.toLocaleTimeString('zh-CN', {
+    return date.toLocaleTimeString(timeLocale, {
       hour12: false,
       hour: '2-digit',
       minute: '2-digit',
@@ -183,21 +177,16 @@ export default function SessionCharts({ sessionId }: SessionChartsProps) {
 
   // 初始化和更新图表
   useEffect(() => {
-    console.log('[SessionCharts] 图表 useEffect 触发');
-    console.log('[SessionCharts] metrics.length:', metrics.length);
-    console.log('[SessionCharts] displayMetrics:', displayMetrics);
 
     if (metrics.length === 0 || displayMetrics.length === 0) {
-      console.log('[SessionCharts] 跳过图表初始化：无数据或无可显示指标');
       return;
     }
 
     // 使用 setTimeout 确保DOM已经渲染
     const timer = setTimeout(() => {
-      console.log('[SessionCharts] 开始创建/更新图表，指标数量:', displayMetrics.length);
 
       // 为每个指标创建/更新图表
-      displayMetrics.forEach((metricKey, index) => {
+      displayMetrics.forEach((metricKey) => {
         const config = CHART_CONFIGS.find(c => c.metricId === metricKey);
         if (!config) {
           console.warn('[SessionCharts] 未找到配置:', metricKey);
@@ -206,12 +195,6 @@ export default function SessionCharts({ sessionId }: SessionChartsProps) {
 
         const chartId = `chart-${metricKey}`;
         const container = chartRefs.current[chartId];
-
-        console.log(`[SessionCharts] 图表 ${index} [${chartId}]:`, {
-          hasContainer: !!container,
-          metricKey,
-          config: config.title
-        });
 
         if (!container) {
           console.warn(`[SessionCharts] 容器未找到: ${chartId}`);
@@ -226,8 +209,6 @@ export default function SessionCharts({ sessionId }: SessionChartsProps) {
 
         const data = metrics.map(m => m[metricKey] as number);
 
-        console.log(`[SessionCharts] ${metricKey} 数据点数量:`, data.length);
-        console.log(`[SessionCharts] ${metricKey} 数据样本:`, data.slice(0, 3));
 
         // 过滤空值
         const cleanData = data.filter(v => v !== null && v !== undefined && !isNaN(v));
@@ -239,7 +220,6 @@ export default function SessionCharts({ sessionId }: SessionChartsProps) {
         // 创建或获取图表实例
         let chart = chartInstances.current[chartId];
         if (!chart) {
-          console.log(`[SessionCharts] 创建新图表实例: ${chartId}`);
           chart = echarts.init(container);
           chartInstances.current[chartId] = chart;
 
@@ -247,14 +227,12 @@ export default function SessionCharts({ sessionId }: SessionChartsProps) {
           const handleResize = () => chart?.resize();
           window.addEventListener('resize', handleResize);
           container.addEventListener('resize', handleResize);
-        } else {
-          console.log(`[SessionCharts] 使用已存在的图表实例: ${chartId}`);
         }
 
         // 构建 ECharts 配置（完全复刻桌面版样式）
         const option: echarts.EChartsOption = {
           title: {
-            text: config.title,
+            text: t(config.title),
             left: 12,
             top: 10,
             textStyle: {
@@ -317,10 +295,8 @@ export default function SessionCharts({ sessionId }: SessionChartsProps) {
         };
 
         chart.setOption(option, true);
-        console.log(`[SessionCharts] ${chartId} 图表配置已应用`);
       });
 
-      console.log('[SessionCharts] 所有图表创建/更新完成');
     }, 100); // 延迟100ms确保DOM渲染完成
 
     return () => clearTimeout(timer);
@@ -336,32 +312,32 @@ export default function SessionCharts({ sessionId }: SessionChartsProps) {
 
   if (!sessionId) {
     return (
-      <div className="flex items-center justify-center h-full bg-dark-card rounded-lg border border-gray-800">
-        <p className="text-text-secondary">{t('sessionList.selectSession')}</p>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", backgroundColor: "var(--bg-card)", borderRadius: 8, border: "1px solid var(--bg-card)" }}>
+        <p style={{ color: "var(--text-secondary)" }}>{t('sessionList.selectSession')}</p>
       </div>
     );
   }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full bg-dark-card rounded-lg border border-gray-800">
-        <p className="text-text-secondary">{t('sessionList.loadingCharts')}</p>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", backgroundColor: "var(--bg-card)", borderRadius: 8, border: "1px solid var(--bg-card)" }}>
+        <p style={{ color: "var(--text-secondary)" }}>{t('sessionList.loadingCharts')}</p>
       </div>
     );
   }
 
   if (metrics.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full bg-dark-card rounded-lg border border-gray-800">
-        <p className="text-text-secondary">{t('sessionList.noData')}</p>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", backgroundColor: "var(--bg-card)", borderRadius: 8, border: "1px solid var(--bg-card)" }}>
+        <p style={{ color: "var(--text-secondary)" }}>{t('sessionList.noData')}</p>
       </div>
     );
   }
 
   if (displayMetrics.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full bg-dark-card rounded-lg border border-gray-800">
-        <p className="text-text-secondary">{t('sessionList.noDisplayableData')}</p>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", backgroundColor: "var(--bg-card)", borderRadius: 8, border: "1px solid var(--bg-card)" }}>
+        <p style={{ color: "var(--text-secondary)" }}>{t('sessionList.noDisplayableData')}</p>
       </div>
     );
   }

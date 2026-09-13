@@ -165,7 +165,7 @@ function NavItem({
         textDecoration: 'none',
         fontSize: 14,
         minHeight: isMobile ? 48 : undefined, // 触控目标 ≥44px
-        background: isActive ? 'rgba(16,185,129,0.08)' : 'transparent',
+        background: isActive ? 'color-mix(in srgb, var(--accent) 8%, transparent)' : 'transparent',
         borderLeft: isActive ? '2px solid var(--accent)' : '2px solid transparent',
       })}
     >

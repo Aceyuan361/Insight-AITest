@@ -176,6 +176,13 @@ export default {
     },
 
     // === Session List ===
+    sessionCharts: {
+      cpuTitle: 'CPU Usage',
+      fpsTitle: 'FPS',
+      memoryTitle: 'Memory Usage',
+      networkDownTitle: 'Network Download',
+      networkUpTitle: 'Network Upload',
+    },
     sessionList: {
       title: 'Session List',
       duration: 'Duration',

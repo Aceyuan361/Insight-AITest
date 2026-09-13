@@ -3,9 +3,6 @@ import { lazy, type ComponentType } from 'react';
 const PerformanceApp = lazy(() =>
   import('./modules/performance').then((m) => ({ default: m.PerformanceApp })),
 );
-const ExampleApp = lazy(() =>
-  import('./modules/example').then((m) => ({ default: m.ExampleApp })),
-);
 const AIApp = lazy(() =>
   import('./modules/ai').then((m) => ({ default: m.AIApp })),
 );
@@ -26,7 +23,6 @@ const UIApp = lazy(() =>
 // key 格式：<模块id>:<导出名>，与 manifest 的 frontend.entry 一致。
 export const moduleMap: Record<string, ComponentType> = {
   'performance:PerformanceApp': PerformanceApp,
-  'example:ExampleApp': ExampleApp,
   'ai:AIApp': AIApp,
   'kb:KnowledgeBaseApp': KnowledgeBaseApp,
   'testcase:TestCaseApp': TestCaseApp,

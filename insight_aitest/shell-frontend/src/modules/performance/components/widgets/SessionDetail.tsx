@@ -81,14 +81,14 @@ export default function SessionDetail({ sessionId, onClose, onDeleted }: Session
   // 空状态
   if (!sessionId) {
     return (
-      <div className="flex items-center justify-center h-full bg-dark-card rounded-lg border border-gray-800">
-        <p className="text-text-secondary">{t('report.selectSessionPrompt')}</p>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", backgroundColor: "var(--bg-card)", borderRadius: 8, border: "1px solid var(--bg-card)" }}>
+        <p style={{ color: "var(--text-secondary)" }}>{t('report.selectSessionPrompt')}</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full bg-dark-card rounded-lg border border-gray-800 overflow-hidden">
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", backgroundColor: "var(--bg-card)", borderRadius: 8, border: "1px solid var(--bg-card)", overflow: "hidden" }}>
       {/* 紧凑会话信息栏 */}
       <SessionInfoBar sessionId={sessionId} />
 

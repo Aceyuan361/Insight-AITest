@@ -324,9 +324,6 @@ export async function exportHtmlReport(
     return itemTime >= startTime && itemTime <= endTime;
   });
 
-  console.log('[exportHtmlReport] 原始数据:', metrics.length, '条');
-  console.log('[exportHtmlReport] 过滤后数据:', filteredMetrics.length, '条');
-  console.log('[exportHtmlReport] 时间范围:', new Date(startTime).toLocaleTimeString(), '-', new Date(endTime).toLocaleTimeString());
 
   // 使用过滤后的数据
   const data = filteredMetrics;

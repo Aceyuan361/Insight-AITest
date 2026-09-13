@@ -44,7 +44,7 @@ export default function MonitorPanel() {
 
       {/* 未监控时的提示 */}
       {!isMonitoring && (
-        <div className="text-center text-text-secondary" style={{ paddingTop: '4px' }}>
+        <div style={{ textAlign: "center", color: "var(--text-secondary)", paddingTop: '4px' }}>
           <p className="text-xs" style={{ color: "var(--text-muted)", fontSize: '10px', margin: 0 }}>
             {t('device.startMonitorHint')}
           </p>

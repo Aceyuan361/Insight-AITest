@@ -100,7 +100,6 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
       const { configManager } = await import('@/shared/utils/configManager');
       const thresholds = configManager.getAlertThresholds();
 
-      console.log('启动监控，使用告警阈值:', thresholds);
 
       const session: Session = await api.startMonitoring(deviceId, appPackage, platform, interval, thresholds, projectId);
 
@@ -110,7 +109,6 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
       const ws = new WebSocket(wsUrl ? `${wsUrl}/api/modules/performance/ws/monitoring/${session.id}` : `/api/modules/performance/ws/monitoring/${session.id}`);
 
       ws.onopen = () => {
-        console.log('WebSocket connected');
       };
 
       ws.onmessage = (event) => {
@@ -128,7 +126,6 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
                 level: alert.level,
                 content: alert.content,
               });
-              console.log('收到告警:', alert);
             } else {
               // 正常指标数据
               get().updateMetrics(message.data);
@@ -144,7 +141,6 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
       };
 
       ws.onclose = () => {
-        console.log('WebSocket disconnected');
         // 当 WebSocket 意外断开时，清除监控状态
         const state = get();
         if (state.wsConnection === ws) {
@@ -194,7 +190,6 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
           lastStoppedSessionId: currentSession.id,  // 记录刚停止的会话ID
         });
 
-        console.log(`监控已停止，会话ID: ${currentSession.id}`);
       } catch (error) {
         console.error('Error stopping monitoring:', error);
         throw error;

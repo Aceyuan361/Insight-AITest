@@ -16,7 +16,9 @@ interface RealTimeChartProps {
 }
 
 export default function RealTimeChart({ data, timestamps, config }: RealTimeChartProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  // 图表时间轴跟随界面语言（而非写死 zh-CN）
+  const timeLocale = i18n.language === 'en-US' ? 'en-US' : 'zh-CN';
   const theme = useThemeStore((s) => s.theme);
   const chartNeutral = getChartNeutral(theme);
   const chartRef = useRef<HTMLDivElement>(null);
@@ -56,13 +58,13 @@ export default function RealTimeChart({ data, timestamps, config }: RealTimeChar
 
   // 格式化时间戳（HH:mm:ss）
   const formatTime = useCallback((date: Date): string => {
-    return date.toLocaleTimeString('zh-CN', {
+    return date.toLocaleTimeString(timeLocale, {
       hour12: false,
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit'
     });
-  }, []);
+  }, [timeLocale]);
 
   // 解析ISO时间字符串
   const parseTimestamp = useCallback((ts: string): Date => {

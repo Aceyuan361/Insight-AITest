@@ -176,6 +176,13 @@ export default {
     },
 
     // === 会话列表 ===
+    sessionCharts: {
+      cpuTitle: 'CPU 使用率',
+      fpsTitle: 'FPS 帧率',
+      memoryTitle: '内存使用',
+      networkDownTitle: '网络下行',
+      networkUpTitle: '网络上行',
+    },
     sessionList: {
       title: '会话列表',
       duration: '时长',
