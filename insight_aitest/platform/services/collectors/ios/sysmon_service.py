@@ -206,15 +206,10 @@ class SysmonService:
         executable_name = AppLookup.find_executable_for_bundle(self.udid, bundle_id)
 
         if not executable_name:
-            logger.warning(
-                f"未找到 Bundle ID '{bundle_id}' 对应的可执行文件名，"
-                "可能应用未安装"
-            )
+            logger.warning(f"未找到 Bundle ID '{bundle_id}' 对应的可执行文件名，" "可能应用未安装")
             return None
 
-        logger.debug(
-            f"查找进程: Bundle ID='{bundle_id}', 可执行文件名='{executable_name}'"
-        )
+        logger.debug(f"查找进程: Bundle ID='{bundle_id}', 可执行文件名='{executable_name}'")
 
         # 精确匹配进程 name（大小写不敏感）
         target_lower = executable_name.lower()
@@ -226,12 +221,8 @@ class SysmonService:
                 logger.info(f"  PID: {process.get('pid')}")
                 logger.info(f"  Name: {name}")
                 logger.info(f"  cpuUsage: {process.get('cpuUsage', 'N/A')}")
-                logger.info(
-                    f"  physFootprint: {process.get('physFootprint', 'N/A')}"
-                )
-                logger.info(
-                    f"  memResidentSize: {process.get('memResidentSize', 'N/A')}"
-                )
+                logger.info(f"  physFootprint: {process.get('physFootprint', 'N/A')}")
+                logger.info(f"  memResidentSize: {process.get('memResidentSize', 'N/A')}")
                 return process
 
         logger.warning(

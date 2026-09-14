@@ -271,7 +271,9 @@ class ReActAgent:
         try:
             task = task_db.get_task(task_id)
             if task is not None and task.conversation_id is not None:
-                status_text = "✅ 任务执行完成" if final_status == TaskStatus.DONE else "❌ 任务执行失败"
+                status_text = (
+                    "✅ 任务执行完成" if final_status == TaskStatus.DONE else "❌ 任务执行失败"
+                )
                 task_db.add_message(
                     task.conversation_id,
                     Role.ASSISTANT,

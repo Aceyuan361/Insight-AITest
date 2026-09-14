@@ -62,7 +62,9 @@ def analyze_coverage(
     # 1. 提取需求点
     analyzer = get_analyzer()
     query = "提取所有可测试需求点"
-    requirement_points = analyzer.analyze(query, document_ids=document_ids, project_id=ctx.project_id)
+    requirement_points = analyzer.analyze(
+        query, document_ids=document_ids, project_id=ctx.project_id
+    )
 
     # 2. 加载用例
     cases = ctx.case_db.list_cases_by_batch(batch_id)
@@ -87,12 +89,14 @@ def analyze_coverage(
     if isinstance(data, list):
         for item in data:
             if isinstance(item, dict):
-                coverage_matrix.append({
-                    "requirement_id": item.get("requirement_id", ""),
-                    "requirement_summary": item.get("requirement_summary", ""),
-                    "case_ids": item.get("case_ids", []),
-                    "match_reason": item.get("match_reason", ""),
-                })
+                coverage_matrix.append(
+                    {
+                        "requirement_id": item.get("requirement_id", ""),
+                        "requirement_summary": item.get("requirement_summary", ""),
+                        "case_ids": item.get("case_ids", []),
+                        "match_reason": item.get("match_reason", ""),
+                    }
+                )
 
     # 4. 分析遗漏和冗余
     covered_ids = {m["requirement_id"] for m in coverage_matrix if m.get("case_ids")}
@@ -103,7 +107,11 @@ def analyze_coverage(
     for m in coverage_matrix:
         for cid in m.get("case_ids", []):
             case_to_reqs.setdefault(cid, []).append(m["requirement_id"])
-    redundant = [{"case_id": cid, "requirements": reqs} for cid, reqs in case_to_reqs.items() if len(reqs) > 1]
+    redundant = [
+        {"case_id": cid, "requirements": reqs}
+        for cid, reqs in case_to_reqs.items()
+        if len(reqs) > 1
+    ]
 
     # 5. 补充遗漏用例
     supplemented = []

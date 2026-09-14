@@ -15,9 +15,7 @@ class ScheduledUIBatch(MappedAsDataclass, Base, kw_only=True):
     """UI 定时批量执行任务。"""
 
     __tablename__ = "ui_scheduled_batches"
-    __table_args__ = (
-        Index("idx_ui_sched_enabled", "enabled"),
-    )
+    __table_args__ = (Index("idx_ui_sched_enabled", "enabled"),)
 
     id: Mapped[int | None] = mapped_column(
         Integer, primary_key=True, autoincrement=True, default=None

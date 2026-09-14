@@ -235,7 +235,9 @@ def _suite_run_to_dict(sr) -> dict:
 
 
 @router.get("/runs/{run_id}/report.html")
-async def suite_run_report_html(run_id: int, suite_run_db: SuiteRunDatabase = Depends(get_suite_run_db)) -> Response:
+async def suite_run_report_html(
+    run_id: int, suite_run_db: SuiteRunDatabase = Depends(get_suite_run_db)
+) -> Response:
     """套件聚合 HTML 报告。"""
     from insight_aitest.modules.api.backend.report.html_report import render_suite_html
 
@@ -248,7 +250,9 @@ async def suite_run_report_html(run_id: int, suite_run_db: SuiteRunDatabase = De
 
 
 @router.get("/runs/{run_id}/report.junit.xml")
-async def suite_run_report_junit(run_id: int, suite_run_db: SuiteRunDatabase = Depends(get_suite_run_db)) -> Response:
+async def suite_run_report_junit(
+    run_id: int, suite_run_db: SuiteRunDatabase = Depends(get_suite_run_db)
+) -> Response:
     """套件 JUnit XML 报告（CI/CD 集成）。"""
     from insight_aitest.modules.api.backend.report.html_report import render_junit_xml
 
@@ -257,8 +261,11 @@ async def suite_run_report_junit(run_id: int, suite_run_db: SuiteRunDatabase = D
         raise HTTPException(404, "套件执行记录不存在")
     child_runs = _fetch_child_runs(sr.case_run_ids)
     xml = render_junit_xml(_suite_run_to_dict(sr), child_runs)
-    return Response(content=xml, media_type="application/xml; charset=utf-8",
-                    headers={"Content-Disposition": f'attachment; filename="suite-{run_id}-junit.xml"'})
+    return Response(
+        content=xml,
+        media_type="application/xml; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="suite-{run_id}-junit.xml"'},
+    )
 
 
 # ===== 套件 CRUD（动态路径 /{suite_id}）=====

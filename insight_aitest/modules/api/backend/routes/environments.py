@@ -50,8 +50,11 @@ async def create_env(body: EnvCreate, db: EnvironmentDatabase = Depends(get_env_
     if db.get_by_name(body.name):
         raise HTTPException(409, f"环境名 '{body.name}' 已存在")
     eid = db.create(
-        name=body.name, base_url=body.base_url, variables=body.variables,
-        variables_meta=body.variables_meta, is_default=body.is_default
+        name=body.name,
+        base_url=body.base_url,
+        variables=body.variables,
+        variables_meta=body.variables_meta,
+        is_default=body.is_default,
     )
     return _env_out(db.get(eid))
 
@@ -63,14 +66,17 @@ async def list_envs(db: EnvironmentDatabase = Depends(get_env_db)) -> list[dict]
 
 # ===== 静态路径，必须在 /{env_id} 之前 =====
 
+
 @router.get("/export")
 async def export_envs(db: EnvironmentDatabase = Depends(get_env_db)) -> Response:
     """导出所有环境为 JSON。"""
     import json
+
     envs = [_env_out(e) for e in db.list()]
     content = json.dumps(envs, ensure_ascii=False, indent=2, default=str)
     return Response(
-        content=content, media_type="application/json",
+        content=content,
+        media_type="application/json",
         headers={"Content-Disposition": 'attachment; filename="environments.json"'},
     )
 

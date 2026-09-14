@@ -81,9 +81,8 @@ def _run_scheduled_ui_batch(sched_id: int) -> None:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         from insight_aitest.modules.ui.backend.routes.batch import _run_batch_task
-        loop.run_until_complete(
-            _run_batch_task(batch_id, case_ids, base_url, browser_config)
-        )
+
+        loop.run_until_complete(_run_batch_task(batch_id, case_ids, base_url, browser_config))
         loop.close()
 
         result_batch = batch_db.get(batch_id)
@@ -124,7 +123,9 @@ class UISchedulerManager:
                     id=f"ui_sched_{sched.id}",
                     replace_existing=True,
                 )
-                logger.info(f"重建 UI 定时任务: ui_sched_{sched.id} ({sched.name}) cron={sched.cron_expression}")
+                logger.info(
+                    f"重建 UI 定时任务: ui_sched_{sched.id} ({sched.name}) cron={sched.cron_expression}"
+                )
             except Exception as e:
                 logger.error(f"重建 UI 定时任务 {sched.id} 失败: {e}")
 
@@ -176,6 +177,7 @@ _manager: UISchedulerManager | None = None
 def get_ui_scheduler_manager(db_path: str | None = None) -> UISchedulerManager:
     global _manager
     import insight_aitest.modules.ui.backend.deps as ui_deps
+
     if _manager is None:
         _manager = UISchedulerManager(db_path or ui_deps._DB_PATH)
     return _manager

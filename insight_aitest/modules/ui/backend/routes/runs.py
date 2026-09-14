@@ -187,10 +187,21 @@ async def stats(case_id: int | None = Query(None), db: UIRunDatabase = Depends(g
         d = (now - timedelta(days=i)).strftime("%m-%d")
         dd = daily_data.get(d, {"total": 0, "passed": 0, "failed": 0, "error": 0})
         rate = round(dd["passed"] / dd["total"] * 100, 1) if dd["total"] > 0 else 0
-        trend.append({"date": d, "total": dd["total"], "passed": dd["passed"], "failed": dd["failed"], "error": dd["error"], "pass_rate": rate})
+        trend.append(
+            {
+                "date": d,
+                "total": dd["total"],
+                "passed": dd["passed"],
+                "failed": dd["failed"],
+                "error": dd["error"],
+                "pass_rate": rate,
+            }
+        )
 
     # 失败 TOP5 用例
-    fail_counts = defaultdict(lambda: {"case_title": "", "case_id": 0, "failed": 0, "error": 0, "total": 0})
+    fail_counts = defaultdict(
+        lambda: {"case_title": "", "case_id": 0, "failed": 0, "error": 0, "total": 0}
+    )
     for r in rows:
         key = r["case_id"]
         fail_counts[key]["case_title"] = r["case_title"]
@@ -198,7 +209,9 @@ async def stats(case_id: int | None = Query(None), db: UIRunDatabase = Depends(g
         fail_counts[key]["total"] += 1
         if r["status"] in ("failed", "error"):
             fail_counts[key][r["status"]] += 1
-    top_failures = sorted(fail_counts.values(), key=lambda x: x["failed"] + x["error"], reverse=True)[:5]
+    top_failures = sorted(
+        fail_counts.values(), key=lambda x: x["failed"] + x["error"], reverse=True
+    )[:5]
 
     # 平均耗时
     durations = [r["duration_ms"] for r in rows if r.get("duration_ms")]

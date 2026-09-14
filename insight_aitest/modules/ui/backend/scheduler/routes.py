@@ -23,6 +23,7 @@ router = APIRouter(prefix="/schedules", tags=["ui"])
 
 def _get_sched_db() -> ScheduledUIBatchDatabase:
     import insight_aitest.modules.ui.backend.deps as ui_deps
+
     return ScheduledUIBatchDatabase(ui_deps._DB_PATH)
 
 
@@ -66,6 +67,7 @@ def _sched_out(s) -> dict:
 async def create_schedule(body: SchedCreate) -> dict:
     db = _get_sched_db()
     from insight_aitest.modules.ui.backend.scheduler.manager import _parse_cron
+
     try:
         _parse_cron(body.cron_expression)
     except ValueError as e:
@@ -106,6 +108,7 @@ async def update_schedule(sched_id: int, body: SchedUpdate) -> dict:
         raise HTTPException(404, "定时任务不存在")
     if body.cron_expression:
         from insight_aitest.modules.ui.backend.scheduler.manager import _parse_cron
+
         try:
             _parse_cron(body.cron_expression)
         except ValueError as e:

@@ -137,13 +137,19 @@ class Planner:
         return {
             "summary": data.get("summary", intent),
             "scope": data.get("scope", []) if isinstance(data.get("scope"), list) else [],
-            "doc_types": data.get("doc_types", {}) if isinstance(data.get("doc_types"), dict) else {},
-            "missing_for": data.get("missing_for", {}) if isinstance(data.get("missing_for"), dict) else {},
+            "doc_types": (
+                data.get("doc_types", {}) if isinstance(data.get("doc_types"), dict) else {}
+            ),
+            "missing_for": (
+                data.get("missing_for", {}) if isinstance(data.get("missing_for"), dict) else {}
+            ),
         }
 
     # ===== 阶段 B：策略生成 =====
 
-    def propose_strategies(self, context: dict, document_ids: list[int] | None = None) -> list[dict]:
+    def propose_strategies(
+        self, context: dict, document_ids: list[int] | None = None
+    ) -> list[dict]:
         """基于理解摘要 → 测试策略选项（现在注入文档类型和能力限制）。"""
         summary = context.get("summary", "")
         scope = context.get("scope", [])
@@ -228,17 +234,18 @@ class Planner:
             ],
         }
 
-    def _validate_plan(
-        self, plan: list, document_ids: list[int] | None = None
-    ) -> list[dict]:
+    def _validate_plan(self, plan: list, document_ids: list[int] | None = None) -> list[dict]:
         """校验 plan 步骤的 skill id 有效性。保留 skill/desc/params/loop 字段。
 
         document_ids 非 None 时，注入到文档敏感型 skill（extract_test_points /
         write_cases_batch / write_case）的 params，供 RAG 检索限定文档范围。
         """
         _DOC_SENSITIVE_SKILLS = {
-            "extract_test_points", "write_cases_batch",
-            "write_functional_case", "write_api_case", "write_ui_case_from_image",
+            "extract_test_points",
+            "write_cases_batch",
+            "write_functional_case",
+            "write_api_case",
+            "write_ui_case_from_image",
             "generate_data_driven_api_case",
         }
         valid = []
@@ -311,8 +318,14 @@ class Planner:
                 result = {
                     "summary": data.get("summary", intent),
                     "scope": data.get("scope", []) if isinstance(data.get("scope"), list) else [],
-                    "doc_types": data.get("doc_types", {}) if isinstance(data.get("doc_types"), dict) else {},
-                    "missing_for": data.get("missing_for", {}) if isinstance(data.get("missing_for"), dict) else {},
+                    "doc_types": (
+                        data.get("doc_types", {}) if isinstance(data.get("doc_types"), dict) else {}
+                    ),
+                    "missing_for": (
+                        data.get("missing_for", {})
+                        if isinstance(data.get("missing_for"), dict)
+                        else {}
+                    ),
                 }
             yield ("result", result)
         except Exception as e:
@@ -341,11 +354,15 @@ class Planner:
         if has_api_doc:
             capability_parts.append("✅ 接口用例：可生成（有API文档）")
         else:
-            capability_parts.append(f"🚫 接口用例：不可生成。{missing.get('api_test', '需要接口文档')}")
+            capability_parts.append(
+                f"🚫 接口用例：不可生成。{missing.get('api_test', '需要接口文档')}"
+            )
         if has_ui_image:
             capability_parts.append("✅ UI用例：可生成（有截图/设计稿）")
         else:
-            capability_parts.append(f"🚫 UI用例：不可生成。{missing.get('ui_test', '需要UI截图或设计稿')}")
+            capability_parts.append(
+                f"🚫 UI用例：不可生成。{missing.get('ui_test', '需要UI截图或设计稿')}"
+            )
         capability_mask = "\n".join(capability_parts)
 
         prompt = _STRATEGY_PROMPT.format(

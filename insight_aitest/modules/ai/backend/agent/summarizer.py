@@ -77,6 +77,7 @@ def summarize_context(
     try:
         raw = llm.chat([{"role": "user", "content": prompt}])
         from insight_aitest.modules.testcase.backend.generator.analyzer import _extract_json
+
         data = _extract_json(raw)
         if not data or not isinstance(data, dict):
             return None

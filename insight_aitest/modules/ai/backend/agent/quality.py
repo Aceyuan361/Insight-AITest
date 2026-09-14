@@ -87,9 +87,7 @@ def validate_and_fix_cases(
         issues = validate_case(case)
         if not issues:
             # 合格：标记 validated
-            ctx.case_db.update_case(
-                case.id, source=f"ai:validated:{ctx.config.chat_model}"
-            )
+            ctx.case_db.update_case(case.id, source=f"ai:validated:{ctx.config.chat_model}")
             stats["valid"] += 1
             continue
 
@@ -123,15 +121,11 @@ def validate_and_fix_cases(
                 # 修复后仍不合格：标记 invalid
                 ctx.case_db.update_case(case.id, source="ai:invalid")
                 stats["invalid"] += 1
-                stats["details"].append(
-                    {"case_id": case.id, "issues": issues + fixed_issues}
-                )
+                stats["details"].append({"case_id": case.id, "issues": issues + fixed_issues})
         except Exception:
             ctx.case_db.update_case(case.id, source="ai:invalid")
             stats["invalid"] += 1
-            stats["details"].append(
-                {"case_id": case.id, "issues": issues + ["retry_failed"]}
-            )
+            stats["details"].append({"case_id": case.id, "issues": issues + ["retry_failed"]})
 
     total = max(stats["total"], 1)
     stats["quality_score"] = round((stats["valid"] + stats["fixed"]) / total, 2)

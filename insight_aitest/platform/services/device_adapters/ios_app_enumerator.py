@@ -148,9 +148,7 @@ class IOSAppEnumerator(BaseAppEnumerator):
     )
 
     @classmethod
-    def _classify_as_system(
-        cls, bundle_id: str, app_info: dict, all_system_degraded: bool
-    ) -> bool:
+    def _classify_as_system(cls, bundle_id: str, app_info: dict, all_system_degraded: bool) -> bool:
         """判断应用是否为系统应用。
 
         - 正常情况（iOS <26 或 ApplicationType 字段可信）：按 ``ApplicationType != "User"`` 判断。
@@ -163,7 +161,6 @@ class IOSAppEnumerator(BaseAppEnumerator):
             return app_type != "User"
         # iOS 26 退化：用 bundle-id 前缀判断
         return bundle_id.startswith(cls._APPLE_SYSTEM_BUNDLE_PREFIXES)
-
 
     def _build_app_name_lookup(self) -> dict:
         """

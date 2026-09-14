@@ -13,7 +13,10 @@ from typing import TYPE_CHECKING
 
 from insight_aitest.platform.services.kb.chunker import ChunkConfig, Chunker, SemanticChunker
 from insight_aitest.platform.services.kb.loader import get_loader
-from insight_aitest.platform.services.kb.loader.base import DocumentLoadError, UnsupportedFormatError
+from insight_aitest.platform.services.kb.loader.base import (
+    DocumentLoadError,
+    UnsupportedFormatError,
+)
 from insight_aitest.platform.services.kb.models import DocumentStatus, EmbedStatus
 
 logger = logging.getLogger(__name__)

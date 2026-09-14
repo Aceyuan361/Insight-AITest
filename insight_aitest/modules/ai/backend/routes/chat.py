@@ -59,13 +59,9 @@ async def chat(
         )
     except Exception as e:
         # answer 失败：写错误占位消息，与流式路径行为一致
-        db.add_message(
-            body.conversation_id, Role.ASSISTANT, f'[reply failed: {e}]'
-        )
-        raise HTTPException(500, f'reply failed: {e}')
-    db.add_message(
-        body.conversation_id, Role.ASSISTANT, result.answer, result.citations
-    )
+        db.add_message(body.conversation_id, Role.ASSISTANT, f"[reply failed: {e}]")
+        raise HTTPException(500, f"reply failed: {e}")
+    db.add_message(body.conversation_id, Role.ASSISTANT, result.answer, result.citations)
     return ChatResponse(
         answer=result.answer,
         citations=[c.__dict__ for c in result.citations],
@@ -161,6 +157,7 @@ async def chat_stream(
 
 _SAFE_ERROR_MSG = "internal error"
 
+
 def _safe_error(detail: object) -> str:
     """Sanitize error detail for client-facing messages.
 
@@ -169,6 +166,7 @@ def _safe_error(detail: object) -> str:
     """
     logger.warning("Chat error: %s", detail)
     return _SAFE_ERROR_MSG
+
 
 _ATTACHMENT_ID_RE = re.compile(r"^[a-f0-9]+\.[a-zA-Z0-9]+$")
 _PREVIEW_MAX_CHARS = 2000

@@ -20,9 +20,7 @@ class ScheduledSuite(MappedAsDataclass, Base, kw_only=True):
 
     __test__ = False
     __tablename__ = "scheduled_suites"
-    __table_args__ = (
-        Index("idx_scheduled_enabled", "enabled"),
-    )
+    __table_args__ = (Index("idx_scheduled_enabled", "enabled"),)
 
     id: Mapped[int | None] = mapped_column(
         Integer, primary_key=True, autoincrement=True, default=None

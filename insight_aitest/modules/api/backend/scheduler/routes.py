@@ -23,6 +23,7 @@ router = APIRouter(prefix="/schedules", tags=["api"])
 
 def _get_sched_db() -> ScheduledSuiteDatabase:
     import os
+
     db_path = os.path.expanduser("~/.insight_eye/api.db")
     return ScheduledSuiteDatabase(db_path)
 
@@ -64,13 +65,17 @@ async def create_schedule(body: SchedCreate) -> dict:
     db = _get_sched_db()
     # 验证 cron 表达式
     from insight_aitest.modules.api.backend.scheduler.manager import _parse_cron
+
     try:
         _parse_cron(body.cron_expression)
     except ValueError as e:
         raise HTTPException(422, str(e))
     sid = db.create(
-        name=body.name, suite_id=body.suite_id, cron_expression=body.cron_expression,
-        environment_id=body.environment_id, enabled=body.enabled,
+        name=body.name,
+        suite_id=body.suite_id,
+        cron_expression=body.cron_expression,
+        environment_id=body.environment_id,
+        enabled=body.enabled,
     )
     # 添加到 scheduler
     if body.enabled:
@@ -101,6 +106,7 @@ async def update_schedule(sched_id: int, body: SchedUpdate) -> dict:
     # 验证 cron
     if body.cron_expression:
         from insight_aitest.modules.api.backend.scheduler.manager import _parse_cron
+
         try:
             _parse_cron(body.cron_expression)
         except ValueError as e:

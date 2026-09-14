@@ -56,7 +56,7 @@ _AGENT_CHAT_WITH_TASK = """你是拾壹，一个专业的测试 Agent。你正�
 
 def build_agent_chat_message(has_task_context: bool = False) -> str:
     """Agent 工作台对话模式的系统提示词（轻对话，非 RAG、非任务流程）。
-    
+
     has_task_context=True 时使用任务感知提示词，让 LLM 意识到当前有活跃任务。
     """
     return _AGENT_CHAT_WITH_TASK if has_task_context else _AGENT_CHAT

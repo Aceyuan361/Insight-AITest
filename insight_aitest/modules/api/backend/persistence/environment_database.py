@@ -42,8 +42,13 @@ class EnvironmentDatabase:
             s.execute(update(Environment).values(is_default=False))
 
     def create(
-        self, *, name: str, base_url: str, variables: dict | None = None,
-        variables_meta: dict | None = None, is_default: bool = False
+        self,
+        *,
+        name: str,
+        base_url: str,
+        variables: dict | None = None,
+        variables_meta: dict | None = None,
+        is_default: bool = False,
     ) -> int:
         if is_default:
             self._clear_default()

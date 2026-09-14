@@ -28,9 +28,7 @@ class UIBatchRun(MappedAsDataclass, Base, kw_only=True):
     """批量执行记录（ORM 模型）。"""
 
     __tablename__ = "ui_batch_runs"
-    __table_args__ = (
-        Index("idx_ui_batch_status", "status"),
-    )
+    __table_args__ = (Index("idx_ui_batch_status", "status"),)
 
     id: Mapped[int | None] = mapped_column(
         Integer, primary_key=True, autoincrement=True, default=None

@@ -44,7 +44,9 @@ class Conversation(MappedAsDataclass, Base):
     # 思考级别：off/low/medium/high（off=普通对话，其余按模型族探测注入 reasoning 参数）
     thinking_level: Mapped[str] = mapped_column(Text, server_default="off", default="off")
     project_id: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
-    summary_json: Mapped[dict | None] = mapped_column("summary_json", JSON, nullable=True, default=None)
+    summary_json: Mapped[dict | None] = mapped_column(
+        "summary_json", JSON, nullable=True, default=None
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime, default_factory=datetime.now)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default_factory=datetime.now)
 

@@ -39,11 +39,13 @@ router = APIRouter(prefix="/batch", tags=["ui"])
 
 def _d_db():
     from insight_aitest.modules.testcase.backend.deps import get_tc_db
+
     return get_tc_db()
 
 
 def _fetch_case_from_d(case_id: int) -> dict | None:
     from insight_aitest.modules.testcase.backend.routes.testcases import _out
+
     case = _d_db().get_case(case_id)
     if case is None:
         return None
@@ -56,6 +58,7 @@ def _make_agent_factory():
         _check_llm_config,
         _default_agent_factory,
     )
+
     _check_llm_config()
     return _default_agent_factory()
 
@@ -88,7 +91,10 @@ def _batch_out(batch: UIBatchRun) -> dict:
 
 
 async def _run_batch_task(
-    batch_id: int, case_ids: list[int], base_url: str | None, browser_config: dict | None,
+    batch_id: int,
+    case_ids: list[int],
+    base_url: str | None,
+    browser_config: dict | None,
 ) -> None:
     """后台批量执行任务（不阻塞 HTTP 响应）。"""
     from insight_aitest.modules.ui.backend.deps import get_batch_db, get_run_db
@@ -107,8 +113,13 @@ async def _run_batch_task(
     except VisionConfigError as e:
         logger.error(f"批量执行 {batch_id} 视觉模型配置错误: {e}")
         batch_db.update(
-            batch_id, status=BatchRunStatus.ERROR, passed=0, failed=0,
-            error=len(case_ids), case_run_ids=[], finished_at=datetime.now(),
+            batch_id,
+            status=BatchRunStatus.ERROR,
+            passed=0,
+            failed=0,
+            error=len(case_ids),
+            case_run_ids=[],
+            finished_at=datetime.now(),
         )
         return
 
@@ -199,6 +210,7 @@ async def execute_batch(
 
     # 异步执行（不等待完成，立即返回）
     import asyncio
+
     asyncio.create_task(
         _run_batch_task(batch_id, body.case_ids, body.base_url, body.browser_config)
     )
@@ -230,15 +242,17 @@ async def get_batch_run(
     for rid in batch.case_run_ids:
         run = run_db.get_run(rid)
         if run:
-            child_runs.append({
-                "id": run.id,
-                "case_id": run.case_id,
-                "case_title": run.case_title,
-                "status": run.status.value,
-                "total_steps": run.total_steps,
-                "passed_steps": run.passed_steps,
-                "duration_ms": run.duration_ms,
-            })
+            child_runs.append(
+                {
+                    "id": run.id,
+                    "case_id": run.case_id,
+                    "case_title": run.case_title,
+                    "status": run.status.value,
+                    "total_steps": run.total_steps,
+                    "passed_steps": run.passed_steps,
+                    "duration_ms": run.duration_ms,
+                }
+            )
     out["child_runs"] = child_runs
     return out
 

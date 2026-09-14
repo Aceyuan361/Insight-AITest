@@ -69,7 +69,10 @@ def _run_scheduled_suite(sched_id: int) -> None:
         env = env_db.get(sched.environment_id)
 
     from datetime import datetime
-    from insight_aitest.modules.api.backend.persistence.suite_models import SuiteRunRecord, SuiteRunStatus
+    from insight_aitest.modules.api.backend.persistence.suite_models import (
+        SuiteRunRecord,
+        SuiteRunStatus,
+    )
 
     sr = SuiteRunRecord(
         id=None,
@@ -94,12 +97,16 @@ def _run_scheduled_suite(sched_id: int) -> None:
     srid = suite_run_db.create(sr)
 
     suite_def = {
-        "id": suite.id, "name": suite.name,
-        "case_ids": suite.case_ids, "setup": suite.setup, "teardown": suite.teardown,
+        "id": suite.id,
+        "name": suite.name,
+        "case_ids": suite.case_ids,
+        "setup": suite.setup,
+        "teardown": suite.teardown,
     }
     try:
         _run_suite_task(srid, suite_def, env, suite_run_db)
         from insight_aitest.modules.api.backend.persistence.suite_models import SuiteRunStatus
+
         result_sr = suite_run_db.get(srid)
         status = result_sr.status.value if result_sr and result_sr.status else "unknown"
         sched_db.record_run(sched_id, status, srid)
@@ -140,7 +147,9 @@ class SchedulerManager:
                     id=f"sched_{sched.id}",
                     replace_existing=True,
                 )
-                logger.info(f"重建定时任务: sched_{sched.id} ({sched.name}) cron={sched.cron_expression}")
+                logger.info(
+                    f"重建定时任务: sched_{sched.id} ({sched.name}) cron={sched.cron_expression}"
+                )
             except Exception as e:
                 logger.error(f"重建定时任务 {sched.id} 失败: {e}")
 
@@ -197,6 +206,7 @@ _manager: SchedulerManager | None = None
 def get_scheduler_manager(db_path: str | None = None) -> SchedulerManager:
     global _manager
     import insight_aitest.modules.api.backend.deps as api_deps
+
     if _manager is None:
         _manager = SchedulerManager(db_path or api_deps._DB_PATH)
     return _manager

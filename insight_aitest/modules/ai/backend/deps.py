@@ -106,7 +106,9 @@ def get_executor(
         api_run_db = get_run_db()
     except Exception as _e:
         api_run_db = None
-        logger.warning("API run db injection failed: %s", _e)  # API 模块未启用时，执行类 skill 不可用
+        logger.warning(
+            "API run db injection failed: %s", _e
+        )  # API 模块未启用时，执行类 skill 不可用
 
     # UI 执行依赖：UI 运行记录库（延迟 import 避免循环）
     try:
@@ -124,7 +126,9 @@ def get_executor(
         ui_batch_db = get_ui_batch_db()
     except Exception as _e:
         ui_batch_db = None
-        logger.warning("UI batch db injection failed: %s", _e)  # UI 模块未启用时，UI 执行 skill 不可用
+        logger.warning(
+            "UI batch db injection failed: %s", _e
+        )  # UI 模块未启用时，UI 执行 skill 不可用
 
     # 套件执行依赖（延迟 import 避免循环）
     try:

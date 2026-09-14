@@ -98,7 +98,9 @@ class VectorStore:
         if project_id is not None:
             where_clauses.append("d.project_id = ?")
             params.append(project_id)
-        where_sql = ("WHERE " + " AND ".join(where_clauses) + " AND ") if where_clauses else "WHERE "
+        where_sql = (
+            ("WHERE " + " AND ".join(where_clauses) + " AND ") if where_clauses else "WHERE "
+        )
         rows = conn.execute(
             f"SELECT {select_cols} {joins} "
             f"{where_sql}ce.embedding MATCH ? AND k = ? "

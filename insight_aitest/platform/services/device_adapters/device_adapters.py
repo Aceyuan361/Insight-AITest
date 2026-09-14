@@ -392,7 +392,9 @@ class AndroidDeviceAdapter(BaseDeviceAdapter):
                 if self._apm:
                     return self._apm
                 # 如果没有 APM 实例，创建一个不带包名的实例用于电池采集
-                from insight_aitest.platform.services.collectors.android.android_apm import AndroidAPM
+                from insight_aitest.platform.services.collectors.android.android_apm import (
+                    AndroidAPM,
+                )
 
                 logger.debug(f"[APM管理] 创建电池专用 APM 实例: device={self.device_id}")
                 self._apm = AndroidAPM("", self.device_id)

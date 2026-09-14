@@ -35,8 +35,8 @@ def _resolve_prev(step_params: dict, prev_result: dict | None) -> dict:
     """Resolve $prev placeholders in step_params.
 
 
-template: replaces "$prev" values with prev_result fields
-beyond just case_id — now supports run_id, batch_id, etc.
+    template: replaces "$prev" values with prev_result fields
+    beyond just case_id — now supports run_id, batch_id, etc.
     """
     if prev_result is None:
         return step_params
@@ -137,7 +137,9 @@ class TaskExecutor:
         try:
             task = task_db.get_task(task_id)
             if task is not None and task.conversation_id is not None:
-                status_text = "✅ 任务执行完成" if final_status == TaskStatus.DONE else "❌ 任务执行失败"
+                status_text = (
+                    "✅ 任务执行完成" if final_status == TaskStatus.DONE else "❌ 任务执行失败"
+                )
                 task_db.add_message(
                     task.conversation_id,
                     Role.ASSISTANT,
@@ -187,6 +189,7 @@ class TaskExecutor:
         try:
             # timeout: skill.execute may hang (HTTP no response, Playwright stuck)
             import concurrent.futures
+
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
                 future = pool.submit(skill.execute, params, self.ctx)
                 try:

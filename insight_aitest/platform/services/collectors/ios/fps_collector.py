@@ -160,8 +160,7 @@ class FpsCollector:
             error_type = type(e).__name__
             if "StartService" in error_type or "InvalidService" in error_type:
                 logger.warning(
-                    f"iOS FPS 采集不可用：Graphics 服务无法启动 ({error_type})。"
-                    "将返回占位 FPS。"
+                    f"iOS FPS 采集不可用：Graphics 服务无法启动 ({error_type})。" "将返回占位 FPS。"
                 )
                 with self._lock:
                     self._available = False

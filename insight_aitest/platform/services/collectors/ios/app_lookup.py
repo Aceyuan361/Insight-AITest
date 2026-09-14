@@ -35,9 +35,7 @@ class AppLookup:
     _cache_ttl = 30.0  # 30 秒缓存，避免每次查进程都重新拉取应用列表
 
     @classmethod
-    def get_bundle_id_by_executable(
-        cls, udid: str, executable_name: str
-    ) -> Optional[str]:
+    def get_bundle_id_by_executable(cls, udid: str, executable_name: str) -> Optional[str]:
         """
         根据进程的可执行文件名（DVT 进程的 ``name`` 字段）查找 Bundle ID。
 

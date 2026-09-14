@@ -38,6 +38,7 @@ class TestRequest(BaseModel):
 
 def _get_cfg():
     from insight_aitest.platform.services.kb.deps import get_llm_config
+
     return get_llm_config()
 
 

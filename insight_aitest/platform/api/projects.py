@@ -103,7 +103,9 @@ def _count_referenced(
         .count_by_project(pid)
     )
     cases = _safe_count(
-        lambda pid: __import__("insight_aitest.modules.testcase.backend.deps", fromlist=["get_tc_db"])
+        lambda pid: __import__(
+            "insight_aitest.modules.testcase.backend.deps", fromlist=["get_tc_db"]
+        )
         .get_tc_db()
         .count_by_project(pid)
     )

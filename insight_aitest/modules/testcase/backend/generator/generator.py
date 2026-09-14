@@ -28,9 +28,7 @@ class Generator:
 
     def _retrieve(self, query: str, document_ids, project_id: int | None = None):
         try:
-            return self.retriever.retrieve(
-                query, document_ids=document_ids, project_id=project_id
-            )
+            return self.retriever.retrieve(query, document_ids=document_ids, project_id=project_id)
         except Exception:
             return []
 

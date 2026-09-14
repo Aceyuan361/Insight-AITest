@@ -17,7 +17,9 @@ class ScheduledUIBatchDatabase:
         Base.metadata.create_all(get_engine(db_path), tables=[ScheduledUIBatch.__table__])
         ensure_schema(db_path, [])
 
-    def create(self, *, name: str, cron_expression: str, case_ids: list, config: dict, enabled: bool = True) -> int:
+    def create(
+        self, *, name: str, cron_expression: str, case_ids: list, config: dict, enabled: bool = True
+    ) -> int:
         sched = ScheduledUIBatch(
             id=None,
             name=name,
@@ -37,15 +39,17 @@ class ScheduledUIBatchDatabase:
 
     def list(self) -> list[ScheduledUIBatch]:
         with session_scope(self.db_path) as s:
-            return list(s.execute(
-                select(ScheduledUIBatch).order_by(ScheduledUIBatch.id.desc())
-            ).scalars())
+            return list(
+                s.execute(select(ScheduledUIBatch).order_by(ScheduledUIBatch.id.desc())).scalars()
+            )
 
     def list_enabled(self) -> list[ScheduledUIBatch]:
         with session_scope(self.db_path) as s:
-            return list(s.execute(
-                select(ScheduledUIBatch).where(ScheduledUIBatch.enabled == True)
-            ).scalars())
+            return list(
+                s.execute(
+                    select(ScheduledUIBatch).where(ScheduledUIBatch.enabled == True)
+                ).scalars()
+            )
 
     def update(self, sched_id: int, **kwargs) -> ScheduledUIBatch | None:
         with session_scope(self.db_path) as s:

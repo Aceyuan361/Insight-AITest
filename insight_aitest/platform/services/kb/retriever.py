@@ -89,7 +89,12 @@ class Retriever:
     def stats(self, document_ids: list[int] | None = None) -> dict:
         """返回检索范围统计（前端可视化）。"""
         if self.kb_db is None:
-            return {"total_docs": 0, "total_chunks": 0, "vectorized_docs": 0, "vector_enabled": getattr(self.config, "vector_enabled", False)}
+            return {
+                "total_docs": 0,
+                "total_chunks": 0,
+                "vectorized_docs": 0,
+                "vector_enabled": getattr(self.config, "vector_enabled", False),
+            }
 
         from insight_aitest.platform.persistence import session_scope
 
@@ -251,7 +256,12 @@ class Retriever:
             return []
 
         # 包装为 ScoredChunk（用低分标记为兜底）
-        from insight_aitest.platform.services.kb.models import Chunk, Document, EmbedStatus, ScoredChunk as SC
+        from insight_aitest.platform.services.kb.models import (
+            Chunk,
+            Document,
+            EmbedStatus,
+            ScoredChunk as SC,
+        )
 
         results = []
         for doc_name, text, doc_id in docs_content:

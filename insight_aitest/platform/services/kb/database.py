@@ -292,11 +292,7 @@ class KBDatabase:
 
     def get_document_content(self, doc_id: int) -> str:
         """获取文档纯文本。优先拼接 chunks；无 chunks（处理中/未分块）时直接解析原始文件。"""
-        stmt = (
-            select(Chunk.text)
-            .where(Chunk.document_id == doc_id)
-            .order_by(Chunk.chunk_index)
-        )
+        stmt = select(Chunk.text).where(Chunk.document_id == doc_id).order_by(Chunk.chunk_index)
         with session_scope(self.db_path) as s:
             parts = [row[0] for row in s.execute(stmt)]
         if parts:
@@ -374,10 +370,7 @@ class KBDatabase:
             if len(existing) < max_chars:
                 doc_texts[doc_id] = (name, existing + (text or "") + "\n")
 
-        return [
-            (name, text[:max_chars], did)
-            for did, (name, text) in doc_texts.items()
-        ]
+        return [(name, text[:max_chars], did) for did, (name, text) in doc_texts.items()]
 
     def update_document_file(
         self,
@@ -526,7 +519,8 @@ def migrate_from_legacy(ai_kb_path: str, kb_db_path: str, ai_db_path: str) -> bo
 
     # —— 建 kb.db 的普通表 schema（documents/chunks，不含 vec0）——
     kb_conn = sqlite3.connect(kb_db_path)
-    kb_conn.executescript("""
+    kb_conn.executescript(
+        """
     CREATE TABLE IF NOT EXISTS documents (
         id INTEGER PRIMARY KEY AUTOINCREMENT, filename TEXT NOT NULL,
         storage_path TEXT NOT NULL, mime_type TEXT, char_count INTEGER DEFAULT 0,
@@ -541,7 +535,8 @@ def migrate_from_legacy(ai_kb_path: str, kb_db_path: str, ai_db_path: str) -> bo
         FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE);
     CREATE INDEX IF NOT EXISTS idx_chunks_document ON chunks(document_id);
     CREATE INDEX IF NOT EXISTS idx_documents_status ON documents(status);
-    """)
+    """
+    )
 
     # 搬 documents
     for row in src.execute("SELECT * FROM documents").fetchall():

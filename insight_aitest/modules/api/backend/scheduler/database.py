@@ -20,8 +20,13 @@ class ScheduledSuiteDatabase:
         Base.metadata.create_all(get_engine(db_path), tables=[ScheduledSuite.__table__])
 
     def create(
-        self, *, name: str, suite_id: int, cron_expression: str,
-        environment_id: int | None = None, enabled: bool = True,
+        self,
+        *,
+        name: str,
+        suite_id: int,
+        cron_expression: str,
+        environment_id: int | None = None,
+        enabled: bool = True,
     ) -> int:
         sched = ScheduledSuite(
             name=name,
@@ -50,8 +55,16 @@ class ScheduledSuiteDatabase:
             return list(s.scalars(stmt))
 
     def update(self, sched_id: int, **fields) -> None:
-        allowed = ("name", "suite_id", "cron_expression", "environment_id", "enabled",
-                    "last_run_at", "last_status", "last_suite_run_id")
+        allowed = (
+            "name",
+            "suite_id",
+            "cron_expression",
+            "environment_id",
+            "enabled",
+            "last_run_at",
+            "last_status",
+            "last_suite_run_id",
+        )
         with session_scope(self.db_path) as s:
             sched = s.get(ScheduledSuite, sched_id)
             if sched is None:

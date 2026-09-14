@@ -53,7 +53,9 @@ def _resolve_vision_config() -> dict:
     return {
         "base_url": (ui.get("base_url") or "").strip() or cfg.llm_base_url,
         "api_key": (ui.get("api_key") or "").strip() or cfg.llm_api_key,
-        "model": (ui.get("model") or "").strip() or (cfg.vision_model or "").strip() or cfg.chat_model,
+        "model": (ui.get("model") or "").strip()
+        or (cfg.vision_model or "").strip()
+        or cfg.chat_model,
     }
 
 
@@ -132,7 +134,14 @@ def _classify_error(e: Exception) -> str:
     msg = str(e).lower()
     if isinstance(e, asyncio.TimeoutError) or "timeout" in msg or "timed out" in msg:
         return f"操作超时（模型响应或页面加载）: {e}"
-    if "api_key" in msg or "apikey" in msg or " 401" in msg or " 403" in msg or "unauthorized" in msg or "forbidden" in msg:
+    if (
+        "api_key" in msg
+        or "apikey" in msg
+        or " 401" in msg
+        or " 403" in msg
+        or "unauthorized" in msg
+        or "forbidden" in msg
+    ):
         return f"AI 模型认证失败，请检查 API Key 配置: {e}"
     if "not found" in msg or "找不到" in msg or "无法定位" in msg or "no element" in msg:
         return f"目标元素未找到: {e}"
@@ -256,7 +265,10 @@ async def execute(
         agent = agent_factory(page)
         for idx, raw_step in enumerate(steps):
             sr = await _run_step(
-                agent, raw_step, idx, variables,
+                agent,
+                raw_step,
+                idx,
+                variables,
                 run_case_id=case_id,
                 retry=bc["retry"],
                 screenshot_on_failure=bc["screenshot_on_failure"],
@@ -296,8 +308,13 @@ async def execute(
 
 
 async def _run_step(
-    agent, raw_step: dict, idx: int, variables: dict[str, Any],
-    run_case_id: int = 0, retry: int = 0, screenshot_on_failure: bool = True,
+    agent,
+    raw_step: dict,
+    idx: int,
+    variables: dict[str, Any],
+    run_case_id: int = 0,
+    retry: int = 0,
+    screenshot_on_failure: bool = True,
 ) -> UIStepResult:
     """执行单步（协程）。任何异常都不向上抛（记录为 error）。
 

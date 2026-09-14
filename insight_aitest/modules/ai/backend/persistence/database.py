@@ -261,6 +261,7 @@ class AIDatabase:
             s.add(c)
             s.flush()
             return c.id
+
     def save_summary(self, conv_id: int, summary: dict) -> None:
         """保存会话上下文摘要。"""
         with session_scope(self.db_path) as s:
@@ -330,9 +331,7 @@ class AIDatabase:
                 m.citations = []
         return msgs
 
-    def list_messages_by_turns(
-        self, conversation_id: int, turns: int = 6
-    ) -> list[Message]:
+    def list_messages_by_turns(self, conversation_id: int, turns: int = 6) -> list[Message]:
         """按对话轮次取历史（turns = user 消息条数）。
 
         与 list_messages(limit=N) 不同，以 user 消息为锚点计算轮次：
@@ -367,13 +366,10 @@ class AIDatabase:
             else:
                 m.citations = []
         return msgs
+
     def list_messages_by_task(self, task_id: int, limit: int | None = None) -> list[Message]:
         """按 task_id 查询消息（用于 agent_chat 加载对话历史）。"""
-        stmt = (
-            select(Message)
-            .where(Message.task_id == task_id)
-            .order_by(Message.created_at.desc())
-        )
+        stmt = select(Message).where(Message.task_id == task_id).order_by(Message.created_at.desc())
         if limit:
             stmt = stmt.limit(limit)
         with session_scope(self.db_path) as s:
@@ -399,7 +395,7 @@ class AIDatabase:
         conversation_id: int | None = None,
     ) -> int:
         """创建 task。plan 为空时走新流程（understand→strategize）。
-        
+
         conversation_id 非 None 时将 task 关联到已有会话（修复会话拆分问题）。
         """
         with session_scope(self.db_path) as s:

@@ -64,7 +64,9 @@ async def create_conversation(
     pid = body.project_id if body else None
     # 去重：复用已有的空会话（无消息），避免重复创建空会话行污染侧栏
     # 原子化 get-or-create：修复并发竞态（find+create 分离时两个请求可能各自创建）
-    cid = db.get_or_create_empty_conversation(title, rag_enabled=rag, thinking_level=think, project_id=pid)
+    cid = db.get_or_create_empty_conversation(
+        title, rag_enabled=rag, thinking_level=think, project_id=pid
+    )
     return _out(db.get_conversation(cid))
 
 
@@ -131,6 +133,7 @@ async def delete_conversation(
         raise HTTPException(404, "conversation not found")
     # cleanup orphan attachment files
     from pathlib import Path as _Path
+
     attachments_dir = _Path(config.docs_dir) / "attachments"
     for att_id in attachment_ids:
         try:
