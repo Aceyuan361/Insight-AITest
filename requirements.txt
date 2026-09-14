@@ -31,6 +31,10 @@ beautifulsoup4>=4.12       # HTML 文档解析（.html/.htm 知识库文档）
 # ==================== API Automation (E) ====================
 jsonpath-ng>=1.6.0
 apscheduler>=3.10           # 定时调度（cron 表达式定时执行套件）
+httpx>=0.28.0               # API 用例执行引擎（同步 HTTP 客户端）
+
+# ==================== Module System ====================
+pyyaml>=6.0                # 模块 manifest.yaml 解析（平台内核必需）
 
 # ==================== UI Automation (F) ====================
 playwright>=1.40.0         # 浏览器驱动（pip install + playwright install chromium）

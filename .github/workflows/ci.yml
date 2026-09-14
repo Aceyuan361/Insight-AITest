@@ -34,7 +34,9 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          # black 的输出随运行时 Python 版本变化（f-string 拆分等 3.12+ 行为）；
+          # 代码统一在 3.12+ 环境格式化，lint 需同版本对齐
+          python-version: '3.12'
           cache: 'pip'
       - name: Install dependencies
         run: |

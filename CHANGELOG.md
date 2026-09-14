@@ -5,7 +5,17 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [Semantic Versioning](https://semver.org/spec/v2.0.0.html)。
 
-## [Unreleased] → v2.2.0 — 可信度冲刺
+## [Unreleased]
+
+### Fixed
+
+- **依赖补全（第二轮，CI e2e 门禁挖出）**：`httpx`（API 执行引擎运行时导入，此前只在
+  dev 依赖）与 `pyyaml`（平台内核解析 manifest.yaml 必需，此前两份依赖清单都没有——
+  本机能跑纯属其他包传递安装的侥幸）补入核心依赖。`pip install -e .` 后全部模块可加载。
+- **black 版本对齐**：CI 的 Backend Lint 改用 Python 3.12——black 输出随运行时版本变化
+  （f-string 拆分等 3.12+ 行为），3.10 环境会误报格式不符。
+
+## [2.2.0] - 2026-09-14 — 可信度冲刺
 
 聚焦：让访客看完 README 敢 star、clone 完能一次跑通。
 

@@ -61,6 +61,8 @@ dependencies = [
     "jsonpath-ng>=1.6.0",
     "logzero>=1.7.0",
     "apscheduler>=3.10",
+    "httpx>=0.28.0",
+    "pyyaml>=6.0",
 ]
 
 [project.optional-dependencies]
@@ -71,7 +73,6 @@ ui = [
 dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.24.0",
-    "httpx>=0.28.0",
     "black>=24.0.0",
     "ruff>=0.8.0",
     "reportlab>=4.0",
