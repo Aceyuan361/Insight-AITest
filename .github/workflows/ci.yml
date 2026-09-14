@@ -13,7 +13,7 @@ jobs:
     name: Backend Tests (pytest)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -30,7 +30,7 @@ jobs:
     name: Backend Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -52,7 +52,7 @@ jobs:
       run:
         working-directory: insight_aitest/shell-frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -75,7 +75,7 @@ jobs:
       run:
         working-directory: insight_aitest/shell-frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Set up Python (backend for e2e)
         uses: actions/setup-python@v5
         with:
