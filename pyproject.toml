@@ -73,7 +73,9 @@ ui = [
 dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.24.0",
-    "black>=24.0.0",
+    # black 锁版本：不同大版本的格式决策不同（25+ 改了字符串拆分等），
+    # 本地与 CI 必须同版本，否则 check 永远对不齐
+    "black==24.10.0",
     "ruff>=0.8.0",
     "reportlab>=4.0",
 ]
