@@ -14,7 +14,9 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 80,
     proxy: {
-      '/api': {
+      // 正则锚定 /api/ 前缀：若用字符串 '/api' 做前缀匹配，会把 /api-runner
+      // （API 自动化模块的前端路由）也代理到后端，深链接/刷新直接 404 白屏
+      '^/api/': {
         target: 'http://127.0.0.1:8001',
         changeOrigin: true,
         secure: false,
