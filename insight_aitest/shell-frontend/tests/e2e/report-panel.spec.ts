@@ -10,7 +10,10 @@ test('前后端基本访问正常', async ({ page, request }) => {
   await page.goto('/');
   await expect(page).toHaveTitle(/Insight-AITest/);
 
-  // 2. 验证后端 API 能响应
-  const response = await request.get('http://localhost:8001/health');
+  // 2. 验证后端 API 能响应（平台健康端点，带版本号）
+  const response = await request.get('http://localhost:8001/api/platform/health');
   expect(response.status()).toBe(200);
+  const body = await response.json();
+  expect(body.status).toBe('healthy');
+  expect(body.version).toBeTruthy();
 });

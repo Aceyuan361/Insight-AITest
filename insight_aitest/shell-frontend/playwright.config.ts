@@ -34,9 +34,10 @@ export default defineConfig({
     },
   ],
   // CI 环境下自动启动后端 API 和前端预览服务器
+  // 后端用 uvicorn factory 直连 kernel（不经过 __main__，避免连带起 Vite/开浏览器）
   webServer: process.env.CI ? [
     {
-      command: 'cd ../.. && python -m insight_aitest',
+      command: 'cd ../.. && python -m uvicorn --factory insight_aitest.platform.kernel:build_app --host 127.0.0.1 --port 8001',
       port: 8001,
       timeout: 60000,
       reuseExistingServer: false,
