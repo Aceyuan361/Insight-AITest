@@ -27,7 +27,7 @@ export function Dashboard() {
     let cancelled = false
     fetch(`${API_BASE}/runs/stats`)
       .then((r) => r.json())
-      .then((data: any) => {
+      .then((data: Partial<Stats>) => {
         if (cancelled) return
         // 防御性：后端可能未返回新字段（旧版本兼容）
         setStats({
@@ -97,7 +97,7 @@ export function Dashboard() {
             <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: 'var(--text-muted)' }} />
             <Tooltip
               contentStyle={{ background: 'var(--bg-base)', border: '1px solid var(--border-strong)', borderRadius: 6, fontSize: 12 }}
-              formatter={(v: any) => `${v}%`}
+              formatter={(v) => `${v}%`}
             />
             <Line type="monotone" dataKey="pass_rate" stroke="var(--success)" strokeWidth={2} name={t('ui.passRate')} dot={false} />
           </LineChart>

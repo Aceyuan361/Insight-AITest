@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import { Download, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { errorMessage } from '../../../../shared/utils/errorMessage';
 
 interface XlsxEditorProps {
   url: string;
@@ -20,13 +21,40 @@ interface XlsxEditorProps {
  * 纯前端方案：Univer 官方 xlsx 导入/导出依赖 Univer Server，
  * 这里用 SheetJS 做 IWorkbookData ↔ XLSX.WorkBook 的桥接转换。
  */
+/** Univer 桥接层的最小结构类型（第三方 API 懒加载，只声明用到的面） */
+interface UniverLike {
+  dispose: () => void;
+}
+interface UniverApiLike {
+  dispose?: () => void;
+  getActiveWorkbook?: () => {
+    getSnapshot?: () => unknown;
+    save?: () => unknown;
+  } | null;
+}
+interface UniverSnapshot {
+  sheets?: Record<string, { name?: string; cellData?: Record<string, { v?: unknown }> }>;
+}
+interface UniverSheetData {
+  id: string;
+  name: string;
+  cellData: Record<string, { v: unknown; t: number }>;
+  rowCount: number;
+  columnCount: number;
+}
+interface UniverWorkbookData {
+  id: string;
+  name: string;
+  sheets: Record<string, UniverSheetData>;
+}
+
 export function XlsxEditor({ url, filename, onSave, saving, readOnly = false }: XlsxEditorProps) {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const univerRef = useRef<any>(null);
-  const apiRef = useRef<any>(null);
+  const univerRef = useRef<UniverLike | null>(null);
+  const apiRef = useRef<UniverApiLike | null>(null);
 
   useEffect(() => {
     let disposed = false;
@@ -57,9 +85,9 @@ export function XlsxEditor({ url, filename, onSave, saving, readOnly = false }: 
         apiRef.current = univerAPI;
 
         if (!disposed) setLoading(false);
-      } catch (e: any) {
+      } catch (e) {
         if (!disposed) {
-          setError(e.message || t('kb.xlsxLoadFailed'));
+          setError(errorMessage(e, t('kb.xlsxLoadFailed')));
           setLoading(false);
         }
       }
@@ -78,12 +106,12 @@ export function XlsxEditor({ url, filename, onSave, saving, readOnly = false }: 
   }, [url, filename]);
 
   /** SheetJS workbook → Univer IWorkbookData（桥接转换） */
-  function xlsxToUniver(wb: XLSX.WorkBook, name: string) {
-    const sheets: Record<string, any> = {};
+  function xlsxToUniver(wb: XLSX.WorkBook, name: string): UniverWorkbookData {
+    const sheets: UniverWorkbookData['sheets'] = {};
     for (const sheetName of wb.SheetNames) {
       const ws = wb.Sheets[sheetName];
       const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
-      const cellData: Record<string, any> = {};
+      const cellData: UniverSheetData['cellData'] = {};
       for (let r = range.s.r; r <= range.e.r; r++) {
         for (let c = range.s.c; c <= range.e.c; c++) {
           const addr = XLSX.utils.encode_cell({ r, c });
@@ -114,17 +142,17 @@ export function XlsxEditor({ url, filename, onSave, saving, readOnly = false }: 
   function univerToXlsx(): XLSX.WorkBook {
     const api = apiRef.current;
     const fWorkbook = api?.getActiveWorkbook?.();
-    const snapshot = fWorkbook?.getSnapshot?.() || fWorkbook?.save?.();
+    const snapshot = (fWorkbook?.getSnapshot?.() || fWorkbook?.save?.() || null) as UniverSnapshot | null;
     const wb = XLSX.utils.book_new();
     const sheets = snapshot?.sheets || {};
     for (const [, sheetData] of Object.entries(sheets)) {
-      const sd = sheetData as any;
-      const aoa: any[][] = [];
+      const sd = sheetData;
+      const aoa: unknown[][] = [];
       const cellData = sd.cellData || {};
       for (const [key, cell] of Object.entries(cellData)) {
         const [r, c] = key.split('_').map(Number);
         if (!aoa[r]) aoa[r] = [];
-        const cv = (cell as any).v;
+        const cv = cell?.v;
         aoa[r][c] = cv ?? '';
       }
       const ws = XLSX.utils.aoa_to_sheet(aoa);
@@ -139,8 +167,8 @@ export function XlsxEditor({ url, filename, onSave, saving, readOnly = false }: 
       const out = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
       const blob = new Blob([out], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       await onSave(blob, filename);
-    } catch (e: any) {
-      setError(t('kb.exportFailed', { message: e.message || String(e) }));
+    } catch (e) {
+      setError(t('kb.exportFailed', { message: errorMessage(e, String(e)) }));
     }
   };
 
@@ -148,8 +176,8 @@ export function XlsxEditor({ url, filename, onSave, saving, readOnly = false }: 
     try {
       const wb = univerToXlsx();
       XLSX.writeFile(wb, filename);
-    } catch (e: any) {
-      setError(t('kb.downloadFailed', { message: e.message || String(e) }));
+    } catch (e) {
+      setError(t('kb.downloadFailed', { message: errorMessage(e, String(e)) }));
     }
   };
 
@@ -198,7 +226,7 @@ export function XlsxEditor({ url, filename, onSave, saving, readOnly = false }: 
 function btnStyle(disabled: boolean): React.CSSProperties {
   return {
     background: disabled ? 'var(--bg-elevated)' : 'var(--accent)',
-    color: disabled ? 'var(--text-muted)' : '#fff',
+    color: disabled ? 'var(--text-muted)' : 'var(--text-on-accent)',
     border: 'none',
     padding: '4px 12px',
     borderRadius: 4,

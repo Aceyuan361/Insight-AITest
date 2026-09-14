@@ -25,7 +25,12 @@ export function CaseEditor() {
 
   useEffect(() => { loadProjects(); }, [loadProjects]);
 
-  useEffect(() => { setForm(c ?? null); }, [c?.id]);
+  // 选中用例变化时替换表单（渲染期调整模式，替代 effect 内同步 setState）
+  const [prevCaseId, setPrevCaseId] = useState(c?.id);
+  if (c?.id !== prevCaseId) {
+    setPrevCaseId(c?.id);
+    setForm(c ?? null);
+  }
 
   if (!form) {
     return <div style={{ padding: 40, color: 'var(--text-muted)' }}>{t('testcase.selectOrCreateHint')}</div>;

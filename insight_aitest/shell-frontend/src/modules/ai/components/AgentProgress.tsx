@@ -40,8 +40,14 @@ export function AgentProgress({
 
   // 所有繁忙阶段计时器
   const [elapsed, setElapsed] = useState(0);
+  // 忙碌态切换时清零计时（渲染期调整模式，替代 effect 内同步 setState）
+  const [prevBusy, setPrevBusy] = useState(isBusy);
+  if (isBusy !== prevBusy) {
+    setPrevBusy(isBusy);
+    setElapsed(0);
+  }
   useEffect(() => {
-    if (!isBusy) { setElapsed(0); return; }
+    if (!isBusy) return;
     const start = Date.now();
     const timer = setInterval(() => setElapsed(Math.floor((Date.now() - start) / 1000)), 1000);
     return () => clearInterval(timer);

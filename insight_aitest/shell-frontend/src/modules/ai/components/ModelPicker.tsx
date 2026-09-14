@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ChevronDown, Check, Cpu } from 'lucide-react';
 import { useConfigStore } from '../store/configStore';
 import { text, RADIUS, SPRING } from './agentStyles';
+import { errorMessage } from '../../../shared/utils/errorMessage';
 
 /**
  * 模型快速切换器（输入栏内联，Cursor 风格）。
@@ -48,8 +49,8 @@ export function ModelPicker({ size = 'sm', isMobile }: Props) {
     if (id === activeId) return;
     try {
       await activateProvider(id);
-    } catch (e: any) {
-      alert(e.message || t('ai.switchFailed'));
+    } catch (e) {
+      alert(errorMessage(e, t('ai.switchFailed')));
     }
   };
 

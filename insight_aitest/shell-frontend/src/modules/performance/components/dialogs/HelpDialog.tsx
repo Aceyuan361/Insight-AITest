@@ -162,8 +162,8 @@ export default function HelpDialog({ onClose }: HelpDialogProps) {
               {t('help.about.projectName')} <span style={{ color: "var(--text-secondary)" }}>v{t('help.about.versionValue')}</span>
             </p>
             <p>{t('help.about.description')}</p>
-            <p>{t('help.about.author')}：{t('help.about.authorValue')}　·　{t('help.about.license')}：{t('help.about.licenseValue')}</p>
-            <p style={{ fontSize: '12px' }}>Frontend: React + TypeScript + Vite + ECharts　·　Backend: Python + FastAPI + WebSocket　·　Database: SQLite</p>
+            <p>{t('help.about.author')}：{t('help.about.authorValue')} · {t('help.about.license')}：{t('help.about.licenseValue')}</p>
+            <p style={{ fontSize: '12px' }}>Frontend: React + TypeScript + Vite + ECharts · Backend: Python + FastAPI + WebSocket · Database: SQLite</p>
           </div>
         </div>
       </div>

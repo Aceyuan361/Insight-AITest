@@ -25,8 +25,17 @@ export function VersionHistory({ doc }: VersionHistoryProps) {
       .finally(() => setLoading(false));
   };
 
+  // 切换文档时重置加载态（渲染期调整模式）；effect 只做异步加载
+  const [prevDocId, setPrevDocId] = useState(doc.id);
+  if (doc.id !== prevDocId) {
+    setPrevDocId(doc.id);
+    setLoading(true);
+  }
+
   useEffect(() => {
-    reload();
+    listVersions(doc.id)
+      .then(setVersions)
+      .finally(() => setLoading(false));
   }, [doc.id]);
 
   const handleCompare = async (v: DocVersion) => {

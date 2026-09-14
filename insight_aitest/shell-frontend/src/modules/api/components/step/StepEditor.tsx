@@ -7,8 +7,8 @@ export interface StepData {
   method: string
   path: string
   headers: Record<string, string>
-  body: any
-  assertions: { type: string; path?: string; expected: any }[]
+  body: unknown
+  assertions: { type: string; path?: string; expected?: unknown }[]
   extract: Record<string, string>
 }
 
@@ -26,7 +26,7 @@ export function StepEditor({ step, onChange, onRemove }: {
   const addAssertion = () => set({ assertions: [...step.assertions, { type: 'status_code', expected: 200 }] })
   const removeAssertion = (i: number) => set({ assertions: step.assertions.filter((_, idx) => idx !== i) })
 
-  const extractPairs: KVPair[] = toPairs(step.extract as any)
+  const extractPairs: KVPair[] = toPairs(step.extract)
   const setExtract = (pairs: KVPair[]) => {
     const out: Record<string, string> = {}
     for (const p of pairs) if (p.key.trim()) out[p.key.trim()] = p.value

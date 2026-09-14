@@ -1,24 +1,36 @@
 import { create } from 'zustand';
 import { useProjectStore } from '../../../shared/store/projectStore';
 
+/** API 用例步骤（前端可编辑的最小结构；未识别字段透传后端）。 */
+export interface ApiStep {
+  name?: string;
+  method: string;
+  path: string;
+  headers?: Record<string, string>;
+  body?: unknown;
+  assertions?: { type: string; path?: string; expected?: unknown }[];
+  extract?: Record<string, string>;
+  [key: string]: unknown;
+}
+
 /** D 的 API 用例（只读引用）。 */
 export interface ApiCase {
   id: number;
   title: string;
   status: string;
-  content: { base_url?: string; steps: any[] };
+  content: { base_url?: string; steps: ApiStep[] };
   last_result: string | null;
 }
 
 export interface StepResult {
   step_index: number;
-  request: { method: string; url: string; headers: Record<string, string>; body: any };
+  request: { method: string; url: string; headers: Record<string, string>; body: unknown };
   status_code: number | null;
-  response_body: any;
+  response_body: unknown;
   response_headers: Record<string, string>;
   elapsed_ms: number;
-  assertions: { type: string; target: string; expected: any; actual: any; passed: boolean }[];
-  extracts: Record<string, any>;
+  assertions: { type: string; target: string; expected: unknown; actual: unknown; passed: boolean }[];
+  extracts: Record<string, unknown>;
   error: string | null;
   passed: boolean;
 }

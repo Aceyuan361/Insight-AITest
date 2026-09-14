@@ -7,6 +7,12 @@ export interface Suite {
   case_count: number
 }
 
+/** 创建/更新套件的载荷（SuiteEditor onSave 的数据形状）。 */
+export interface SuitePayload {
+  name: string; description: string
+  case_ids: number[]; setup: StepData[]; teardown: StepData[]
+}
+
 export interface SuiteRunSummary {
   id: number; suite_id: number; suite_name: string
   status: 'running' | 'completed' | 'failed' | 'interrupted'
@@ -34,9 +40,9 @@ interface SuiteState {
   selectedRun: SuiteRunDetail | null
   executing: boolean
   loadSuites: () => Promise<void>
-  selectSuite: (id: number) => void
-  createSuite: (data: any) => Promise<void>
-  updateSuite: (id: number, data: any) => Promise<void>
+  selectSuite: (id: number | null) => void
+  createSuite: (data: SuitePayload) => Promise<void>
+  updateSuite: (id: number, data: SuitePayload) => Promise<void>
   deleteSuite: (id: number) => Promise<void>
   loadRuns: (suiteId: number) => Promise<void>
   executeSuite: (suiteId: number, envId: number | null) => Promise<number>
@@ -51,7 +57,7 @@ export const useSuiteStore = create<SuiteState>((set, get) => ({
     const r = await fetch(BASE)
     set({ suites: await _jsonOrThrow(r) })
   },
-  selectSuite: (id) => { set({ selectedSuiteId: id, selectedRun: null }); get().loadRuns(id) },
+  selectSuite: (id) => { set({ selectedSuiteId: id, selectedRun: null }); if (id != null) get().loadRuns(id) },
   createSuite: async (data) => {
     const r = await fetch(BASE, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) })
     await _jsonOrThrow(r)

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useConfigStore, type AIConfigUpdate, type ProviderOut, type ProviderUpsert } from '../store/configStore';
 import { Play, AlertTriangle, Plus, Trash2, Check, Zap, Edit3, ChevronDown, Sun, Moon } from 'lucide-react';
 import { useThemeStore, type Theme } from '@/shared/store/themeStore';
+import { errorMessage } from '@/shared/utils/errorMessage';
 
 const inputStyle: React.CSSProperties = {
   flex: 1, background: "var(--bg-card)", border: '1px solid var(--bg-elevated)',
@@ -23,7 +24,10 @@ export function SettingsPanel() {
     loadConfig();
   }, [loadConfig]);
 
-  useEffect(() => {
+  // 服务端配置到达时填充表单（渲染期调整模式，替代 effect 内同步 setState）
+  const [syncedConfig, setSyncedConfig] = useState(config);
+  if (config !== syncedConfig) {
+    setSyncedConfig(config);
     if (config) {
       setForm({
         chunk_size: config.chunk_size,
@@ -40,7 +44,7 @@ export function SettingsPanel() {
       });
       setVectorExpanded(config.vector_enabled);
     }
-  }, [config]);
+  }
 
   if (loading || !config) {
     return <div style={{ padding: 24, color: "var(--text-muted)" }}>{t('settings.loadingConfig')}</div>;
@@ -54,8 +58,8 @@ export function SettingsPanel() {
     try {
       await updateConfig({ ...form });
       setMsg({ ok: true, text: t('settings.saved') });
-    } catch (e: any) {
-      setMsg({ ok: false, text: e.message || t('settings.saveFailed') });
+    } catch (e) {
+      setMsg({ ok: false, text: errorMessage(e, t('settings.saveFailed')) });
     }
   };
 
@@ -216,7 +220,7 @@ function ProviderSection() {
             onEdit={() => { setEditing(p); setAdding(false); }}
             onDelete={async () => {
               if (confirm(t('settings.confirmDeleteProvider', { name: p.name }))) {
-                try { await deleteProvider(p.id); } catch (e: any) { alert(e.message); }
+                try { await deleteProvider(p.id); } catch (e) { alert(errorMessage(e)); }
               }
             }}
           />
@@ -232,7 +236,7 @@ function ProviderSection() {
             try {
               await upsertProvider(editing ? editing.id : 'new', body);
               setAdding(false); setEditing(null);
-            } catch (e: any) { alert(e.message); }
+            } catch (e) { alert(errorMessage(e)); }
           }}
           onCancel={() => { setAdding(false); setEditing(null); }}
           onTest={testConnection}
@@ -334,8 +338,8 @@ function ProviderEditor({ provider, presets, saving, onSave, onCancel, onTest }:
     try {
       const r = await onTest(baseUrl, apiKey || 'placeholder', chatModel);
       setTestResult(r);
-    } catch (e: any) {
-      setTestResult({ ok: false, message: e.message });
+    } catch (e) {
+      setTestResult({ ok: false, message: errorMessage(e) });
     } finally {
       setTesting(false);
     }

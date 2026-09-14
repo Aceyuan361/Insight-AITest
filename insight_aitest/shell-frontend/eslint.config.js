@@ -27,5 +27,13 @@ export default tseslint.config(
         { allowConstantExport: true },
       ],
     },
+  },
+  {
+    // 构建脚本跑在 Node 而非浏览器
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      globals: globals.node,
+    },
   }
 )

@@ -36,7 +36,13 @@ export function ProjectsPage() {
     setProjects(await r.json());
   };
 
-  useEffect(() => { loadProjects(); }, []);
+  // 挂载加载（setState 在异步回调中，规避 effect 内同步 setState）
+  useEffect(() => {
+    fetch(`${BASE}/projects`)
+      .then((r) => r.json())
+      .then(setProjects)
+      .catch(() => { /* 列表加载失败保持空态 */ });
+  }, []);
 
   const loadVersions = async (projectId: number) => {
     const r = await fetch(`${BASE}/projects/${projectId}/versions`);

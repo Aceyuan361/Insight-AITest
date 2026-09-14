@@ -380,7 +380,14 @@ export const useTaskStore = create<TaskState>((set, get) => ({
         for (const evt of events) {
           const type = evt.match(/^event: (.+)$/m)?.[1];
           const dataStr = evt.match(/^data: (.+)$/m)?.[1] ?? '{}';
-          let data: any;
+          let data: {
+            phase?: string; text?: string; summary?: string; task?: unknown;
+            step_index?: number; current?: number; total?: number; skill?: string;
+            status?: string; result?: Record<string, unknown>; reason?: string; failures?: unknown[];
+            iteration?: number; params?: Record<string, unknown>;
+            rca?: Record<string, unknown>; desc?: string; error?: string; message?: string; trace?: TraceEntry[];
+            [key: string]: unknown;
+          };
           try { data = JSON.parse(dataStr); } catch { continue; }
 
           if (type === 'phase') {
@@ -436,8 +443,8 @@ export const useTaskStore = create<TaskState>((set, get) => ({
           }
         }
       }
-    } catch (e: any) {
-      if (e.name === 'AbortError') {
+    } catch (e) {
+      if (e instanceof DOMException && e.name === 'AbortError') {
         set((s) => {
           const tid = s.currentTask?.id;
           const newMsgs = [...s.messages, { role: 'agent' as const, content: '（已取消）' }];
@@ -625,14 +632,21 @@ export const useTaskStore = create<TaskState>((set, get) => ({
         for (const evt of events) {
           const type = evt.match(/^event: (.+)$/m)?.[1];
           const dataStr = evt.match(/^data: (.+)$/m)?.[1] ?? '{}';
-          let data: any;
+          let data: {
+            phase?: string; text?: string; summary?: string; task?: unknown;
+            step_index?: number; current?: number; total?: number; skill?: string;
+            status?: string; result?: Record<string, unknown>; reason?: string; failures?: unknown[];
+            iteration?: number; params?: Record<string, unknown>;
+            rca?: Record<string, unknown>; desc?: string; error?: string; message?: string; trace?: TraceEntry[];
+            [key: string]: unknown;
+          };
           try { data = JSON.parse(dataStr); } catch { continue; }
 
           if (type === 'step_start') {
             set((s) => ({
               phaseMessage: `${data.current}/${data.total}: ${data.desc}`,
               stepLogs: [...s.stepLogs, {
-                step_index: data.step_index, type: 'step_start',
+                step_index: data.step_index ?? 0, type: 'step_start',
                 skill: data.skill, desc: data.desc, current: data.current, total: data.total,
               }],
             }));
@@ -659,7 +673,9 @@ export const useTaskStore = create<TaskState>((set, get) => ({
           }
           // ReAct Agent 事件：action / observation / reflection / decision / aborted
           if (type === 'action') {
-            const { step_index, iteration, skill, desc, params } = data;
+            const step_index = data.step_index ?? 0;
+            const iteration = data.iteration ?? 0;
+            const { skill, desc, params } = data;
             set((s) => {
               const taskTrace = s.trace[taskId] || {};
               const stepEntries = taskTrace[step_index] ? [...taskTrace[step_index]] : [];
@@ -667,14 +683,15 @@ export const useTaskStore = create<TaskState>((set, get) => ({
               stepEntries[iteration] = {
                 ...(stepEntries[iteration] || {}),
                 step_index, iteration,
-                action: { skill, desc, params: params || {} },
+                action: { skill: skill ?? '', desc: desc ?? '', params: params || {} },
                 observation: {}, reflection: null, decision: 'continue',
               };
               return { trace: { ...s.trace, [taskId]: { ...taskTrace, [step_index]: stepEntries } } };
             });
           }
           if (type === 'observation') {
-            const { step_index, iteration } = data;
+            const step_index = data.step_index ?? 0;
+              const iteration = data.iteration ?? 0;
             set((s) => {
               const taskTrace = s.trace[taskId] || {};
               const stepEntries = taskTrace[step_index] ? [...taskTrace[step_index]] : [];
@@ -687,7 +704,9 @@ export const useTaskStore = create<TaskState>((set, get) => ({
             });
           }
           if (type === 'reflection' && data.result) {
-            const { step_index, iteration, result } = data;
+            const step_index = data.step_index ?? 0;
+            const iteration = data.iteration ?? 0;
+            const result = data.result as TraceEntry['reflection'];
             set((s) => {
               const taskTrace = s.trace[taskId] || {};
               const stepEntries = taskTrace[step_index] ? [...taskTrace[step_index]] : [];
@@ -698,7 +717,9 @@ export const useTaskStore = create<TaskState>((set, get) => ({
             });
           }
           if (type === 'decision') {
-            const { step_index, iteration, decision } = data;
+            const step_index = data.step_index ?? 0;
+            const iteration = data.iteration ?? 0;
+            const decision = data.decision as Decision;
             set((s) => {
               const taskTrace = s.trace[taskId] || {};
               const stepEntries = taskTrace[step_index] ? [...taskTrace[step_index]] : [];
@@ -710,7 +731,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
           }
           if (type === 'aborted') {
             set((s) => ({
-              rca: { ...s.rca, [taskId]: { step_index: data.step_index, reason: data.reason, rca: data.rca || {}, trace: data.trace || [] } },
+              rca: { ...s.rca, [taskId]: { step_index: data.step_index ?? 0, reason: data.reason ?? '', rca: data.rca || {}, trace: data.trace || [] } },
             }));
           }
           if (type === 'done') {

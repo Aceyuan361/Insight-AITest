@@ -14,7 +14,8 @@ const PRIORITY_COLOR: Record<string, string> = {
 export function CaseList({ isMobile, onNew, onAnalyze, onFromImage }: {
   isMobile?: boolean; onNew: () => void; onAnalyze: () => void; onFromImage: () => void;
 }) {
-  const isMobileLayout = isMobile ?? useIsMobile();
+  const detectedMobile = useIsMobile();
+  const isMobileLayout = isMobile ?? detectedMobile;
   const { t } = useTranslation();
   const { cases, activeId, selectCase, deleteCase, loadCases } = useCaseStore();
   const { confirm } = useConfirmStore();

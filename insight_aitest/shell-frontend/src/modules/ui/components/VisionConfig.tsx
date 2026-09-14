@@ -21,12 +21,15 @@ export function VisionConfig() {
 
   useEffect(() => { load(); }, [load]);
 
-  useEffect(() => {
+  // 服务端配置到达时填充表单（渲染期调整模式，替代 effect 内同步 setState）
+  const [syncedConfig, setSyncedConfig] = useState(config);
+  if (config !== syncedConfig) {
+    setSyncedConfig(config);
     if (config) {
       setBaseUrl(config.base_url);
       setModel(config.model);
     }
-  }, [config]);
+  }
 
   const doSave = async () => {
     setMsg(null);

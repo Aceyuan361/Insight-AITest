@@ -22,7 +22,7 @@ export function SuitesTab() {
       }}>
         <SuiteList suites={suites} selectedId={selectedSuiteId}
           onSelect={(id) => { setCreating(false); selectSuite(id); }}
-          onNew={() => { setCreating(true); selectSuite(null as any); }} />
+          onNew={() => { setCreating(true); selectSuite(null); }} />
       </div>
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         {creating || selectedSuiteId ? (

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { ArrowUp, ArrowDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -54,11 +54,12 @@ function JsonField({ value, onChange, placeholder }: {
     : typeof value === 'string' ? value : ''
   ));
   const [error, setError] = useState(false);
-  const lastEmitted = useRef<unknown>(value);
+  // 「上次发出值」用 state 保存：prop 变化时在渲染期调整显示（React 官方模式），避免 ref-in-render
+  const [lastEmitted, setLastEmitted] = useState<unknown>(value);
 
-  // 外部值与上次发出值不一致 → 是外部改动（如重排/初始化），同步显示
-  if (value !== lastEmitted.current) {
-    lastEmitted.current = value;
+  // 外部值与上次发出值不一致 → 是外部改动（如重排/初始化），同步显示文本
+  if (value !== lastEmitted) {
+    setLastEmitted(value);
     const next = value && typeof value === 'object' ? JSON.stringify(value, null, 2)
       : typeof value === 'string' ? value : '';
     setText(next);
@@ -69,18 +70,18 @@ function JsonField({ value, onChange, placeholder }: {
     setText(raw);
     if (!raw.trim()) {
       setError(false);
-      lastEmitted.current = '';
+      setLastEmitted('');
       onChange('');
       return;
     }
     try {
       const parsed = JSON.parse(raw);
       setError(false);
-      lastEmitted.current = parsed;
+      setLastEmitted(parsed);
       onChange(parsed);
     } catch {
       setError(true);
-      lastEmitted.current = raw;
+      setLastEmitted(raw);
       onChange(raw);
     }
   };

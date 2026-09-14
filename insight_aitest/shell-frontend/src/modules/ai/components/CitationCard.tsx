@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Citation } from '../store/conversationStore';
 
@@ -15,10 +15,12 @@ export function CitationCard({
   const [expanded, setExpanded] = useState(false);
   const { t } = useTranslation();
 
-  // highlight 变化时：自动展开 + 重启闪烁动画
-  useEffect(() => {
+  // highlight 变化时：自动展开（渲染期调整模式，替代 effect 内同步 setState）
+  const [prevHighlight, setPrevHighlight] = useState(highlight);
+  if (highlight !== prevHighlight) {
+    setPrevHighlight(highlight);
     if (highlight) setExpanded(true);
-  }, [highlight]);
+  }
 
   return (
     <div

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { toast } from 'sonner';
 import { useProjectStore } from '../../../shared/store/projectStore';
 import { parseLLMError } from './llmErrors';
+import { errorMessage } from '../../../shared/utils/errorMessage';
 
 export interface Citation {
   document_id: number;
@@ -237,7 +238,7 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
         for (const evt of events) {
           const type = evt.match(/^event: (.+)$/m)?.[1];
           const dataStr = evt.match(/^data: (.+)$/m)?.[1] ?? '{}';
-          let data: any;
+          let data: { citations?: Citation[]; text?: string; message?: string; [key: string]: unknown };
           try { data = JSON.parse(dataStr); } catch { continue; }
           if (type === 'citations') citations = data.citations ?? [];
           if (type === 'thinking') {
@@ -284,10 +285,10 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
           }
         }
       }
-    } catch (e: any) {
-      if (e.name !== 'AbortError') {
+    } catch (e) {
+      if (errorMessage(e) !== 'AbortError' && !(e instanceof DOMException && e.name === 'AbortError')) {
         set({ streamingMessage: null, streamingThinking: null, streaming: false });
-        const parsed = parseLLMError(e?.message);
+        const parsed = parseLLMError(errorMessage(e));
         toast.error(parsed.message);
       } else {
         // 用户中断：保留部分回答

@@ -1,12 +1,16 @@
 import { create } from 'zustand';
 import { useProjectStore } from '../../../shared/store/projectStore';
+import type { UIStepData } from '../components/StepEditor';
+
+/** UI 用例步骤（编辑器的 UIStepData；含 assert/extract 专用字段）。 */
+export type UiStep = UIStepData;
 
 /** D 的 UI 用例（只读引用）。 */
 export interface UiCase {
   id: number;
   title: string;
   status: string;
-  content: { base_url?: string; steps: any[] };
+  content: { base_url?: string; steps: UiStep[] };
   last_result: string | null;
 }
 
@@ -17,7 +21,7 @@ export interface UIStepResult {
   screenshot: string | null;
   action_log: string | null;
   assert_passed: boolean | null;
-  extracts: Record<string, any>;
+  extracts: Record<string, unknown>;
   elapsed_ms: number;
   error: string | null;
   passed: boolean;
@@ -112,7 +116,7 @@ export const useRunStore = create<RunState>((set, get) => ({
       if (!r.ok) {
         const errText = await r.text();
         let msg = errText || '执行失败';
-        try { const j = JSON.parse(errText); if (j.detail) msg = j.detail; } catch {}
+        try { const j = JSON.parse(errText); if (j.detail) msg = j.detail; } catch { /* 非 JSON 错误体直接用原文 */ }
         set({ execError: msg });
         return;
       }

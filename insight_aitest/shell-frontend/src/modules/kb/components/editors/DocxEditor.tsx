@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Download, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { errorMessage } from '../../../../shared/utils/errorMessage';
 
 interface DocxEditorProps {
   /** docx 原始文件 URL（GET /raw） */
@@ -20,13 +21,19 @@ interface DocxEditorProps {
  *
  * 注意：SuperDoc 是 AGPL-3.0 许可证（开源/自托管场景免费）。
  */
+/** SuperDoc 实例的最小使用面（懒加载第三方库，只声明用到的方法，避免耦合其完整类型） */
+interface SuperDocLike {
+  export: (opts?: { triggerDownload?: boolean }) => Promise<Blob>;
+  destroy: () => void;
+}
+
 export function DocxEditor({ url, filename, onSave, saving, readOnly = false }: DocxEditorProps) {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [superDocInstance, setSuperDocInstance] = useState<any>(null);
+  const [superDocInstance, setSuperDocInstance] = useState<SuperDocLike | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const instanceRef = useRef<any>(null);
+  const instanceRef = useRef<SuperDocLike | null>(null);
 
   useEffect(() => {
     let destroyed = false;
@@ -63,13 +70,13 @@ export function DocxEditor({ url, filename, onSave, saving, readOnly = false }: 
         })
         .catch((e) => {
           if (!destroyed) {
-            setError(e.message || t('kb.docxLoadFailed'));
+            setError(errorMessage(e, t('kb.docxLoadFailed')));
             setLoading(false);
           }
         });
     }).catch((e) => {
       if (!destroyed) {
-        setError(t('kb.superDocLoadFailed', { message: e.message || String(e) }));
+        setError(t('kb.superDocLoadFailed', { message: errorMessage(e, String(e)) }));
         setLoading(false);
       }
     });
@@ -90,8 +97,8 @@ export function DocxEditor({ url, filename, onSave, saving, readOnly = false }: 
       // triggerDownload:false 返回 Blob，不弹下载框
       const blob = await superDocInstance.export({ triggerDownload: false });
       await onSave(blob as Blob, filename);
-    } catch (e: any) {
-      setError(t('kb.exportFailed', { message: e.message || String(e) }));
+    } catch (e) {
+      setError(t('kb.exportFailed', { message: errorMessage(e, String(e)) }));
     }
   };
 
@@ -99,8 +106,8 @@ export function DocxEditor({ url, filename, onSave, saving, readOnly = false }: 
     if (!superDocInstance) return;
     try {
       await superDocInstance.export({ triggerDownload: true });
-    } catch (e: any) {
-      setError(t('kb.downloadFailed', { message: e.message || String(e) }));
+    } catch (e) {
+      setError(t('kb.downloadFailed', { message: errorMessage(e, String(e)) }));
     }
   };
 
@@ -154,7 +161,7 @@ export function DocxEditor({ url, filename, onSave, saving, readOnly = false }: 
 function btnStyle(disabled: boolean): React.CSSProperties {
   return {
     background: disabled ? 'var(--bg-elevated)' : 'var(--accent)',
-    color: disabled ? 'var(--text-muted)' : '#fff',
+    color: disabled ? 'var(--text-muted)' : 'var(--text-on-accent)',
     border: 'none',
     padding: '4px 12px',
     borderRadius: 4,

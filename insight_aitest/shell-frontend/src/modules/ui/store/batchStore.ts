@@ -1,11 +1,12 @@
 import { create } from 'zustand';
 import { useProjectStore } from '../../../shared/store/projectStore';
+import type { UiStep } from './runStore';
 
 export interface UiCase {
   id: number;
   title: string;
   status: string;
-  content: { base_url?: string; steps: any[] };
+  content: { base_url?: string; steps: UiStep[] };
 }
 
 export interface BatchRunSummary {
@@ -22,7 +23,7 @@ export interface BatchRunSummary {
 }
 
 export interface BatchRunDetail extends BatchRunSummary {
-  config: { base_url?: string; browser_config?: any };
+  config: { base_url?: string; browser_config?: unknown };
   case_run_ids: number[];
   child_runs: {
     id: number; case_id: number; case_title: string; status: string;

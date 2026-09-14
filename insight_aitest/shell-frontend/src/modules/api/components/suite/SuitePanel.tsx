@@ -31,9 +31,17 @@ export function SuitePanel({ suiteId, onNew }: { suiteId: number | null; onNew: 
 
   const suite = suites.find((s) => s.id === suiteId)
 
-  // 选中 run 变化时，并行 fetch 子 run 详情 → caseRuns
+  // 选中 run 变化时重置子 run 列表（渲染期调整模式）
+  const prevRunKey = selectedRun?.id ?? 0
+  const [syncedRunKey, setSyncedRunKey] = useState(prevRunKey)
+  if (prevRunKey !== syncedRunKey) {
+    setSyncedRunKey(prevRunKey)
+    setCaseRuns([])
+  }
+
+  // 并行 fetch 子 run 详情 → caseRuns（setCaseRuns 全部发生在异步回调中）
   useEffect(() => {
-    if (!selectedRun || selectedRun.case_run_ids.length === 0) { setCaseRuns([]); return }
+    if (!selectedRun || selectedRun.case_run_ids.length === 0) return
     let cancelled = false
     Promise.all(
       selectedRun.case_run_ids.map((id) =>

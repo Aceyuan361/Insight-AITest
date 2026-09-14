@@ -4,11 +4,12 @@ import { useTranslation } from 'react-i18next'
 import { StepListEditor } from '../step/StepListEditor'
 import type { StepData } from '../step/StepEditor'
 import type { ApiCase } from '../../store/runStore'
+import type { SuitePayload } from '../../store/suiteStore'
 
 export function SuiteEditor({ initial, cases, onSave, onCancel }: {
-  initial: { name: string; description: string; case_ids: number[]; setup: StepData[]; teardown: StepData[] } | null
+  initial: SuitePayload | null
   cases: ApiCase[]
-  onSave: (data: any) => void
+  onSave: (data: SuitePayload) => void
   onCancel: () => void
 }) {
   const [name, setName] = useState(initial?.name ?? '')

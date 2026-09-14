@@ -6,7 +6,7 @@ export interface UISchedule {
   cron_expression: string;
   case_ids: number[];
   base_url: string | null;
-  browser_config: any;
+  browser_config: Record<string, unknown> | null;
   enabled: boolean;
   last_run_at: string | null;
   last_status: string | null;

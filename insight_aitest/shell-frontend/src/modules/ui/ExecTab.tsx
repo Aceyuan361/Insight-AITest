@@ -21,12 +21,12 @@ function loadConfig(): typeof DEFAULT_CONFIG {
   try {
     const saved = localStorage.getItem('ui_browser_config');
     if (saved) return { ...DEFAULT_CONFIG, ...JSON.parse(saved) };
-  } catch {}
+  } catch { /* 本地存储不可用时回退默认值 */ }
   return DEFAULT_CONFIG;
 }
 
 function saveConfig(cfg: typeof DEFAULT_CONFIG) {
-  try { localStorage.setItem('ui_browser_config', JSON.stringify(cfg)); } catch {}
+  try { localStorage.setItem('ui_browser_config', JSON.stringify(cfg)); } catch { /* 本地存储不可用时回退默认值 */ }
 }
 
 export function ExecTab() {

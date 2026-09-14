@@ -50,7 +50,7 @@ export function DashboardOverview() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setLoading(true);
+    // 首挂载加载一次；loading 初值已为 true，无需 effect 内同步置位
     fetch('/api/platform/dashboard/summary')
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
