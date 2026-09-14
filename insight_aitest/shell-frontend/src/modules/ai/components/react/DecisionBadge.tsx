@@ -2,12 +2,32 @@ import type { CSSProperties } from 'react';
 import type { Decision } from '../../store/taskStore';
 import { RADIUS } from '../agentStyles';
 
-/** ReAct Agent 决策徽章：按 continue/retry/fix/abort 着色。 */
+/** ReAct Agent 决策徽章：按 continue/retry/fix/abort 着色（token 派生，双主题自适应）。 */
 const DECISION_STYLES: Record<Decision, { color: string; bg: string; border: string; label: string }> = {
-  continue: { color: '#16a34a', bg: '#dcfce7', border: 'rgba(22,163,74,0.3)', label: 'CONTINUE' },
-  retry: { color: '#ca8a04', bg: '#fef9c3', border: 'rgba(202,138,4,0.3)', label: 'RETRY' },
-  fix: { color: '#ea580c', bg: '#ffedd5', border: 'rgba(234,88,12,0.3)', label: 'FIX' },
-  abort: { color: '#dc2626', bg: '#fee2e2', border: 'rgba(220,38,38,0.3)', label: 'ABORT' },
+  continue: {
+    color: 'var(--success)',
+    bg: 'color-mix(in srgb, var(--success) 12%, transparent)',
+    border: 'color-mix(in srgb, var(--success) 30%, transparent)',
+    label: 'CONTINUE',
+  },
+  retry: {
+    color: 'var(--warning)',
+    bg: 'color-mix(in srgb, var(--warning) 12%, transparent)',
+    border: 'color-mix(in srgb, var(--warning) 30%, transparent)',
+    label: 'RETRY',
+  },
+  fix: {
+    color: 'var(--risk)',
+    bg: 'color-mix(in srgb, var(--risk) 12%, transparent)',
+    border: 'color-mix(in srgb, var(--risk) 30%, transparent)',
+    label: 'FIX',
+  },
+  abort: {
+    color: 'var(--error)',
+    bg: 'color-mix(in srgb, var(--error) 12%, transparent)',
+    border: 'color-mix(in srgb, var(--error) 30%, transparent)',
+    label: 'ABORT',
+  },
 };
 
 export function DecisionBadge({ decision, confidence }: { decision: Decision; confidence?: number }) {

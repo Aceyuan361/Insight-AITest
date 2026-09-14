@@ -151,7 +151,7 @@ export function KbToggle({ mode, onModeChange, selectedDocIds, onDocIdsChange }:
                     background: selectedDocIds.includes(d.id) ? 'var(--accent)' : 'transparent',
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                   }}>
-                    {selectedDocIds.includes(d.id) && <Check size={10} strokeWidth={2} color="#fff" />}
+                    {selectedDocIds.includes(d.id) && <Check size={10} strokeWidth={2} color="var(--text-on-accent)" />}
                   </span>
                   <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {d.filename}

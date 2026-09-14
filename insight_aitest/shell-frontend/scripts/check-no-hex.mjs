@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 禁硬编码色 lint —— Stage 2 护栏。
  *

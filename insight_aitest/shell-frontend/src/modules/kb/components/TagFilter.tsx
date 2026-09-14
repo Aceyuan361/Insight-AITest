@@ -47,7 +47,7 @@ export function TagFilter({ selectedTags, onToggleTag, onClearTags, selectedType
             onClick={() => onSelectType(opt.value)}
             style={{
               background: selectedType === opt.value ? 'var(--accent)' : 'var(--bg-card)',
-              color: selectedType === opt.value ? '#fff' : 'var(--text-secondary)',
+              color: selectedType === opt.value ? 'var(--text-on-accent)' : 'var(--text-secondary)',
               border: '1px solid var(--bg-elevated)',
               borderRadius: 4,
               padding: '2px 8px',
@@ -81,7 +81,7 @@ export function TagFilter({ selectedTags, onToggleTag, onClearTags, selectedType
               onClick={() => onToggleTag(tagItem.tag)}
               style={{
                 background: active ? 'var(--accent)' : 'var(--bg-card)',
-                color: active ? '#fff' : 'var(--text-secondary)',
+                color: active ? 'var(--text-on-accent)' : 'var(--text-secondary)',
                 border: '1px solid var(--bg-elevated)',
                 borderRadius: 12,
                 padding: '2px 10px',

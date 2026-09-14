@@ -19,10 +19,16 @@ export function DocxViewer({ url }: DocxViewerProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
+  // url 变化时重置加载态（渲染期调整模式）
+  const [prevUrl, setPrevUrl] = useState(url);
+  if (url !== prevUrl) {
+    setPrevUrl(url);
     setLoading(true);
     setError(null);
+  }
+
+  useEffect(() => {
+    let cancelled = false;
     fetch(url)
       .then((r) => r.arrayBuffer())
       .then((buf) => mammoth.convertToHtml({ arrayBuffer: buf }))
@@ -41,6 +47,7 @@ export function DocxViewer({ url }: DocxViewerProps) {
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- t 仅用于错误文案，语言切换不应触发重新解析
   }, [url]);
 
   if (loading) {

@@ -51,18 +51,34 @@ export function DocumentViewer({ doc, open, onOpenChange }: DocumentViewerProps)
   const kind = doc ? fileKind(doc.filename) : 'unknown';
   const canEdit = TEXT_KINDS.has(kind) || kind === 'docx' || kind === 'xlsx';
 
-  useEffect(() => {
-    if (open && doc && TEXT_KINDS.has(kind)) {
-      setLoadingContent(true);
-      fetchContent(doc.id)
-        .then((data) => setContent(data.text))
-        .catch(() => setContent(''))
-        .finally(() => setLoadingContent(false));
-    } else {
-      setContent('');
-    }
+  // 对话框打开/切换文档时重置查看状态（渲染期调整模式，替代 effect 内同步 setState）
+  const viewKey = open && doc ? doc.id : null;
+  const [prevViewKey, setPrevViewKey] = useState<number | null>(viewKey);
+  if (viewKey !== prevViewKey) {
+    setPrevViewKey(viewKey);
+    setContent('');
+    setLoadingContent(viewKey !== null && TEXT_KINDS.has(kind));
     setMode('view');
     setShowVersions(false);
+  }
+
+  useEffect(() => {
+    if (!(open && doc && TEXT_KINDS.has(kind))) return;
+    let cancelled = false;
+    fetchContent(doc.id)
+      .then((data) => {
+        if (!cancelled) setContent(data.text);
+      })
+      .catch(() => {
+        if (!cancelled) setContent('');
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingContent(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 与原实现一致：仅按文档身份触发
   }, [open, doc?.id]);
 
   if (!doc) return null;
@@ -139,7 +155,7 @@ export function DocumentViewer({ doc, open, onOpenChange }: DocumentViewerProps)
 function toolBtnStyle(active: boolean): React.CSSProperties {
   return {
     background: active ? 'var(--accent)' : 'none',
-    color: active ? '#fff' : 'var(--text-secondary)',
+    color: active ? 'var(--text-on-accent)' : 'var(--text-secondary)',
     border: '1px solid var(--border-strong)',
     borderRadius: 4,
     padding: 4,

@@ -154,7 +154,7 @@ export function DocumentMetaEditor({ doc, open, onOpenChange }: DocumentMetaEdit
             <button
               onClick={handleSave}
               disabled={saving}
-              style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 16px', cursor: 'pointer', fontSize: 13, fontWeight: 600, opacity: saving ? 0.6 : 1 }}
+              style={{ background: 'var(--accent)', color: 'var(--text-on-accent)', border: 'none', borderRadius: 6, padding: '6px 16px', cursor: 'pointer', fontSize: 13, fontWeight: 600, opacity: saving ? 0.6 : 1 }}
             >
               {saving ? t('kb.saving') : t('kb.save')}
             </button>

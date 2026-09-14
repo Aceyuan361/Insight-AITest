@@ -123,7 +123,7 @@ export function AgentInput() {
             opacity: busy ? 1 : (disabled ? 0.35 : 1),
             transform: 'none',
             transition: `all 0.15s ${SPRING}`,
-            ...(busy ? { background: 'var(--error)', color: '#fff' } : {}),
+            ...(busy ? { background: 'var(--error)', color: 'var(--text-on-accent)' } : {}),
           }}
           title={busy ? t('ai.stopGen') : t('ai.send')}
         >

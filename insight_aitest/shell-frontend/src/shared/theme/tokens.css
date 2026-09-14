@@ -45,6 +45,8 @@
   --warning: #f59e0b; /* Amber 高饱和 */
   --error: #ef4444; /* Red 高饱和 */
   --info: #3b82f6; /* Blue 高饱和 */
+  --risk: #ea580c; /* Orange 高饱和（介于 warning 与 error 的风险态）*/
+  --text-on-accent: #ffffff; /* 饱和色底上的文字/图标（按钮、激活页签、选中 chip）*/
 
   /* ========== CHART — 高饱和可区分（多指标折线在深底上鲜明）========== */
   --chart-1: #10b981; /* cpu（emerald）*/
@@ -114,6 +116,8 @@
   --warning: #d97706; /* amber-600 */
   --error: #dc2626; /* red-600 */
   --info: #2563eb; /* blue-600 */
+  --risk: #c2410c; /* orange-700 */
+  --text-on-accent: #ffffff; /* 饱和色底上的文字/图标（白在 emerald-600/red-600 上均可读）*/
 
   /* CHART —— 线条色与深色主题同源（高饱和色在浅底上同样鲜明）；
      但中性色需切换为深色系，见 chart-tokens.ts 的 light 分支。*/

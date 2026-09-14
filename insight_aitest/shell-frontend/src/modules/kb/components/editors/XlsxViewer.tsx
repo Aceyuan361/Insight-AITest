@@ -23,10 +23,16 @@ export function XlsxViewer({ url, filename }: XlsxViewerProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
+  // url 变化时重置加载态（渲染期调整模式）
+  const [prevUrl, setPrevUrl] = useState(url);
+  if (url !== prevUrl) {
+    setPrevUrl(url);
     setLoading(true);
     setError(null);
+  }
+
+  useEffect(() => {
+    let cancelled = false;
     fetch(url)
       .then((r) => r.arrayBuffer())
       .then((buf) => {
@@ -73,7 +79,7 @@ export function XlsxViewer({ url, filename }: XlsxViewerProps) {
               onClick={() => setActiveSheet(i)}
               style={{
                 background: i === activeSheet ? 'var(--accent)' : 'none',
-                color: i === activeSheet ? '#fff' : 'var(--text-secondary)',
+                color: i === activeSheet ? 'var(--text-on-accent)' : 'var(--text-secondary)',
                 border: '1px solid var(--border-strong)',
                 padding: '2px 8px',
                 borderRadius: 4,

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useTranslation } from 'react-i18next';
@@ -18,10 +18,13 @@ export function TextEditor({ initialText, filename, onSave, saving, readOnly = f
   const [dirty, setDirty] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
 
-  useEffect(() => {
+  // 外部 initialText 变化（切换文档/版本回滚）时重置编辑态（渲染期调整模式）
+  const [prevInitial, setPrevInitial] = useState(initialText);
+  if (initialText !== prevInitial) {
+    setPrevInitial(initialText);
     setText(initialText);
     setDirty(false);
-  }, [initialText]);
+  }
 
   const isMarkdown = /\.(md|markdown)$/i.test(filename);
 
@@ -55,7 +58,7 @@ export function TextEditor({ initialText, filename, onSave, saving, readOnly = f
             disabled={!dirty || saving}
             style={{
               background: dirty && !saving ? 'var(--accent)' : 'var(--bg-elevated)',
-              color: dirty && !saving ? '#fff' : 'var(--text-muted)',
+              color: dirty && !saving ? 'var(--text-on-accent)' : 'var(--text-muted)',
               border: 'none', padding: '4px 16px', borderRadius: 4, cursor: dirty && !saving ? 'pointer' : 'not-allowed', fontSize: 12,
             }}
           >
